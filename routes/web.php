@@ -2,12 +2,18 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\AdminController; // nếu có
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ComicController;
 
-// Trang chủ (ví dụ)
-Route::get('/', function () {
-    return view('home');
-})->name('home');
+/*
+|--------------------------------------------------------------------------
+| PUBLIC ROUTES
+|--------------------------------------------------------------------------
+*/
+
+// Trang chủ
+Route::view('/', 'home')->name('home');
 
 /*
 |--------------------------------------------------------------------------
@@ -15,27 +21,44 @@ Route::get('/', function () {
 |--------------------------------------------------------------------------
 */
 
-// ĐĂNG KÝ người dùng
-Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register.form'); // GET: hiển thị form
-Route::post('/register', [AuthController::class, 'register'])->name('register');            // POST: xử lý đăng ký
+Route::controller(AuthController::class)->group(function () {
+    // Đăng ký
+    Route::get('/register', 'showRegisterForm')->name('register.form');
+    Route::post('/register', 'register')->name('register');
 
-// ĐĂNG NHẬP người dùng
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login.form');         // GET: hiển thị form
-Route::post('/login', [AuthController::class, 'login'])->name('login');                     // POST: xử lý đăng nhập
+    // Đăng nhập
+    Route::get('/login', 'showLoginForm')->name('login.form');
+    Route::post('/login', 'login')->name('login');
 
-// QUÊN MẬT KHẨU
-Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('password.request'); // GET: hiển thị form
-Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])->name('password.email');      // POST: gửi link đặt lại mật khẩu
+    // Quên mật khẩu (chỉ có trang form)
+    Route::get('/forgot-password', 'showForgotPasswordForm')->name('password.request');
 
-// ĐĂNG XUẤT
-// (thực tế nên dùng POST là chính, nhưng bạn yêu cầu cả GET & POST thì ta cho trùng controller)
-Route::get('/logout', [AuthController::class, 'logout'])->name('logout.get');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
-// KHU VỰC ADMIN – dùng middleware kiểm tra quyền
-Route::middleware(['auth', 'isAdmin'])->group(function () {
-    // Route::get('/admin', [AdminController::class, 'index'])->name('admin.dashboard');
-
-    // Các route admin khác...
-    // Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
+    // Đăng xuất (GET + POST để tiện cho form & link)
+    Route::get('/logout', 'logout')->name('logout.get');
+    Route::post('/logout', 'logout')->name('logout');
 });
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN ROUTES
+|--------------------------------------------------------------------------
+|
+| Tất cả route admin đều prefix /admin và yêu cầu middleware auth + isAdmin.
+| Giữ tên route cho resource Category / Comic là "categories.*" và "comics.*"
+| để khớp với trong controller.
+|
+*/
+
+Route::prefix('admin')
+    ->name('admin.')
+    ->middleware(['auth', 'isAdmin'])
+    ->group(function () {
+        // Dashboard
+        Route::get('/', [AdminController::class, 'index'])->name('dashboard');
+
+        // Quản lý thể loại
+        Route::resource('categories', CategoryController::class);
+
+        // Quản lý truyện
+        Route::resource('comics', ComicController::class);
+    });

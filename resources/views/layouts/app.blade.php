@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'TruyenVH - Đọc Truyện Tranh Online')</title>
-    <link rel="icon" type="image/png" href="{{ asset('storage/logo/miniLogo.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('storage/logo/logoMini.png') }}">
 
     <!-- Tailwind & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -116,7 +116,7 @@
             <!-- Left: Logo & Nav -->
             <div class="flex items-center gap-8">
                 <a href="{{ route('home') }}" class="flex items-center gap-2">
-                    <img src="{{ asset('storage/logo/truyenvh-high-resolution-logo-transparent.png') }}" alt="TruyenVH Logo" class="h-8">
+                    <img src="{{ asset('storage/logo/logoLight.png') }}" alt="TruyenVH Logo" class="h-8">
                 </a>
 
                 <nav class="hidden lg:flex items-center gap-6 font-bold text-sm text-gray-600 uppercase">
@@ -128,6 +128,7 @@
                             <a href="#" class="hover:text-blue-600 text-xs font-semibold">Action</a>
                             <a href="#" class="hover:text-blue-600 text-xs font-semibold">Comedy</a>
                             <a href="#" class="hover:text-blue-600 text-xs font-semibold">Manhwa</a>
+                            <a href="#" class="hover:text-blue-600 text-xs font-semibold">Xem tất cả</a>
                         </div>
                     </div>
                     <a href="#" class="hover:text-blue-600 transition">Tìm truyện</a>
@@ -145,9 +146,47 @@
                 <button class="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition">
                     <i class="fas fa-moon"></i>
                 </button>
-                <a href="{{ route('login.form') }}" class="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-5 py-2 rounded-full text-sm font-bold shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition transform hover:-translate-y-0.5">
+                @guest
+                <a href="{{ route('login.form') }}"
+                    class="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-5 py-2 rounded-full text-sm font-bold shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition transform hover:-translate-y-0.5">
                     Đăng nhập
                 </a>
+                @else
+
+                {{-- DROPDOWN USER --}}
+                <div class="relative group">
+                    <!-- Nút avatar / username -->
+                    <button class="flex items-center gap-2 font-semibold text-gray-700 hover:text-blue-600">
+                        <i class="fas fa-user-circle text-2xl"></i>
+                        <span>{{ Auth::user()->name }}</span>
+                        <i class="fas fa-caret-down"></i>
+                    </button>
+
+                    <!-- MENU DROPDOWN -->
+                    <div class="absolute right-0 mt-2 w-48 bg-white shadow-lg border border-gray-200 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+
+                        {{-- ADMIN OPTION --}}
+                        @if(Auth::user()->role === 'admin')
+                        <a href="{{ url('/admin') }}"
+                            class="block px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
+                            Quản trị Dashboard
+                        </a>
+                        <div class="border-t border-gray-200"></div>
+                        @endif
+
+                        {{-- LOGOUT --}}
+                        <form action="{{ route('logout') }}" method="POST">
+                            @csrf
+                            <button type="submit"
+                                class="w-full text-left px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50">
+                                Đăng xuất
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                @endguest
+
             </div>
         </div>
     </header>
@@ -184,8 +223,8 @@
                 <div>
                     <h4 class="text-white font-bold mb-4">Liên hệ</h4>
                     <div class="flex gap-4 text-xl">
-                        <a href="#" class="hover:text-blue-500 transition"><i class="fab fa-facebook"></i></a>
-                        <a href="#" class="hover:text-pink-500 transition"><i class="fab fa-instagram"></i></a>
+                        <a href="https://www.facebook.com/viethoang272/" class="hover:text-blue-500 transition"><i class="fab fa-facebook"></i></a>
+                        <a href="https://www.instagram.com/viethoang272/" class="hover:text-pink-500 transition"><i class="fab fa-instagram"></i></a>
                     </div>
                 </div>
             </div>
