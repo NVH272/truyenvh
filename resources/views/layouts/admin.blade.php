@@ -187,7 +187,7 @@
 
                 <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 mt-6">Người dùng & Hệ thống</p>
 
-                <a href="#" class="nav-item text-slate-400 flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-r-lg">
+                <a href="{{ route('admin.users.index') }}" class="nav-item text-slate-400 flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-r-lg">
                     <i class="fas fa-users w-5 text-center"></i>
                     <span>Thành viên</span>
                 </a>

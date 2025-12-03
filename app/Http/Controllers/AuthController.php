@@ -18,26 +18,43 @@ class AuthController extends Controller
     // 2. Xử lý đăng ký người dùng
     public function register(Request $request)
     {
+        // Chuẩn hóa email: trim và lowercase TRƯỚC khi validate
+        $email = strtolower(trim($request->email));
+        
+        // Merge email đã normalize vào request để validation kiểm tra đúng
+        $request->merge(['email' => $email]);
+        
         // Validate dữ liệu
-        $request->validate([
+        $validated = $request->validate([
             'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
+            'email'    => 'required|email|max:255|unique:users,email',
             'password' => 'required|min:6|confirmed', // cần field password_confirmation
+        ], [
+            'email.unique' => 'Email này đã được sử dụng. Vui lòng chọn email khác.',
+            'email.email' => 'Email không hợp lệ.',
+            'password.confirmed' => 'Mật khẩu xác nhận không khớp.',
         ]);
 
-        // Tạo user
+        // Tạo user với email đã được normalize
         $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
+            'name'     => trim($request->name),
+            'email'    => $email,
             'password' => Hash::make($request->password),
             'role'     => 'user', // role mặc định
         ]);
 
-        // Đăng nhập luôn sau khi đăng ký (tuỳ bạn)
-        Auth::login($user);
+        // GỬI MAIL XÁC THỰC
+        $user->sendEmailVerificationNotification();
 
-        return redirect()->route('home')
-            ->with('success', 'Đăng ký thành công!');
+        // Cho phép đăng nhập ngay, nhưng khuyến khích xác thực email
+        return redirect()->route('login.form')
+            ->with('success', 'Đăng ký thành công! Bạn có thể đăng nhập ngay. Vui lòng kiểm tra email để xác thực tài khoản để sử dụng đầy đủ các chức năng.');
+
+        // Đăng nhập luôn sau khi đăng ký (tuỳ bạn)
+        // Auth::login($user);
+
+        // return redirect()->route('home')
+        //     ->with('success', 'Đăng ký thành công!');
     }
 
     // 3. Hiển thị form đăng nhập
@@ -49,29 +66,35 @@ class AuthController extends Controller
     // 4. Xử lý đăng nhập người dùng
     public function login(Request $request)
     {
-        // Validate
         $credentials = $request->validate([
             'email'    => 'required|email',
-            'password' => 'required',
+            'password' => 'required|string',
         ]);
 
-        $remember = $request->has('remember'); // checkbox nhớ đăng nhập
+        // Chuẩn hóa email trước khi đăng nhập (khớp với cách lưu trong database)
+        $credentials['email'] = strtolower(trim($credentials['email']));
 
-        if (Auth::attempt($credentials, $remember)) {
-            $request->session()->regenerate(); // chống session fixation
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            $request->session()->regenerate();
 
-            // Nếu muốn phân quyền theo role, có thể check ở đây
-            // $user = Auth::user();
-            // if ($user->role == 'admin') return redirect()->route('admin.dashboard');
+            $user = Auth::user();
 
-            return redirect()->intended(route('home'));
+            // Nếu tài khoản bị khóa (nếu bạn có is_active)
+            if (isset($user->is_active) && !$user->is_active) {
+                Auth::logout();
+                return back()->withErrors([
+                    'email' => 'Tài khoản của bạn đã bị khóa.',
+                ]);
+            }
+
+            // Cho phép đăng nhập dù chưa xác thực email
+            // User chưa verify vẫn có thể sử dụng các chức năng như người chưa đăng nhập
+            return redirect()->route('home');
         }
 
-        return back()
-            ->withErrors([
-                'email' => 'Email hoặc mật khẩu không đúng.',
-            ])
-            ->onlyInput('email');
+        return back()->withErrors([
+            'email' => 'Email hoặc mật khẩu không đúng.',
+        ])->onlyInput('email');
     }
 
     // 5. Xử lý đăng xuất người dùng

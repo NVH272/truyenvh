@@ -154,32 +154,54 @@
                 @else
 
                 {{-- DROPDOWN USER --}}
-                <div class="relative group">
-                    <!-- Nút avatar / username -->
-                    <button class="flex items-center gap-2 font-semibold text-gray-700 hover:text-blue-600">
-                        <i class="fas fa-user-circle text-2xl"></i>
-                        <span>{{ Auth::user()->name }}</span>
-                        <i class="fas fa-caret-down"></i>
+                <div class="relative group" id="userMenu">
+                    <!-- AVATAR BUTTON -->
+                    <button id="userMenuBtn"
+                        class="flex items-center gap-2 font-semibold text-gray-700 hover:text-blue-600">
+                        <img src="{{ Auth::user()->avatar_url }}" class="w-9 h-9 rounded-full">
                     </button>
 
                     <!-- MENU DROPDOWN -->
-                    <div class="absolute right-0 mt-2 w-48 bg-white shadow-lg border border-gray-200 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                    <div id="userDropdown"
+                        class="absolute right-0 mt-2 w-56 bg-white shadow-lg border border-gray-200 rounded-lg 
+               transition-all duration-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible">
 
-                        {{-- ADMIN OPTION --}}
-                        @if(Auth::user()->role === 'admin')
-                        <a href="{{ url('/admin') }}"
-                            class="block px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
-                            Quản trị Dashboard
+                        {{-- EMAIL VERIFICATION --}}
+                        @if(!Auth::user()->hasVerifiedEmail())
+                        <div class="px-4 py-2 bg-yellow-50 border-b border-yellow-200">
+                            <div class="flex items-center gap-2 text-xs text-yellow-800">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span class="font-semibold">Email chưa được xác thực</span>
+                            </div>
+                        </div>
+                        <a href="{{ route('verification.notice') }}"
+                            class="block px-4 py-2 text-sm font-semibold text-orange-600 hover:bg-orange-50 border-b border-gray-200">
+                            <i class="fas fa-envelope mr-2"></i>Xác thực email
                         </a>
                         <div class="border-t border-gray-200"></div>
                         @endif
+
+                        {{-- ADMIN --}}
+                        @if(Auth::user()->role === 'admin')
+                        <a href="{{ url('/admin') }}"
+                            class="block px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
+                            <i class="fas fa-cog mr-2"></i>Quản trị Dashboard
+                        </a>
+                        <div class="border-t border-gray-200"></div>
+                        @endif
+
+                        {{-- PROFILE --}}
+                        <a href=""
+                            class="block px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
+                            <i class="fas fa-user mr-2"></i>Trang cá nhân
+                        </a>
 
                         {{-- LOGOUT --}}
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
                             <button type="submit"
                                 class="w-full text-left px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50">
-                                Đăng xuất
+                                <i class="fas fa-sign-out-alt mr-2"></i>Đăng xuất
                             </button>
                         </form>
                     </div>
@@ -196,7 +218,7 @@
 
         {{-- LOGIC QUAN TRỌNG: KIỂM TRA TRANG --}}
         {{-- Nếu là Login hoặc Register: KHÔNG dùng khung nền trắng --}}
-        @if(request()->routeIs('login') || request()->routeIs('login.form') || request()->routeIs('register') || request()->routeIs('register.form') || request()->routeIs('password.request'))
+        @if(request()->routeIs('login') || request()->routeIs('login.form') || request()->routeIs('register') || request()->routeIs('register.form') || request()->routeIs('password.request') || request()->routeIs('verification.notice'))
 
         {{-- Hiển thị trực tiếp nội dung để nền trong suốt --}}
         @yield('content')
@@ -236,3 +258,29 @@
 </body>
 
 </html>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('userMenuBtn');
+        const menu = document.getElementById('userDropdown');
+        const wrap = document.getElementById('userMenu');
+
+        // CLICK mở/đóng
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menu.classList.toggle('opacity-100');
+            menu.classList.toggle('visible');
+            menu.classList.toggle('opacity-0');
+            menu.classList.toggle('invisible');
+        });
+
+        // CLICK RA NGOÀI → ĐÓNG
+        document.addEventListener('click', () => {
+            menu.classList.add('opacity-0', 'invisible');
+            menu.classList.remove('opacity-100', 'visible');
+        });
+
+        // Ngăn đóng khi click bên trong menu
+        menu.addEventListener('click', (e) => e.stopPropagation());
+    });
+</script>

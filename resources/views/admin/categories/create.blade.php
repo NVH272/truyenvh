@@ -30,7 +30,7 @@
 
                 <!-- Slug Input -->
                 <div class="space-y-2">
-                    <label class="text-xs font-bold text-slate-300 uppercase tracking-wider">Slug (URL) <span class="text-red-500">*</span></label>
+                    <label class="text-xs font-bold text-slate-300 uppercase tracking-wider">Slug (URL)</label>
                     <input type="text" name="slug" class="admin-input w-full px-4 py-2.5 rounded-lg text-sm font-mono-tech bg-slate-900/50 border-slate-600 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-orange-400 placeholder-slate-600 transition" placeholder="vi-du-isekai-hoc-duong">
                     <p class="text-[10px] text-slate-500 italic">Để trống sẽ tự động tạo từ tên.</p>
                 </div>
