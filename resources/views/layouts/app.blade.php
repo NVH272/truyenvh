@@ -191,7 +191,7 @@
                         @endif
 
                         {{-- PROFILE --}}
-                        <a href=""
+                        <a href="{{ route('user.profile.index') }}"
                             class="block px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
                             <i class="fas fa-user mr-2"></i>Trang cá nhân
                         </a>
@@ -217,19 +217,20 @@
     <main class="container mx-auto px-4 py-6 space-y-10 min-h-screen flex flex-col">
 
         {{-- LOGIC QUAN TRỌNG: KIỂM TRA TRANG --}}
-        {{-- Nếu là Login hoặc Register: KHÔNG dùng khung nền trắng --}}
-        @if(request()->routeIs('login') || request()->routeIs('login.form') || request()->routeIs('register') || request()->routeIs('register.form') || request()->routeIs('password.request') || request()->routeIs('verification.notice'))
-
+        @if (request()->routeIs([
+        'login', 'login.form',
+        'register', 'register.form',
+        'password.request',
+        'verification.notice',
+        'user.profile.*',
+        ]))
         {{-- Hiển thị trực tiếp nội dung để nền trong suốt --}}
         @yield('content')
-
         @else
-
-        {{-- Nếu là trang khác: Bọc trong khung trắng mờ để dễ đọc nội dung --}}
+        {{-- Nếu là trang khác: Bọc trong khung trắng --}}
         <div class="bg-white/85 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-gray-300">
             @yield('content')
         </div>
-
         @endif
 
     </main>

@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\User\UserProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,18 +22,18 @@ use Illuminate\Support\Facades\Auth;
 // Trang nhắc xác thực email (nếu bạn muốn dùng)
 Route::get('/email/verify', function (Request $request) {
     $user = $request->user();
-    
+
     // Tự động gửi email xác thực nếu user chưa verify và chưa có thông báo trong session
     if (!$user->hasVerifiedEmail()) {
         // Chỉ gửi nếu chưa có flag trong session (tránh gửi lại khi refresh)
         if (!$request->session()->has('verification_email_auto_sent')) {
             $user->sendEmailVerificationNotification();
             $request->session()->put('verification_email_auto_sent', true);
-            
+
             return view('auth.verify-email')->with('info', 'Email xác thực đã được gửi tự động đến địa chỉ email của bạn. Vui lòng kiểm tra hộp thư.');
         }
     }
-    
+
     return view('auth.verify-email');
 })->middleware(['auth', 'throttle:6,1'])->name('verification.notice');
 
@@ -77,7 +78,7 @@ Route::get('/email/verify/{id}/{hash}', function (Request $request, $id, $hash) 
 // Route để gửi lại email xác thực (nút "Gửi lại mail")
 Route::post('/email/verification-notification', function (Request $request) {
     $user = $request->user();
-    
+
     // Chỉ gửi nếu chưa verify
     if (!$user->hasVerifiedEmail()) {
         $user->sendEmailVerificationNotification();
@@ -85,7 +86,7 @@ Route::post('/email/verification-notification', function (Request $request) {
         $request->session()->forget('verification_email_auto_sent');
         return back()->with('success', 'Đã gửi lại email xác thực. Vui lòng kiểm tra hộp thư.');
     }
-    
+
     return back()->with('info', 'Email của bạn đã được xác thực rồi.');
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
@@ -144,4 +145,16 @@ Route::prefix('admin')
         Route::resource('users', UserController::class)->except(['show']);
         Route::patch('users/{user}/toggle-active', [UserController::class, 'toggleActive'])
             ->name('users.toggle-active');
+    });
+
+Route::prefix('user/profile')
+    ->name('user.profile.')
+    ->middleware('auth')
+    ->group(function () {
+        Route::get('/', [UserProfileController::class, 'index'])->name('index');
+        Route::get('/edit', [UserProfileController::class, 'editInfo'])->name('editInfo');
+        Route::put('/edit', [UserProfileController::class, 'updateInfo'])->name('updateInfo');
+
+        Route::get('/password', [UserProfileController::class, 'editPassword'])->name('editPassword');
+        Route::put('/password', [UserProfileController::class, 'updatePassword'])->name('updatePassword');
     });
