@@ -26,21 +26,31 @@ class Comic extends Model
         'last_chapter_at',
     ];
 
-    /**
-     * Quan hệ N-N với Category
-     * 1 truyện có thể thuộc nhiều thể loại
-     * 1 thể loại có thể có nhiều truyện
-     */
+    protected $casts = [
+        'published_at'    => 'datetime',
+        'last_chapter_at' => 'datetime',
+    ];
+
+    // Lấy URL ảnh bìa
+    public function getCoverUrlAttribute()
+    {
+        // Nếu có ảnh upload, dùng ảnh đó từ storage/public/uploads/comics
+        if ($this->cover_image) {
+            return asset('storage/uploads/comics/' . $this->cover_image);
+        }
+
+        // Nếu không có ảnh, dùng ảnh mặc định từ storage/public/images
+        return asset('storage/images/default-cover.png');
+    }
+
+    // Quan hệ N-N với Category    
     public function categories()
     {
         // pivot: category_comic (category_id, comic_id)
         return $this->belongsToMany(Category::class, 'category_comic', 'comic_id', 'category_id');
     }
 
-    /**
-     * Quan hệ 1-N với Chapter
-     * 1 truyện có nhiều chapter
-     */
+    // Quan hệ 1-N với Chapter
     public function chapters()
     {
         // return $this->hasMany(Chapter::class, 'comic_id');

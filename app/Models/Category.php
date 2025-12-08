@@ -18,8 +18,8 @@ class Category extends Model
     ];
 
     // Quan hệ với Comic nếu có
-    // public function comics()
-    // {
-    //     return $this->belongsToMany(Comic::class, 'category_comic', 'category_id', 'comic_id');
-    // }
+    public function comics()
+    {
+        return $this->belongsToMany(Comic::class, 'category_comic', 'category_id', 'comic_id');
+    }
 }

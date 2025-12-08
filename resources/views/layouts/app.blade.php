@@ -137,34 +137,73 @@
 
             <!-- Right: Search & User -->
             <div class="flex items-center gap-3">
+
+                <!-- SEARCH BAR (match userMenuBtn height: rounded-full, padding đồng bộ) -->
                 <div class="relative hidden md:block group">
-                    <input type="text" placeholder="Tìm truyện..." class="bg-gray-100/80 border border-gray-300 rounded-full pl-4 pr-10 py-2 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
-                    <button class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-blue-600">
+                    <input type="text"
+                        placeholder="Tìm truyện..."
+                        class="bg-white/90 backdrop-blur-sm border border-slate-200 rounded-full 
+                   pl-4 pr-10 py-2.5 text-sm w-64 shadow-sm
+                   focus:outline-none focus:ring-2 focus:ring-blue-100/70 
+                   hover:border-blue-300 transition-all duration-300">
+
+                    <button class="absolute right-3 top-1/2 -translate-y-1/2 
+                       text-gray-400 group-hover:text-blue-600 transition">
                         <i class="fas fa-search"></i>
                     </button>
                 </div>
-                <button class="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition">
-                    <i class="fas fa-moon"></i>
+
+                <!-- DARK MODE BUTTON (same height/shape as userMenuBtn avatar size) -->
+                <button class="relative w-10 h-10 bg-white/80 backdrop-blur-md border border-slate-200/60 
+                   rounded-full shadow-sm hover:shadow-lg hover:shadow-blue-500/10 
+                   hover:border-blue-300 hover:bg-white text-slate-500 hover:text-blue-600 
+                   flex items-center justify-center transition-all duration-300 group">
+                    <i class="fas fa-moon transform group-hover:-rotate-12 transition-transform duration-300"></i>
                 </button>
+
+                <!-- LOGIN BUTTON (đồng bộ chiều cao, bo tròn, texture) -->
                 @guest
                 <a href="{{ route('login.form') }}"
-                    class="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-5 py-2 rounded-full text-sm font-bold shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition transform hover:-translate-y-0.5">
-                    Đăng nhập
+                    class="group flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-sm font-bold 
+                    shadow-md hover:shadow-xl hover:shadow-blue-600/20 transition-all duration-300 hover:-translate-y-0.5">
+                    <span>Đăng nhập</span>
+                    <i class="fas fa-arrow-right text-xs opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300"></i>
                 </a>
                 @else
 
                 {{-- DROPDOWN USER --}}
                 <div class="relative group" id="userMenu">
-                    <!-- AVATAR BUTTON -->
+                    <!-- AVATAR + BADGE WRAPPER -->
                     <button id="userMenuBtn"
-                        class="flex items-center gap-2 font-semibold text-gray-700 hover:text-blue-600">
-                        <img src="{{ Auth::user()->avatar_url }}" class="w-9 h-9 rounded-full">
+                        class="group flex items-center gap-2 p-1 pl-3 bg-white/90 backdrop-blur-sm border border-slate-200 rounded-full shadow-sm hover:shadow-md hover:border-blue-300 hover:ring-2 hover:ring-blue-100/50 transition-all duration-300">
+
+                        <!-- BADGE (ROLE) -->
+                        <div class="flex flex-col items-end leading-none">
+                            <span class="text-[10px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded-md border shadow-sm
+                                @if(Auth::user()->role === 'admin')
+                                    bg-blue-50 text-blue-700 border-blue-200
+                                @elseif(Auth::user()->role === 'poster')
+                                    bg-purple-50 text-purple-700 border-purple-200
+                                @else
+                                    bg-emerald-50 text-emerald-700 border-emerald-200
+                                @endif
+                            ">
+                                {{ Auth::user()->role }}
+                            </span>
+                        </div>
+
+                        <!-- AVATAR -->
+                        <!-- Thêm relative để bọc avatar, giúp căn chỉnh đẹp hơn -->
+                        <div class="relative w-9 h-9">
+                            <img src="{{ Auth::user()->avatar_url }}"
+                                class="w-full h-full rounded-full object-cover border-2 border-white shadow-sm"
+                                alt="Avatar">
                     </button>
 
                     <!-- MENU DROPDOWN -->
                     <div id="userDropdown"
                         class="absolute right-0 mt-2 w-56 bg-white shadow-lg border border-gray-200 rounded-lg 
-               transition-all duration-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible">
+                        transition-all duration-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible">
 
                         {{-- EMAIL VERIFICATION --}}
                         @if(!Auth::user()->hasVerifiedEmail())
@@ -216,18 +255,17 @@
     <!-- MAIN CONTENT -->
     <main class="container mx-auto px-4 py-6 space-y-10 min-h-screen flex flex-col">
 
-        {{-- LOGIC QUAN TRỌNG: KIỂM TRA TRANG --}}
+        {{-- Các trang AUTH và PROFILE không bị bọc khung trắng --}}
         @if (request()->routeIs([
-        'login', 'login.form',
-        'register', 'register.form',
-        'password.request',
-        'verification.notice',
-        'user.profile.*',
+        'login*',
+        'register*',
+        'password.*',
+        'verification.*',
+        'user.profile.*'
         ]))
-        {{-- Hiển thị trực tiếp nội dung để nền trong suốt --}}
         @yield('content')
         @else
-        {{-- Nếu là trang khác: Bọc trong khung trắng --}}
+        {{-- Các trang khác bị bọc trong khung trắng --}}
         <div class="bg-white/85 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-gray-300">
             @yield('content')
         </div>
@@ -236,7 +274,7 @@
     </main>
 
     <!-- FOOTER -->
-    <footer class="bg-slate-900 text-slate-400 pt-12 pb-6 mt-12 border-t-4 border-gray-800 relative z-10">
+    <footer class="bg-slate-900 text-slate-400 pt-12 pb-6 mt-0 border-t-4 border-gray-800 relative z-10">
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 border-b border-slate-800 pb-8">
                 <div class="col-span-1 md:col-span-2">

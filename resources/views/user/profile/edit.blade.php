@@ -106,6 +106,7 @@
                             class="inline-block text-[10px] font-bold bg-slate-900 border border-slate-700 hover:border-slate-500 text-slate-300 px-3 py-1.5 rounded transition-colors uppercase tracking-wide cursor-pointer">
                             Upload Avatar Mới
                         </label>
+                        <p class="text-red-500 text-xs mt-1 hidden" id="avatar-error"></p>
                         @error('avatar')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
@@ -211,16 +212,52 @@
 
 <script>
     function previewAvatar(input) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = document.getElementById('avatar-preview');
-                if (img) {
-                    img.src = e.target.result;
-                }
-            };
-            reader.readAsDataURL(input.files[0]);
+        const avatarError = document.getElementById('avatar-error');
+        const avatarErrorText = avatarError;
+        
+        // Reset error message
+        if (avatarErrorText) {
+            avatarErrorText.textContent = '';
+            avatarErrorText.classList.add('hidden');
         }
+
+        if (!input.files || !input.files[0]) {
+            return;
+        }
+
+        const file = input.files[0];
+
+        // Kiểm tra định dạng
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            if (avatarErrorText) {
+                avatarErrorText.textContent = '❌ Định dạng ảnh không hợp lệ. Chỉ chấp nhận: JPG, PNG, GIF, WEBP.';
+                avatarErrorText.classList.remove('hidden');
+            }
+            input.value = '';
+            return;
+        }
+
+        // Kiểm tra dung lượng (5MB = 5 * 1024 * 1024 bytes)
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        if (file.size > maxSize) {
+            if (avatarErrorText) {
+                avatarErrorText.textContent = '❌ Dung lượng ảnh vượt quá 5MB. Vui lòng chọn ảnh nhỏ hơn.';
+                avatarErrorText.classList.remove('hidden');
+            }
+            input.value = '';
+            return;
+        }
+
+        // Hiển thị preview nếu hợp lệ
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = document.getElementById('avatar-preview');
+            if (img) {
+                img.src = e.target.result;
+            }
+        };
+        reader.readAsDataURL(file);
     }
 </script>
 @endsection

@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\Comic;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use App\Http\Controllers\Controller;
 
 class ComicController extends Controller
 {
@@ -62,7 +63,9 @@ class ComicController extends Controller
 
             $file = $request->file('cover_image');
             $imageName = uniqid('comic_') . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('uploads/comics'), $imageName);
+            
+            // Lưu vào storage/app/public/uploads/comics
+            $file->storeAs('uploads/comics', $imageName, 'public');
 
             return $imageName;
         }
@@ -77,33 +80,57 @@ class ComicController extends Controller
     private function deleteCoverImage(?string $imageName): void
     {
         if ($imageName) {
-            $path = public_path('uploads/comics/' . $imageName);
-            if (File::exists($path)) {
-                File::delete($path);
+            // Xóa từ storage/app/public/uploads/comics
+            $storagePath = 'uploads/comics/' . $imageName;
+            if (Storage::disk('public')->exists($storagePath)) {
+                Storage::disk('public')->delete($storagePath);
+            }
+            
+            // Xóa từ public/uploads/comics (nếu còn tồn tại từ code cũ)
+            $publicPath = public_path('uploads/comics/' . $imageName);
+            if (File::exists($publicPath)) {
+                File::delete($publicPath);
             }
         }
     }
 
     /**
-     * Danh sách truyện
+     * Danh sách truyện (ADMIN) + search + filter + paginate
      */
-    public function index()
+    public function index(Request $request)
     {
-        $comics = Comic::with('categories')->latest()->get();
-        return view('comics.index', compact('comics'));
+        $search = $request->input('search');
+        $status = $request->input('status');
+
+        $query = Comic::with('categories');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'LIKE', "%{$search}%")
+                    ->orWhere('author', 'LIKE', "%{$search}%");
+            });
+        }
+
+        if ($status !== null && $status !== '') {
+            $query->where('status', $status);
+        }
+
+        $comics = $query->orderByDesc('created_at')->paginate(12);
+
+        return view('admin.comics.index', compact('comics', 'search', 'status'));
     }
 
     /**
-     * Form tạo truyện
+     * Form tạo truyện (ADMIN)
      */
     public function create()
     {
         $categories = Category::all();
-        return view('comics.create', compact('categories'));
+        return view('admin.comics.create', compact('categories'));
     }
 
     /**
-     * Lưu truyện mới
+     * Lưu truyện mới (ADMIN)
      */
     public function store(Request $request)
     {
@@ -113,8 +140,11 @@ class ComicController extends Controller
         $data = $request->validate($this->getValidationRules());
 
         $comic = new Comic();
-        $comic->title         = $data['title'];
-        $comic->slug          = $data['slug'] ?? Str::slug($data['title']);
+        $comic->title = $data['title'];
+
+        // Nếu user nhập slug thì dùng slug đó làm base, còn không thì dùng title
+        $baseSlug = $data['slug'] ?: $data['title'];
+        $comic->slug = $this->generateUniqueSlug($baseSlug, null);
         $comic->description   = $data['description'] ?? null;
         $comic->author        = $data['author'] ?? null;
         $comic->status        = $data['status'];
@@ -136,32 +166,32 @@ class ComicController extends Controller
         // sync categories (many-to-many)
         $comic->categories()->sync($data['category_ids']);
 
-        return redirect()->route('comics.index')
+        return redirect()->route('admin.comics.index')
             ->with('success', 'Truyện đã được tạo thành công.');
     }
 
     /**
-     * Chi tiết một truyện
+     * (OPTIONAL) Chi tiết truyện – nếu muốn trang chi tiết trong admin
      */
     public function show(Comic $comic)
     {
-        $comic->load('categories', 'chapters'); // nếu bạn có model Chapter
-        return view('comics.show', compact('comic'));
+        $comic->load('categories', 'chapters'); // nếu có model Chapter
+        return view('admin.comics.show', compact('comic'));
     }
 
     /**
-     * Form chỉnh sửa truyện
+     * Form chỉnh sửa truyện (ADMIN)
      */
     public function edit(Comic $comic)
     {
         $categories = Category::all();
         $selectedCategoryIds = $comic->categories()->pluck('categories.id')->toArray();
 
-        return view('comics.edit', compact('comic', 'categories', 'selectedCategoryIds'));
+        return view('admin.comics.edit', compact('comic', 'categories', 'selectedCategoryIds'));
     }
 
     /**
-     * Cập nhật truyện
+     * Cập nhật truyện (ADMIN)
      */
     public function update(Request $request, Comic $comic)
     {
@@ -170,8 +200,11 @@ class ComicController extends Controller
         $validated = $request->validate($this->getValidationRules($comic));
 
         // update các field cơ bản
-        $comic->title         = $validated['title'];
-        $comic->slug          = $validated['slug'] ?? $comic->slug ?? Str::slug($validated['title']);
+        $comic->title = $validated['title'];
+
+        // baseSlug ưu tiên theo thứ tự: slug user nhập > slug hiện tại > title
+        $baseSlug = $validated['slug'] ?: ($comic->slug ?: $validated['title']);
+        $comic->slug = $this->generateUniqueSlug($baseSlug, $comic->id);
         $comic->description   = $validated['description'] ?? null;
         $comic->author        = $validated['author'] ?? null;
         $comic->status        = $validated['status'];
@@ -186,12 +219,12 @@ class ComicController extends Controller
         // Sync lại categories
         $comic->categories()->sync($validated['category_ids']);
 
-        return redirect()->route('comics.index')
+        return redirect()->route('admin.comics.index')
             ->with('success', 'Truyện đã được cập nhật thành công.');
     }
 
     /**
-     * Xoá truyện
+     * Xoá truyện (ADMIN)
      */
     public function destroy(Comic $comic)
     {
@@ -203,7 +236,37 @@ class ComicController extends Controller
 
         $comic->delete();
 
-        return redirect()->route('comics.index')
+        return redirect()->route('admin.comics.index')
             ->with('success', 'Truyện đã được xóa thành công.');
+    }
+
+    /**
+     * Tạo slug không trùng trong bảng comics
+     */
+    private function generateUniqueSlug(string $baseSlug, ?int $ignoreId = null): string
+    {
+        $slug = Str::slug($baseSlug);          // chuẩn hóa
+        $originalSlug = $slug;
+        $counter = 1;
+
+        $query = Comic::query();
+
+        // Nếu là update thì bỏ qua chính nó
+        if ($ignoreId) {
+            $query->where('id', '!=', $ignoreId);
+        }
+
+        // Nếu đã tồn tại thì thêm -1, -2, ...
+        while ($query->where('slug', $slug)->exists()) {
+            $slug = $originalSlug . '-' . $counter;
+            $counter++;
+            // reset query để tránh where chồng chất
+            $query = Comic::query();
+            if ($ignoreId) {
+                $query->where('id', '!=', $ignoreId);
+            }
+        }
+
+        return $slug;
     }
 }

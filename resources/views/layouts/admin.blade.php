@@ -166,13 +166,9 @@
 
                 <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 mt-6">Quản lý Truyện</p>
 
-                <a href="#" class="nav-item text-slate-400 flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-r-lg">
+                <a href="{{ route('admin.comics.index') }}" class="nav-item text-slate-400 flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-r-lg">
                     <i class="fas fa-book w-5 text-center"></i>
                     <span>Danh sách Truyện</span>
-                </a>
-                <a href="#" class="nav-item text-slate-400 flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-r-lg">
-                    <i class="fas fa-file-upload w-5 text-center"></i>
-                    <span>Đăng truyện mới</span>
                 </a>
                 <a href="#" class="nav-item text-slate-400 flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-r-lg">
                     <i class="fas fa-list w-5 text-center"></i>

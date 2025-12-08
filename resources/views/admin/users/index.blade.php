@@ -56,7 +56,15 @@
 
                 <tbody class="divide-y divide-slate-700/50">
                     @forelse ($users as $u)
-                    <tr class="hover:bg-slate-700/30 transition group">
+                    <tr class="hover:bg-slate-700/30 transition group cursor-pointer js-user-row"
+                        data-id="{{ str_pad($u->id, 3, '0', STR_PAD_LEFT) }}"
+                        data-name="{{ $u->name }}"
+                        data-email="{{ $u->email }}"
+                        data-role="{{ $u->role }}"
+                        data-avatar="{{ $u->avatar_url }}"
+                        data-joined="{{ $u->created_at->format('d/m/Y') }}"
+                        data-active="{{ $u->is_active ? '1' : '0' }}"
+                        data-verified="{{ $u->email_verified_at ? '1' : '0' }}">
                         <!-- ID -->
                         <td class="px-6 py-4 text-center font-mono-tech text-slate-500 whitespace-nowrap">
                             #{{ str_pad($u->id, 3, '0', STR_PAD_LEFT) }}
@@ -69,7 +77,9 @@
                                     src="{{ $u->avatar_url }}"
                                     alt="{{ $u->name }}">
                                 <div class="min-w-0">
-                                    <div class="font-bold text-white brand-font text-sm truncate group-hover:text-orange-500 transition-colors">{{ $u->name }}</div>
+                                    <div class="font-bold text-white brand-font text-sm truncate group-hover:text-orange-500 transition-colors">
+                                        {{ $u->name }}
+                                    </div>
                                     <div class="text-xs text-slate-500 font-mono-tech truncate">{{ $u->email }}</div>
                                 </div>
                             </div>
@@ -111,36 +121,38 @@
                             <div class="text-xs text-slate-600">{{ $u->created_at->format('H:i') }}</div>
                         </td>
 
-                        <!-- Actions -->
-                        <td class="px-6 py-4 text-right whitespace-nowrap">
+                        <!-- Actions (đánh dấu no-modal để JS bỏ qua khi click) -->
+                        <td class="px-6 py-4 text-right whitespace-nowrap no-modal">
                             <div class="flex items-center justify-end gap-2 opacity-70 group-hover:opacity-100 transition-opacity">
                                 <!-- Toggle Active -->
                                 @if(Auth::id() !== $u->id)
                                 <form action="{{ route('admin.users.toggle-active', $u->id) }}" method="POST" class="inline-block">
                                     @csrf
                                     @method('PATCH')
-                                    <button type="submit" class="w-8 h-8 rounded-lg flex items-center justify-center border transition {{ $u->is_active ? 'border-yellow-500/30 text-yellow-500 hover:bg-yellow-500 hover:text-black' : 'border-green-500/30 text-green-500 hover:bg-green-500 hover:text-white' }}" title="{{ $u->is_active ? 'Khóa tài khoản' : 'Mở khóa' }}">
+                                    <button type="submit"
+                                        class="w-8 h-8 rounded-lg flex items-center justify-center border transition {{ $u->is_active ? 'border-yellow-500/30 text-yellow-500 hover:bg-yellow-500 hover:text-black' : 'border-green-500/30 text-green-500 hover:bg-green-500 hover:text-white' }}"
+                                        title="{{ $u->is_active ? 'Khóa tài khoản' : 'Mở khóa' }}">
                                         <i class="fas {{ $u->is_active ? 'fa-lock' : 'fa-unlock' }}"></i>
                                     </button>
                                 </form>
                                 @endif
 
-                                <!-- View Details -->
-                                <a href="#" class="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-700 text-slate-400 hover:bg-teal-500 hover:text-white transition" title="Xem chi tiết">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-
                                 <!-- Edit -->
-                                <a href="{{ route('admin.users.edit', $u->id) }}" class="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-700 text-slate-400 hover:bg-blue-600 hover:text-white transition" title="Chỉnh sửa">
+                                <a href="{{ route('admin.users.edit', $u->id) }}"
+                                    class="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-700 text-slate-400 hover:bg-blue-600 hover:text-white transition"
+                                    title="Chỉnh sửa">
                                     <i class="fas fa-edit"></i>
                                 </a>
 
                                 <!-- Delete -->
                                 @if(Auth::id() !== $u->id)
-                                <form action="{{ route('admin.users.destroy', $u->id) }}" method="POST" class="inline-block" onsubmit="return confirm('CẢNH BÁO: Bạn có chắc chắn muốn xóa thành viên {{ $u->name }}?');">
+                                <form action="{{ route('admin.users.destroy', $u->id) }}" method="POST" class="inline-block"
+                                    onsubmit="return confirm('CẢNH BÁO: Bạn có chắc chắn muốn xóa thành viên {{ $u->name }}?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-700 text-slate-400 hover:bg-red-600 hover:text-white transition" title="Xóa">
+                                    <button type="submit"
+                                        class="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-700 text-slate-400 hover:bg-red-600 hover:text-white transition"
+                                        title="Xóa">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </form>
@@ -159,6 +171,7 @@
                     </tr>
                     @endforelse
                 </tbody>
+
             </table>
         </div>
 
@@ -205,4 +218,251 @@
         </div>
     </div>
 </div>
+
+{{-- MODAL OVERLAY: Xem chi tiết thành viên --}}
+<div id="userDetailModal"
+    class="fixed inset-0 z-50 hidden items-center justify-center px-4 py-10">
+
+    {{-- Lớp nền mờ phía sau --}}
+    <div id="userDetailOverlay" class="absolute inset-0 bg-slate-900/70 backdrop-blur-sm"></div>
+
+    {{-- CARD CHÍNH --}}
+    <div class="relative w-full max-w-[950px] mx-auto">
+
+        <div class="bg-slate-900 rounded-xl border border-slate-800 shadow-2xl overflow-hidden relative">
+
+            <!-- TOP SECTION (Avatar + Name + Role) -->
+            <div class="px-10 pt-10 pb-6 relative">
+
+                <!-- Background icon -->
+                <div class="absolute right-6 top-6 opacity-[0.05] pointer-events-none">
+                    <i class="fas fa-id-badge text-[120px] text-white"></i>
+                </div>
+
+                <!-- AVATAR + NAME + ROLE + VERIFY STATUS -->
+                <div class="flex items-center gap-6 relative z-10">
+
+                    <!-- AVATAR -->
+                    <div class="relative">
+                        <div class="w-24 h-24 rounded-full bg-slate-800 border border-slate-600 shadow-lg overflow-hidden flex items-center justify-center">
+                            <img id="modalAvatar"
+                                src=""
+                                class="w-full h-full object-cover">
+                        </div>
+                    </div>
+
+                    <!-- NAME + INFO -->
+                    <div class="flex flex-col">
+
+                        <!-- NAME -->
+                        <h1 id="modalName" class="text-3xl font-bold text-white tracking-tight">
+                            <!-- Tên user -->
+                        </h1>
+
+                        <!-- USER ID -->
+                        <p class="text-slate-400 text-xs font-mono tracking-[0.25em]">
+                            USER #<span id="modalUserId"></span>
+                        </p>
+
+                        <!-- ROLE + VERIFY BADGE WRAPPER -->
+                        <div class="flex flex-col gap-2 mt-3">
+
+                            <!-- BADGE ROW -->
+                            <div class="flex items-center gap-3">
+
+                                {{-- ROLE BADGE --}}
+                                <span id="badgeRoleAdmin"
+                                    class="hidden inline-flex items-center px-3 py-1 rounded-full text-xs font-bold 
+                                           bg-red-500/10 text-red-500 border border-red-500/20 shadow-sm">
+                                    <i class="fas fa-shield-alt mr-1.5"></i> Admin
+                                </span>
+
+                                <span id="badgeRolePoster"
+                                    class="hidden inline-flex items-center px-3 py-1 rounded-full text-xs font-bold 
+                                           bg-blue-500/10 text-blue-500 border border-blue-500/20 shadow-sm">
+                                    <i class="fas fa-feather-alt mr-1.5"></i> Poster
+                                </span>
+
+                                <span id="badgeRoleUser"
+                                    class="hidden inline-flex items-center px-3 py-1 rounded-full text-xs font-bold 
+                                           bg-slate-700 text-slate-300 border border-slate-600 shadow-sm">
+                                    <i class="fas fa-user mr-1.5"></i> User
+                                </span>
+
+                                {{-- VERIFY STATUS --}}
+                                <span id="badgeVerified"
+                                    class="hidden inline-flex items-center px-3 py-1 rounded-full text-xs font-bold 
+                                           bg-green-500/10 text-green-400 border border-green-500/20">
+                                    <i class="fas fa-check-circle mr-1.5"></i> Verified
+                                </span>
+
+                                <span id="badgeUnverified"
+                                    class="hidden inline-flex items-center px-3 py-1 rounded-full text-xs font-bold 
+                                           bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+                                    <i class="fas fa-exclamation-circle mr-1.5"></i> Unverified
+                                </span>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- SEPARATOR -->
+            <div class="h-px bg-slate-800"></div>
+
+            <!-- BODY CONTENT -->
+            <div class="p-10 grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+
+                <!-- Email -->
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Email</label>
+                    <div class="bg-slate-900/60 border border-slate-800 rounded px-4 py-3">
+                        <span id="modalEmail" class="text-slate-200 text-sm"></span>
+                    </div>
+                </div>
+
+                <!-- Role -->
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Vai trò</label>
+                    <div class="bg-slate-900/60 border border-slate-800 rounded px-4 py-3">
+                        <span id="modalRoleText" class="text-sky-400 text-sm font-semibold"></span>
+                    </div>
+                </div>
+
+                <!-- Join Date -->
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Ngày tham gia</label>
+                    <div class="bg-slate-900/60 border border-slate-800 rounded px-4 py-3">
+                        <span id="modalJoined" class="text-slate-300 text-sm font-mono"></span>
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Trạng thái</label>
+                    <div class="bg-slate-900/60 border border-slate-800 rounded px-4 py-3">
+                        <span id="modalStatusLabel" class="text-sm font-mono text-green-400">ACTIVE</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- SEPARATOR -->
+            <div class="h-px bg-slate-800"></div>
+
+            <!-- ACTION BUTTONS (chỉ có nút Đóng cho admin xem nhanh) -->
+            <div class="p-6 flex justify-end gap-3">
+                <button type="button"
+                    class="js-user-modal-close flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs font-bold py-2.5 px-5 rounded border border-slate-600 transition uppercase tracking-wide">
+                    <i class="fas fa-times text-sm"></i>
+                    Đóng
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+{{-- SCRIPT: điều khiển modal --}}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const modal = document.getElementById('userDetailModal');
+        const overlay = document.getElementById('userDetailOverlay');
+        const rows = document.querySelectorAll('.js-user-row');
+        const closeBtns = document.querySelectorAll('.js-user-modal-close');
+
+        const avatarEl = document.getElementById('modalAvatar');
+        const nameEl = document.getElementById('modalName');
+        const idEl = document.getElementById('modalUserId');
+        const emailEl = document.getElementById('modalEmail');
+        const roleTextEl = document.getElementById('modalRoleText');
+        const joinedEl = document.getElementById('modalJoined');
+        const statusLabelEl = document.getElementById('modalStatusLabel');
+
+        const badgeRoleAdmin = document.getElementById('badgeRoleAdmin');
+        const badgeRolePoster = document.getElementById('badgeRolePoster');
+        const badgeRoleUser = document.getElementById('badgeRoleUser');
+
+        const badgeVerified = document.getElementById('badgeVerified');
+        const badgeUnverified = document.getElementById('badgeUnverified');
+        const verifyNotice = document.getElementById('verifyNotice'); // không có cũng không sao, đã có if
+
+        function openModal(row) {
+            const role = row.dataset.role || 'user';
+            const isActive = row.dataset.active === '1';
+            const isVerified = row.dataset.verified === '1';
+
+            // Đổ dữ liệu
+            avatarEl.src = row.dataset.avatar || '';
+            nameEl.textContent = row.dataset.name || '';
+            idEl.textContent = row.dataset.id || '';
+            emailEl.textContent = row.dataset.email || '';
+            roleTextEl.textContent = role.toUpperCase();
+            joinedEl.textContent = row.dataset.joined || '';
+
+            // Trạng thái
+            statusLabelEl.textContent = isActive ? 'ACTIVE' : 'INACTIVE';
+            statusLabelEl.classList.toggle('text-green-400', isActive);
+            statusLabelEl.classList.toggle('text-red-400', !isActive);
+
+            // Role badges
+            badgeRoleAdmin.classList.add('hidden');
+            badgeRolePoster.classList.add('hidden');
+            badgeRoleUser.classList.add('hidden');
+
+            if (role === 'admin') {
+                badgeRoleAdmin.classList.remove('hidden');
+            } else if (role === 'poster') {
+                badgeRolePoster.classList.remove('hidden');
+            } else {
+                badgeRoleUser.classList.remove('hidden');
+            }
+
+            // Xác thực
+            badgeVerified.classList.toggle('hidden', !isVerified);
+            badgeUnverified.classList.toggle('hidden', isVerified);
+
+            if (verifyNotice) {
+                verifyNotice.classList.toggle('hidden', isVerified);
+            }
+
+            // Mở modal
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // 👉 Click cả dòng <tr> để mở modal, trừ cột .no-modal (Hành động)
+        rows.forEach(row => {
+            row.addEventListener('click', (e) => {
+                if (e.target.closest('.no-modal')) return; // bỏ qua click trong cột nút
+                openModal(row);
+            });
+        });
+
+        // Nút Đóng
+        closeBtns.forEach(btn => {
+            btn.addEventListener('click', closeModal);
+        });
+
+        // Click nền mờ để đóng
+        if (overlay) {
+            overlay.addEventListener('click', closeModal);
+        }
+
+        // ESC để đóng
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+    });
+</script>
 @endsection

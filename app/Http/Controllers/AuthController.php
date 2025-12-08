@@ -28,7 +28,7 @@ class AuthController extends Controller
         $validated = $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|max:255|unique:users,email',
-            'password' => 'required|min:6|confirmed', // cần field password_confirmation
+            'password' => 'required|min:8|confirmed', // cần field password_confirmation
         ], [
             'email.unique' => 'Email này đã được sử dụng. Vui lòng chọn email khác.',
             'email.email' => 'Email không hợp lệ.',

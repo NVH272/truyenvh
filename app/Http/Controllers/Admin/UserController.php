@@ -44,11 +44,11 @@ class UserController extends Controller
         // Chuẩn hóa email: trim và lowercase TRƯỚC khi validate
         $email = strtolower(trim($request->email));
         $request->merge(['email' => $email]);
-        
+
         $data = $request->validate([
             'name'      => ['required', 'string', 'max:255'],
             'email'     => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password'  => ['required', 'string', 'min:6'],
+            'password'  => ['required', 'string', 'min:8'],
             'role'      => ['required', 'in:admin,user,poster'],
             'is_active' => ['nullable', 'boolean'],
             'avatar'    => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'], // Tối đa 5MB
@@ -82,11 +82,11 @@ class UserController extends Controller
         // Chuẩn hóa email: trim và lowercase TRƯỚC khi validate
         $email = strtolower(trim($request->email));
         $request->merge(['email' => $email]);
-        
+
         $data = $request->validate([
             'name'      => ['required', 'string', 'max:255'],
             'email'     => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'password'  => ['nullable', 'string', 'min:6'],
+            'password'  => ['nullable', 'string', 'min:8'],
             'role'      => ['required', 'in:admin,user,poster'],
             'is_active' => ['nullable', 'boolean'],
             'avatar'    => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'], // Tối đa 5MB
@@ -146,5 +146,11 @@ class UserController extends Controller
         $user->save();
 
         return back()->with('success', 'Cập nhật trạng thái tài khoản thành công.');
+    }
+
+    public function show($id)
+    {
+        $user = User::findOrFail($id);
+        return view('admin.users.show', compact('user'));
     }
 }

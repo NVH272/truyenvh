@@ -12,6 +12,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\User\UserProfileController;
+use App\Http\Controllers\NewPasswordController;
+use App\Http\Controllers\PasswordResetLinkController;
 
 /*
 |--------------------------------------------------------------------------
@@ -109,8 +111,19 @@ Route::controller(AuthController::class)->group(function () {
     Route::get('/login', 'showLoginForm')->name('login.form');
     Route::post('/login', 'login')->name('login');
 
-    // Quên mật khẩu (chỉ có trang form)
-    Route::get('/forgot-password', 'showForgotPasswordForm')->name('password.request');
+    // Trang hiện form reset (có token)
+    Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])
+        ->name('password.reset');
+
+    // Nhận email để gửi link reset
+    Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])
+        ->name('password.request');
+    Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
+        ->name('password.email');
+
+    // Submit mật khẩu mới
+    Route::post('/reset-password', [NewPasswordController::class, 'store'])
+        ->name('password.update');
 
     // Đăng xuất (GET + POST để tiện cho form & link)
     Route::get('/logout', 'logout')->name('logout.get');
@@ -142,7 +155,7 @@ Route::prefix('admin')
         Route::resource('comics', ComicController::class);
 
         // Quản lý thành viên
-        Route::resource('users', UserController::class)->except(['show']);
+        Route::resource('users', UserController::class);
         Route::patch('users/{user}/toggle-active', [UserController::class, 'toggleActive'])
             ->name('users.toggle-active');
     });

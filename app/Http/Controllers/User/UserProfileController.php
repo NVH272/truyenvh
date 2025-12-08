@@ -32,34 +32,50 @@ class UserProfileController extends Controller
         $user = Auth::user();
 
         $data = $request->validate([
-            'name'   => ['required', 'string', 'max:255'],
-            'email'  => [
+            'name'  => ['required', 'string', 'max:255'],
+            'email' => [
                 'required',
                 'email',
                 Rule::unique('users', 'email')->ignore($user->id),
             ],
-            'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:5120'],
+            'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'], // Tối đa 5MB
         ]);
 
-        // Cập nhật tên + email
-        $user->name  = $data['name'];
-        $user->email = $data['email'];
+        $emailChanged = $data['email'] !== $user->email;
 
-        // Nếu có upload avatar mới
+        // Xử lý upload avatar (nếu có)
         if ($request->hasFile('avatar')) {
-            // Xóa ảnh cũ nếu có & tồn tại
-            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
-                Storage::disk('public')->delete($user->avatar);
+            // Xoá avatar cũ nếu có
+            if ($user->avatar && \Storage::disk('public')->exists($user->avatar)) {
+                \Storage::disk('public')->delete($user->avatar);
             }
 
-            // Lưu ảnh mới vào storage/app/public/avatars
             $path = $request->file('avatar')->store('avatars', 'public');
-            $user->avatar = $path; // cột avatar trong bảng users
+            $data['avatar'] = $path;
         }
 
-        $user->save();
+        if ($emailChanged) {
+            // Đổi email => reset trạng thái verify
+            $user->forceFill([
+                'name'              => $data['name'],
+                'email'             => $data['email'],
+                'avatar'            => $data['avatar'] ?? $user->avatar,
+                'email_verified_at' => null,
+            ])->save();
 
-        return redirect()->route('user.profile.index')->with('success', 'Cập nhật thông tin thành công!');
+            // Gửi lại email xác thực
+            $user->sendEmailVerificationNotification();
+
+            $msg = 'Cập nhật thành công! Vui lòng kiểm tra email mới và xác thực để sử dụng đầy đủ chức năng.';
+        } else {
+            // Không đổi email -> update bình thường
+            $user->update($data);
+            $msg = 'Cập nhật thành công!';
+        }
+
+        return redirect()
+            ->route('user.profile.index')
+            ->with('success', $msg);
     }
 
     // Form đổi mật khẩu
@@ -75,7 +91,7 @@ class UserProfileController extends Controller
 
         $data = $request->validate([
             'current_password' => ['required'],
-            'password'         => ['required', 'min:6', 'confirmed'],
+            'password'         => ['required', 'min:8', 'confirmed'],
         ]);
 
         if (!Hash::check($data['current_password'], $user->password)) {
