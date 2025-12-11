@@ -90,9 +90,6 @@
                             class="absolute inset-0 rounded-full flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
                             <i class="fas fa-camera text-white text-sm"></i>
                         </label>
-
-                        <!-- Status Dot -->
-                        <div class="absolute bottom-1 right-1 w-4 h-4 bg-green-500 border-2 border-slate-900 rounded-full"></div>
                     </div>
 
                     <!-- Name & Upload Button -->
@@ -214,7 +211,7 @@
     function previewAvatar(input) {
         const avatarError = document.getElementById('avatar-error');
         const avatarErrorText = avatarError;
-        
+
         // Reset error message
         if (avatarErrorText) {
             avatarErrorText.textContent = '';

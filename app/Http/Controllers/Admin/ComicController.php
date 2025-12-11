@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class ComicController extends Controller
 {
@@ -63,7 +64,7 @@ class ComicController extends Controller
 
             $file = $request->file('cover_image');
             $imageName = uniqid('comic_') . '.' . $file->getClientOriginalExtension();
-            
+
             // Lưu vào storage/app/public/uploads/comics
             $file->storeAs('uploads/comics', $imageName, 'public');
 
@@ -85,7 +86,7 @@ class ComicController extends Controller
             if (Storage::disk('public')->exists($storagePath)) {
                 Storage::disk('public')->delete($storagePath);
             }
-            
+
             // Xóa từ public/uploads/comics (nếu còn tồn tại từ code cũ)
             $publicPath = public_path('uploads/comics/' . $imageName);
             if (File::exists($publicPath)) {
@@ -116,8 +117,11 @@ class ComicController extends Controller
         }
 
         $comics = $query->orderByDesc('created_at')->paginate(12);
+        
+        // Đếm số truyện chờ duyệt
+        $pendingCount = Comic::where('approval_status', 'pending')->count();
 
-        return view('admin.comics.index', compact('comics', 'search', 'status'));
+        return view('admin.comics.index', compact('comics', 'search', 'status', 'pendingCount'));
     }
 
     /**
@@ -151,6 +155,9 @@ class ComicController extends Controller
 
         $comic->chapter_count = $data['chapter_count'] ?? 0;
         $comic->published_at  = $data['published_at'] ?? null;
+
+        // Gán người tạo truyện
+        $comic->created_by    = Auth::id();
 
         // Các field thống kê để mặc định 0
         $comic->views         = 0;
@@ -268,5 +275,67 @@ class ComicController extends Controller
         }
 
         return $slug;
+    }
+
+    // Danh sách truyện của user hiện tại (ADMIN + POSTER)
+    public function myComics()
+    {
+        $user = Auth::user();
+
+        if (!in_array($user->role, ['admin', 'poster'])) {
+            abort(403, 'Bạn không có quyền xem trang này.');
+        }
+
+        $comics = Comic::where('created_by', $user->id)
+            ->orderByDesc('created_at')
+            ->paginate(10);
+
+        return view('user.my_comics.index', compact('comics'));
+    }
+
+    public function pending()
+    {
+        $comics = Comic::where('approval_status', 'pending')
+            ->with('creator', 'categories')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        return view('admin.comics.pending', compact('comics'));
+    }
+
+    public function approve(Comic $comic)
+    {
+        // Chỉ cho phép duyệt truyện đang ở trạng thái pending
+        if ($comic->approval_status !== 'pending') {
+            return back()->with('error', 'Truyện này không ở trạng thái chờ duyệt.');
+        }
+
+        $comic->approval_status = 'approved';
+        $comic->approved_by     = Auth::id();
+        $comic->approved_at     = now();
+        $comic->rejection_reason = null;
+        $comic->save();
+
+        return back()->with('success', 'Đã phê duyệt truyện: ' . $comic->title);
+    }
+
+    public function reject(Request $request, Comic $comic)
+    {
+        // Chỉ cho phép từ chối truyện đang ở trạng thái pending
+        if ($comic->approval_status !== 'pending') {
+            return back()->with('error', 'Truyện này không ở trạng thái chờ duyệt.');
+        }
+
+        $request->validate([
+            'reason' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $comic->approval_status = 'rejected';
+        $comic->approved_by     = Auth::id();
+        $comic->approved_at     = now();
+        $comic->rejection_reason = $request->input('reason');
+        $comic->save();
+
+        return back()->with('success', 'Đã từ chối truyện: ' . $comic->title);
     }
 }

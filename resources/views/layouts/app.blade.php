@@ -229,6 +229,15 @@
                         <div class="border-t border-gray-200"></div>
                         @endif
 
+                        {{-- MY COMICS (ADMIN + POSTER) --}}
+                        @if(Auth::user()->role === 'admin' || Auth::user()->role === 'poster')
+                        <a href="{{ route('user.comics.index') }}"
+                            class="block px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
+                            <i class="fas fa-book mr-2"></i>Danh sách truyện của bạn
+                        </a>
+                        <div class="border-t border-gray-200"></div>
+                        @endif
+
                         {{-- PROFILE --}}
                         <a href="{{ route('user.profile.index') }}"
                             class="block px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">

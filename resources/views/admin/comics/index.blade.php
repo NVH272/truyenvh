@@ -102,6 +102,19 @@
                 <i class="fas fa-plus text-xs"></i>
                 Thêm Truyện Mới
             </a>
+
+            {{-- NÚT TRUYỆN ĐANG CHỜ DUYỆT --}}
+            <a href="{{ route('admin.comics.pending') }}"
+                class="px-6 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-orange-500 to-red-600 rounded-xl shadow-lg
+                      hover:shadow-orange-500/30 hover:-translate-y-0.5 transition-all whitespace-nowrap flex items-center justify-center gap-2 relative">
+                <i class="fas fa-clock text-xs"></i>
+                <span>Truyện chờ duyệt</span>
+                @if(isset($pendingCount) && $pendingCount > 0)
+                <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
+                    {{ $pendingCount > 9 ? '9+' : $pendingCount }}
+                </span>
+                @endif
+            </a>
         </form>
     </div>
 

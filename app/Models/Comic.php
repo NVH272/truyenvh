@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
 
 class Comic extends Model
 {
@@ -24,11 +25,17 @@ class Comic extends Model
         'chapter_count',
         'published_at',
         'last_chapter_at',
+        'created_by',
+        'approval_status',
+        'approved_by',
+        'approved_at',
+        'rejection_reason',
     ];
 
     protected $casts = [
         'published_at'    => 'datetime',
         'last_chapter_at' => 'datetime',
+        'approved_at'     => 'datetime',
     ];
 
     // Lấy URL ảnh bìa
@@ -48,6 +55,18 @@ class Comic extends Model
     {
         // pivot: category_comic (category_id, comic_id)
         return $this->belongsToMany(Category::class, 'category_comic', 'comic_id', 'category_id');
+    }
+
+    // Quan hệ với User (người tạo truyện)
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    // Quan hệ với User (người duyệt truyện)
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
     // Quan hệ 1-N với Chapter
