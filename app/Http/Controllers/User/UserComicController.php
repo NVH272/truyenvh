@@ -21,7 +21,7 @@ class UserComicController extends Controller
             ->latest()
             ->paginate(24);
 
-        return view('user.comics.index', compact('comics'));
+        return view('user.my-comics.index', compact('comics'));
     }
 
     // Form thêm truyện (user)
@@ -29,7 +29,7 @@ class UserComicController extends Controller
     {
         $categories = Category::orderBy('name')->get();
 
-        return view('user.comics.create', compact('categories'));
+        return view('user.my-comics.create', compact('categories'));
     }
 
     // Lưu truyện mới do user đăng
@@ -73,7 +73,7 @@ class UserComicController extends Controller
         $comic->categories()->sync($data['category_ids']);
 
         return redirect()
-            ->route('user.comics.index')
+            ->route('user.my-comics.index')
             ->with('success', $user->role === 'poster'
                 ? 'Truyện đã được gửi, vui lòng chờ admin xét duyệt.'
                 : 'Truyện của bạn đã được tạo thành công.');
@@ -87,7 +87,7 @@ class UserComicController extends Controller
         $categories = Category::orderBy('name')->get();
         $selectedCategories = $comic->categories()->pluck('categories.id')->toArray();
 
-        return view('user.comics.edit', compact('comic', 'categories', 'selectedCategories'));
+        return view('user.my-comics.edit', compact('comic', 'categories', 'selectedCategories'));
     }
 
     // Cập nhật truyện
@@ -112,7 +112,7 @@ class UserComicController extends Controller
         $comic->categories()->sync($data['category_ids']);
 
         return redirect()
-            ->route('user.comics.index')
+            ->route('user.my-comics.index')
             ->with('success', 'Truyện của bạn đã được cập nhật.');
     }
 
@@ -132,7 +132,7 @@ class UserComicController extends Controller
         $comic->delete();
 
         return redirect()
-            ->route('user.comics.index')
+            ->route('user.my-comics.index')
             ->with('success', 'Truyện của bạn đã được xoá.');
     }
 

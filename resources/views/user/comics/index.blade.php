@@ -1,173 +1,376 @@
 @extends('layouts.app')
 
-@section('title', 'Truyện của bạn')
-@section('header', 'Danh sách truyện của bạn')
+@section('title', $comic->title ?? 'Chi tiết truyện')
 
 @section('content')
+{{-- Container chính --}}
+<div class="bg-gray-100 min-h-screen pb-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-<div class="max-w-[1920px] mx-auto space-y-8 pb-10">
+        {{-- === PHẦN THÔNG TIN TRUYỆN (TOP) === --}}
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
+            <div class="p-6">
+                <div class="flex flex-col md:flex-row gap-8">
+                    {{-- Cột Trái: Ảnh Bìa --}}
+                    <div class="w-full md:w-60 flex-shrink-0">
+                        <div class="relative group aspect-[2/3] rounded-lg overflow-hidden shadow-md border border-gray-200">
+                            <img src="{{ $comic->cover_url ?? 'https://placehold.co/400x600?text=No+Image' }}"
+                                alt="{{ $comic->title ?? 'Cover' }}"
+                                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                            {{-- Badge Hot/New nếu cần --}}
+                            <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">HOT</span>
+                        </div>
+                    </div>
 
-    {{-- 1. Header & Actions (Thiết kế mới: Sạch sẽ, Hiện đại) --}}
-    <div class="flex flex-col md:flex-row justify-between items-end gap-4 border-b border-slate-200 pb-5">
-        <div>
-            <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">Thư viện truyện</h2>
-            <div class="flex items-center gap-2 mt-2 text-sm text-slate-500 font-medium">
-                <span class="flex items-center gap-1.5">
-                    <i class="fas fa-book-open text-blue-500"></i>
-                    Tổng số: <span class="text-slate-800 font-bold">{{ $comics->total() }}</span> bộ
-                </span>
-                <span class="text-slate-300">|</span>
-                <span>Quản lý danh sách tác phẩm của bạn</span>
+                    {{-- Cột Phải: Thông tin chi tiết --}}
+                    <div class="flex-1">
+                        <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2 text-center md:text-left">
+                            {{ $comic->title ?? 'DANDADAN' }}
+                        </h1>
+
+                        {{-- Rating --}}
+                        <div class="flex items-center justify-center md:justify-start gap-2 mb-4">
+
+                            @php
+                            $avgRating = $comic->rating ?? 0;
+                            $ratingCount = $comic->rating_count ?? 0;
+                            $currentStars = $userRating ?? 0; // từ controller
+                            @endphp
+
+                            @auth
+                            @if(auth()->user()->hasVerifiedEmail())
+                            <form id="rating-form"
+                                action="{{ route('comics.rate', $comic) }}"
+                                method="POST"
+                                class="flex items-center gap-2">
+                                @csrf
+                                <input type="hidden" name="rating" id="rating-input" value="{{ $currentStars }}">
+
+                                <div class="flex text-sm">
+                                    @for($i = 1; $i <= 5; $i++)
+                                        <button type="button"
+                                        class="rating-star mx-[1px] {{ $i <= $currentStars ? 'text-yellow-400' : 'text-gray-300' }}"
+                                        data-value="{{ $i }}">
+                                        <i class="fas fa-star"></i>
+                                        </button>
+                                        @endfor
+                                </div>
+
+                                <span class="text-gray-500 text-sm">
+                                    ({{ number_format($avgRating, 1) }}/5 - {{ $ratingCount }} đánh giá)
+                                </span>
+                            </form>
+                            @else
+                            <div class="flex items-center gap-2 text-sm text-gray-500">
+                                <div class="flex text-yellow-400 text-sm">
+                                    @for($i = 1; $i <= 5; $i++)
+                                        <i class="fas fa-star {{ $i <= round($avgRating) ? '' : 'text-gray-300' }}"></i>
+                                        @endfor
+                                </div>
+                                <span>( {{ number_format($avgRating, 1) }}/5 - {{ $ratingCount }} đánh giá )</span>
+                                <a href="{{ route('verification.notice') }}" class="text-blue-600 text-xs underline ml-1">
+                                    Xác thực email để đánh giá
+                                </a>
+                            </div>
+                            @endif
+                            @else
+                            <div class="flex items-center gap-2 text-sm text-gray-500">
+                                <div class="flex text-yellow-400 text-sm">
+                                    @for($i = 1; $i <= 5; $i++)
+                                        <i class="fas fa-star {{ $i <= round($avgRating) ? '' : 'text-gray-300' }}"></i>
+                                        @endfor
+                                </div>
+                                <span>( {{ number_format($avgRating, 1) }}/5 - {{ $ratingCount }} đánh giá )</span>
+                                <a href="{{ route('login.form') }}" class="text-blue-600 text-xs underline ml-1">
+                                    Đăng nhập để đánh giá
+                                </a>
+                            </div>
+                            @endauth
+                        </div>
+
+                        {{-- Grid Thông tin --}}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm mb-6">
+                            <div class="flex items-center gap-2">
+                                <span class="text-gray-500 w-24 flex-shrink-0"><i class="fas fa-user mr-1.5"></i> Tác giả:</span>
+                                <span class="font-medium text-gray-800">{{ $comic->author ?? 'Đang cập nhật' }}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-gray-500 w-24 flex-shrink-0"><i class="fas fa-rss mr-1.5"></i> Tình trạng:</span>
+                                <span class="font-medium text-blue-600">{{ $comic->status_text ?? 'Đang tiến hành' }}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-gray-500 w-24 flex-shrink-0"><i class="fas fa-tags mr-1.5"></i> Thể loại:</span>
+                                <div class="flex flex-wrap gap-1">
+                                    <a href="#" class="text-blue-500 hover:underline">Hành động</a>,
+                                    <a href="#" class="text-blue-500 hover:underline">Hài hước</a>,
+                                    <a href="#" class="text-blue-500 hover:underline">Shounen</a>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-gray-500 w-24 flex-shrink-0"><i class="fas fa-eye mr-1.5"></i> Lượt xem:</span>
+                                <span class="font-medium text-gray-800">12,345,678</span>
+                            </div>
+                        </div>
+
+                        {{-- Mô tả ngắn --}}
+                        <div class="mb-6">
+                            <h3 class="font-bold text-gray-800 border-b-2 border-blue-500 inline-block mb-2 pb-1">
+                                Sơ lược
+                            </h3>
+                            <p class="text-gray-600 text-sm leading-relaxed whitespace-pre-line">
+                                {{ $comic->description ?? 'Nội dung truyện kể về Momo Ayase - một nữ sinh trung học tin vào ma quỷ nhưng không tin người ngoài hành tinh, và Okarun - một nam sinh tin vào người ngoài hành tinh nhưng không tin ma quỷ...' }}
+                            </p>
+                        </div>
+
+                        {{-- Action Buttons --}}
+                        <div class="flex flex-wrap gap-3 justify-center md:justify-start">
+                            <a href="#" class="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg shadow-lg hover:bg-blue-700 hover:-translate-y-0.5 transition-all flex items-center gap-2">
+                                <i class="fas fa-book-open"></i> Đọc từ đầu
+                            </a>
+
+                            {{-- Follow Button --}}
+                            @auth
+                            @if(auth()->user()->hasVerifiedEmail())
+                            <form action="{{ route('comics.follow', $comic) }}" method="POST">
+                                @csrf
+                                <button type="submit"
+                                    class="px-6 py-2.5 {{ $isFollowing ? 'bg-gray-200 text-gray-800' : 'bg-red-500 text-white' }} font-bold rounded-lg shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 hover:bg-red-600">
+                                    <i class="fas fa-heart {{ $isFollowing ? 'text-red-500' : '' }}"></i>
+                                    {{ $isFollowing ? 'Đã theo dõi' : 'Theo dõi' }}
+                                </button>
+                            </form>
+                            @else
+                            <a href="{{ route('verification.notice') }}"
+                                class="px-6 py-2.5 bg-gray-300 text-gray-700 font-bold rounded-lg shadow flex items-center gap-2">
+                                <i class="fas fa-heart"></i> Xác thực email để theo dõi
+                            </a>
+                            @endif
+                            @else
+                            <a href="{{ route('login.form') }}"
+                                class="px-6 py-2.5 bg-gray-300 text-gray-700 font-bold rounded-lg shadow flex items-center gap-2">
+                                <i class="fas fa-heart"></i> Đăng nhập để theo dõi
+                            </a>
+                            @endauth
+
+                            <a href="#" class="px-6 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-lg border border-gray-300 hover:bg-gray-200 transition-all flex items-center gap-2">
+                                <i class="fas fa-list"></i> Đọc mới nhất
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        {{-- Nút đăng truyện (Style nổi bật) --}}
-        <a href="{{ route('user.comics.create') }}"
-            class="group relative inline-flex items-center justify-center px-6 py-2.5 text-sm font-bold text-white transition-all duration-200 bg-slate-900 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 hover:bg-blue-600 shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5">
-            <i class="fas fa-plus mr-2 transition-transform duration-300 group-hover:rotate-90"></i>
-            <span>Đăng truyện mới</span>
-        </a>
-    </div>
+        {{-- === MAIN CONTENT LAYOUT (2 Columns) === --}}
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-    @if($comics->isEmpty())
-    {{-- Empty State (Thiết kế mới: Trân trọng, mời gọi) --}}
-    <div class="flex flex-col items-center justify-center py-20 px-4 bg-white border-2 border-dashed border-slate-200 rounded-3xl text-center">
-        <div class="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-6 shadow-sm">
-            <i class="fas fa-feather-alt text-4xl text-blue-400 transform -rotate-12"></i>
-        </div>
-        <h3 class="text-xl font-bold text-slate-800 mb-2">Chưa có tác phẩm nào</h3>
-        <p class="text-slate-500 text-sm mb-8 max-w-sm mx-auto leading-relaxed">
-            Thư viện của bạn đang trống. Hãy bắt đầu hành trình sáng tạo và chia sẻ câu chuyện đầu tiên của bạn ngay hôm nay!
-        </p>
-        <a href="{{ route('user.comics.create') }}" class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
-            <i class="fas fa-magic mr-2"></i> Đăng truyện ngay
-        </a>
-    </div>
-    @else
+            {{-- LEFT COLUMN: CHAPTERS & COMMENTS (Chiếm 2/3) --}}
+            <div class="lg:col-span-2 space-y-6">
 
-    {{-- Grid Container (GIỮ NGUYÊN CODE CŨ 100% về giao diện, chỉ thêm Stretched Link) --}}
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-x-4 gap-y-6">
-        @foreach($comics as $comic)
-        <div class="group relative bg-transparent rounded-md overflow-hidden transition-all duration-300 hover:-translate-y-1">
-
-            {{-- *** LINK PHỦ TOÀN BỘ THẺ (Stretched Link) *** --}}
-            {{-- Thay route('comics.show', $comic->slug) bằng route thực tế trang đọc truyện của bạn --}}
-            {{-- Ví dụ: route('comics.show') hoặc link chi tiết --}}
-            <a href="{{ route('admin.comics.edit', $comic->id) }}" class="absolute inset-0 z-10" aria-hidden="true">
-
-                {{-- Cover Image Wrapper --}}
-                <div class="relative aspect-[2/3] rounded-md overflow-hidden shadow-md border border-slate-700/50 group-hover:shadow-lg group-hover:border-blue-500/50 transition-all">
-
-                    {{-- Ảnh bìa --}}
-                    <div class="block w-full h-full">
-                        <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}"
-                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                {{-- DANH SÁCH CHƯƠNG --}}
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                        <h2 class="text-lg font-bold text-blue-600 flex items-center gap-2">
+                            <i class="fas fa-list-ul"></i> Danh sách chương
+                        </h2>
+                        <span class="text-xs text-gray-500">Cập nhật lúc: 10 phút trước</span>
                     </div>
 
-                    {{-- Badge: Chapter (Top Left) --}}
-                    <div class="absolute top-1.5 left-1.5 pointer-events-none z-20"> {{-- z-20 để nổi lên trên link phủ --}}
-                        <span class="px-1.5 py-0.5 text-[9px] font-bold bg-black/70 text-white rounded backdrop-blur-sm shadow-sm">
-                            {{ $comic->chapters_count ?? 0 }} chương
-                        </span>
-                    </div>
-
-                    {{-- Badge: Status (Top Right) --}}
-                    <div class="absolute top-1.5 right-1.5 pointer-events-none z-20">
-                        @if($comic->status === 'ongoing')
-                        <span class="px-1.5 py-0.5 text-[9px] font-bold bg-blue-600/90 text-white rounded shadow-sm">Đang tiến hành</span>
-                        @elseif($comic->status === 'completed')
-                        <span class="px-1.5 py-0.5 text-[9px] font-bold bg-green-600/90 text-white rounded shadow-sm">Hoàn thành</span>
-                        @else
-                        <span class="px-1.5 py-0.5 text-[9px] font-bold bg-yellow-600/90 text-white rounded shadow-sm">Tạm dừng</span>
-                        @endif
-                    </div>
-
-                    {{-- Overlay Stats (Bottom on Image) --}}
-                    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-6 pb-1.5 px-2 flex justify-between items-end text-[10px] text-white/90 pointer-events-none z-20">
-                        <span class="flex items-center gap-1">
-                            <i class="fas fa-eye text-[9px]"></i>
-                            {{ number_format($comic->views ?? 0) }}
-                        </span>
-                        <span class="flex items-center gap-1">
-                            <i class="fas fa-heart text-red-400 text-[9px]"></i>
-                            {{ number_format($comic->follows ?? 0) }}
-                        </span>
-                    </div>
-
-                    {{-- Action Overlay (Center Hover) --}}
-                    {{-- QUAN TRỌNG: z-30 để cao hơn Stretched Link (z-10) -> Click vào đây sẽ không kích hoạt link phủ --}}
-                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3 backdrop-blur-[1px] z-30 pointer-events-none group-hover:pointer-events-auto">
-                        <a href="{{ route('user.comics.edit', $comic->id) }}" class="w-8 h-8 rounded-full bg-white text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition shadow-lg relative z-40" title="Sửa">
-                            <i class="fas fa-pen text-xs"></i>
-                        </a>
-                        <form action="{{ route('user.comics.destroy', $comic->id) }}" method="POST"
-                            onsubmit="return confirm('Xóa truyện này?');" class="relative z-40">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="w-8 h-8 rounded-full bg-white text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition shadow-lg" title="Xóa">
-                                <i class="fas fa-trash-alt text-xs"></i>
-                            </button>
-                        </form>
+                    <div class="max-h-[500px] overflow-y-auto custom-scrollbar">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-gray-50 sticky top-0 z-10 text-xs text-gray-500 uppercase">
+                                <tr>
+                                    <th class="px-6 py-3 font-medium">Số chương</th>
+                                    <th class="px-4 py-3 font-medium text-center">Cập nhật</th>
+                                    <th class="px-4 py-3 font-medium text-right">Lượt xem</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 text-sm">
+                                @for($i = 200; $i >= 1; $i--)
+                                <tr class="hover:bg-gray-50 transition-colors group">
+                                    <td class="px-6 py-3">
+                                        <a href="#" class="font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
+                                            Chapter {{ $i }}
+                                        </a>
+                                    </td>
+                                    <td class="px-4 py-3 text-gray-500 text-center text-xs">
+                                        {{ rand(1, 24) }} giờ trước
+                                    </td>
+                                    <td class="px-4 py-3 text-gray-500 text-right text-xs">
+                                        {{ rand(1000, 50000) }}
+                                    </td>
+                                </tr>
+                                @endfor
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                {{-- Content Below Image --}}
-                <div class="mt-2 space-y-1 relative z-20"> {{-- z-20 để text nổi lên trên (nếu cần select text) --}}
-                    {{-- Title --}}
-                    <h3 class="text-[13px] font-bold text-slate-800 dark:text-slate-200 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors" title="{{ $comic->title }}">
-                        {{-- Link ở đây không cần thiết nữa vì đã có stretched link phủ toàn bộ thẻ, nhưng giữ lại để chuẩn semantic --}}
-                        <span class="block">
-                            {{ $comic->title }}
-                        </span>
-                    </h3>
-
-                    {{-- Pending status --}}
-                    <div class="flex items-center gap-1 text-[10px] mt-0.5">
-                        @if($comic->approval_status === 'pending')
-                        <span class="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 border border-yellow-300">
-                            Đang chờ duyệt
-                        </span>
-                        @elseif($comic->approval_status === 'rejected')
-                        <span class="px-2 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-300"
-                            title="{{ $comic->rejection_reason }}">
-                            Bị từ chối
-                        </span>
-                        @else
-                        <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300">
-                            Đã duyệt
-                        </span>
-                        @endif
+                {{-- BÌNH LUẬN --}}
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                        <h2 class="text-lg font-bold text-blue-600 flex items-center gap-2">
+                            <i class="fas fa-comments"></i> Bình luận (32)
+                        </h2>
                     </div>
 
-                    {{-- Rating Stars --}}
-                    <div class="flex items-center gap-0.5 text-yellow-500 text-[10px]">
-                        @for($i = 1; $i <= 5; $i++)
-                            @if($i <=round($comic->rating ?? 0))
-                            <i class="fas fa-star"></i>
-                            @else
-                            <i class="far fa-star text-slate-400"></i>
-                            @endif
-                            @endfor
-                            <span class="text-slate-500 ml-1">({{ number_format($comic->rating ?? 0, 1) }})</span>
-                    </div>
+                    <div class="p-6">
+                        {{-- Input Comment --}}
+                        <div class="flex gap-4 mb-8">
+                            <img src="https://ui-avatars.com/api/?name=User&background=random" class="w-10 h-10 rounded-full" alt="Avatar">
+                            <div class="flex-1">
+                                <textarea class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
+                                    rows="3" placeholder="Để lại bình luận của bạn..."></textarea>
+                                <div class="flex justify-end mt-2">
+                                    <button class="px-4 py-1.5 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700 transition-colors">
+                                        Gửi bình luận
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
 
-                    {{-- Author --}}
-                    <div class="text-[11px] text-slate-500 truncate" title="Tác giả">
-                        <i class="fas fa-user-edit text-[9px] mr-1"></i> {{ $comic->author ?? 'Đang cập nhật' }}
+                        {{-- Comment List --}}
+                        <div class="space-y-6">
+                            @foreach([1, 2, 3] as $comment)
+                            <div class="flex gap-4">
+                                <img src="https://ui-avatars.com/api/?name=User+{{ $comment }}&background=random" class="w-10 h-10 rounded-full" alt="Avatar">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="font-bold text-gray-800 text-sm">Người dùng {{ $comment }}</span>
+                                        <span class="px-1.5 py-0.5 bg-blue-100 text-blue-600 text-[10px] rounded font-bold">Cấp 5</span>
+                                        <span class="text-xs text-gray-400 ml-auto"><i class="far fa-clock"></i> 2 giờ trước</span>
+                                    </div>
+                                    <p class="text-gray-600 text-sm leading-relaxed bg-gray-50 p-3 rounded-br-lg rounded-bl-lg rounded-tr-lg">
+                                        Truyện này hay quá, hóng chap mới từng ngày luôn! Art đẹp, nội dung cuốn.
+                                    </p>
+                                    <div class="flex gap-4 mt-1.5 text-xs text-gray-500 font-medium">
+                                        <button class="hover:text-blue-600 flex items-center gap-1"><i class="far fa-thumbs-up"></i> Thích</button>
+                                        <button class="hover:text-blue-600 flex items-center gap-1"><i class="far fa-comment-dots"></i> Trả lời</button>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+
+                            <div class="text-center pt-2">
+                                <button class="text-sm text-blue-600 font-medium hover:underline">Xem thêm bình luận...</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </a>
+
+            </div>
+
+            {{-- RIGHT COLUMN: SIDEBAR (Chiếm 1/3) --}}
+            <div class="lg:col-span-1 space-y-6">
+
+                {{-- TRUYỆN LIÊN QUAN --}}
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="px-5 py-3 border-b border-gray-100">
+                        <h3 class="font-bold text-gray-800 text-base border-l-4 border-blue-500 pl-3 uppercase">
+                            Truyện liên quan
+                        </h3>
+                    </div>
+                    <div class="p-4 space-y-4">
+                        @foreach(range(1, 5) as $item)
+                        <div class="flex gap-3 group cursor-pointer">
+                            <div class="w-16 h-24 flex-shrink-0 rounded overflow-hidden relative">
+                                <img src="https://placehold.co/100x150?text=Manga" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" alt="Related">
+                            </div>
+                            <div class="flex-1 min-w-0 py-1">
+                                <h4 class="text-sm font-bold text-gray-800 group-hover:text-blue-600 truncate transition-colors">
+                                    Tên truyện liên quan số {{ $item }}
+                                </h4>
+                                <div class="flex items-center text-xs text-yellow-500 my-1">
+                                    <i class="fas fa-star"></i>
+                                    <span class="text-gray-400 ml-1">4.8</span>
+                                </div>
+                                <div class="flex flex-wrap gap-1">
+                                    <span class="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded">Hành động</span>
+                                    <span class="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded">Fantasy</span>
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- TOP THEO DÕI --}}
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="px-5 py-3 border-b border-gray-100 flex justify-between items-center">
+                        <h3 class="font-bold text-gray-800 text-base border-l-4 border-red-500 pl-3 uppercase">
+                            Top Theo Dõi
+                        </h3>
+                        <div class="flex gap-1">
+                            <button class="text-[10px] px-2 py-0.5 bg-red-500 text-white rounded-full">Ngày</button>
+                            <button class="text-[10px] px-2 py-0.5 bg-gray-200 text-gray-500 rounded-full hover:bg-gray-300">Tuần</button>
+                        </div>
+                    </div>
+                    <div class="divide-y divide-gray-100">
+                        @foreach(range(1, 5) as $index => $item)
+                        <div class="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors cursor-pointer group">
+                            <span class="w-6 h-6 flex-shrink-0 flex items-center justify-center rounded-full {{ $index < 3 ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-600' }} text-xs font-bold">
+                                {{ $index + 1 }}
+                            </span>
+                            <div class="w-12 h-16 flex-shrink-0 rounded overflow-hidden">
+                                <img src="https://placehold.co/80x120?text=Top" class="w-full h-full object-cover" alt="Top">
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-sm font-medium text-gray-800 group-hover:text-red-500 truncate transition-colors">
+                                    Siêu Phẩm Top {{ $index + 1 }}
+                                </h4>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    <i class="fas fa-eye text-gray-400"></i> 1.2M
+                                    <span class="mx-1">•</span>
+                                    Chapter 200
+                                </p>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+
+            </div>
         </div>
-        @endforeach
+
     </div>
-
-    {{-- Pagination (Thiết kế mới: Căn giữa, padding rộng) --}}
-    <div class="mt-12 flex justify-center border-t border-slate-200 pt-8">
-        {{ $comics->links() }}
-    </div>
-
-    @endif
-
 </div>
+
+<style>
+    /* Custom Scrollbar cho danh sách chương */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const stars = document.querySelectorAll('.rating-star');
+        const input = document.getElementById('rating-input');
+        const form = document.getElementById('rating-form');
+
+        if (stars && input && form) {
+            stars.forEach(star => {
+                star.addEventListener('click', function() {
+                    const value = this.dataset.value;
+                    input.value = value;
+                    form.submit(); // click lại star để đổi rating bất cứ lúc nào
+                });
+            });
+        }
+    });
+</script>
 
 @endsection

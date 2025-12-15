@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Models\User;
 
 class Comic extends Model
@@ -75,21 +76,16 @@ class Comic extends Model
         // return $this->hasMany(Chapter::class, 'comic_id');
     }
 
-    /**
-     * (Gợi ý) Quan hệ N-N với User thông qua bảng follow / favorite
-     * Chỉ dùng khi bạn tạo bảng này, có thể sửa tên bảng tùy ý
-     */
-    // public function followers()
-    // {
-    //     return $this->belongsToMany(User::class, 'comic_user_follows', 'comic_id', 'user_id')
-    //                 ->withTimestamps();
-    // }
+    // Quan hệ 1-N với ComicRating
+    public function ratings()
+    {
+        return $this->hasMany(\App\Models\ComicRating::class);
+    }
 
-    /**
- * (Gợi ý) Quan hệ 1-N với Rating/Bình luận nếu bạn tách ra bảng riêng
- */
-    // public function ratings()
-    // {
-    //     return $this->hasMany(Rating::class, 'comic_id');
-    // }
+    // Quan hệ N-N với User qua bảng comic_follows
+    public function followers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'comic_follows')
+            ->withTimestamps();
+    }
 }

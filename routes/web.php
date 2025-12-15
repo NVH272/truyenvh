@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ComicController;
 use App\Http\Controllers\Admin\UserController;
@@ -14,6 +14,11 @@ use App\Http\Controllers\User\UserProfileController;
 use App\Http\Controllers\User\UserComicController;
 use App\Http\Controllers\NewPasswordController;
 use App\Http\Controllers\PasswordResetLinkController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\User\ComicReadController;
+use App\Http\Controllers\User\ComicInteractionController;
+use App\Http\Controllers\User\ComicFollowController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -22,7 +27,20 @@ use App\Http\Controllers\PasswordResetLinkController;
 */
 
 // Trang chủ
-Route::view('/', 'home')->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home');
+
+// Trang chi tiết / đọc truyện theo slug
+Route::get('/truyen/{comic:slug}', [ComicReadController::class, 'show'])
+    ->name('user.comics.show');
+
+// Các route tương tác truyện (theo dõi, đánh giá) - chỉ cho user đã xác thực email
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::post('/comics/{comic}/follow', [ComicInteractionController::class, 'toggleFollow'])
+        ->name('comics.follow');
+
+    Route::post('/comics/{comic}/rate', [ComicInteractionController::class, 'rate'])
+        ->name('comics.rate');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -100,6 +118,13 @@ Route::prefix('reset-password')->name('password.')->group(function () {
     Route::post('/', [NewPasswordController::class, 'store'])->name('update');
 });
 
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Trang liệt kê truyện đang theo dõi
+    Route::get('/followed', [ComicFollowController::class, 'index'])
+        ->name('user.comics.followed');
+});
+
 /*
 |--------------------------------------------------------------------------
 | USER PROFILE ROUTES
@@ -120,7 +145,7 @@ Route::prefix('user/profile')->name('user.profile.')->middleware('auth')->group(
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('my-comics')->name('user.comics.')->middleware(['auth', 'verified'])->group(function () {
+Route::prefix('my-comics')->name('user.my-comics.')->middleware(['auth', 'verified'])->group(function () {
     Route::get('/', [UserComicController::class, 'index'])->name('index');
     Route::get('/create', [UserComicController::class, 'create'])->name('create');
     Route::post('/', [UserComicController::class, 'store'])->name('store');
@@ -137,17 +162,21 @@ Route::prefix('my-comics')->name('user.comics.')->middleware(['auth', 'verified'
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'isAdmin', 'verified'])->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('dashboard');
-    
+
     Route::resource('categories', CategoryController::class);
     Route::resource('users', UserController::class);
-    
+
     // Routes cho comics - đặt trước resource để tránh conflict với {comic} parameter
     Route::get('comics/pending', [ComicController::class, 'pending'])->name('comics.pending');
     Route::post('comics/{comic}/approve', [ComicController::class, 'approve'])->name('comics.approve');
     Route::post('comics/{comic}/reject', [ComicController::class, 'reject'])->name('comics.reject');
-    
+
     // Resource route cho comics (phải đặt sau các route đặc biệt để tránh conflict)
     Route::resource('comics', ComicController::class)->except(['show']);
-    
+
+    // Lịch sử duyệt truyện (đã duyệt + đã từ chối)
+    Route::get('/comics/review-history', [ComicController::class, 'reviewHistory'])
+        ->name('comics.review_history');
+
     Route::patch('users/{user}/toggle-active', [UserController::class, 'toggleActive'])->name('users.toggle-active');
 });

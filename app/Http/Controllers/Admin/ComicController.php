@@ -117,7 +117,7 @@ class ComicController extends Controller
         }
 
         $comics = $query->orderByDesc('created_at')->paginate(12);
-        
+
         // Đếm số truyện chờ duyệt
         $pendingCount = Comic::where('approval_status', 'pending')->count();
 
@@ -337,5 +337,15 @@ class ComicController extends Controller
         $comic->save();
 
         return back()->with('success', 'Đã từ chối truyện: ' . $comic->title);
+    }
+
+    public function reviewHistory()
+    {
+        $comics = Comic::whereIn('approval_status', ['approved', 'rejected'])
+            ->with(['creator', 'categories', 'approver']) // approver mình sẽ nói bên dưới
+            ->orderByDesc('approved_at')
+            ->paginate(20);
+
+        return view('admin.comics.review_history', compact('comics'));
     }
 }

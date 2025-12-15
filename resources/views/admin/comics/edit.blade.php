@@ -23,8 +23,8 @@
 
     {{-- MAIN FORM --}}
     <form id="edit-comic-form" action="{{ route('admin.comics.update', $comic) }}" method="POST" enctype="multipart/form-data">
-            @csrf
-            @method('PUT')
+        @csrf
+        @method('PUT')
 
         {{-- === ROW 1: THÔNG TIN TRUYỆN (Cùng chiều rộng với 2 card bên dưới) === --}}
         <div class="flex justify-center">
@@ -60,7 +60,7 @@
                                         class="flex-1 min-w-0 block w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-r-lg text-slate-100 text-sm placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
                                         placeholder="tu-dong-tao">
                                 </div>
-                        </div>
+                            </div>
 
                             <div class="space-y-1.5">
                                 <label class="block text-sm font-semibold text-slate-300">Tác giả</label>
@@ -72,8 +72,8 @@
                                         class="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-slate-100 text-sm placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
                                         placeholder="Tên tác giả">
                                 </div>
+                            </div>
                         </div>
-                    </div>
 
                         {{-- Description --}}
                         <div class="space-y-1.5">
@@ -90,25 +90,25 @@
                             <div class="space-y-1.5">
                                 <label class="block text-sm font-semibold text-slate-300">
                                     Trạng thái <span class="text-red-500">*</span>
-                            </label>
+                                </label>
                                 <div class="relative">
-                            @php $oldStatus = old('status', $comic->status); @endphp
+                                    @php $oldStatus = old('status', $comic->status); @endphp
                                     <select name="status" id="input-status" class="w-full pl-4 pr-10 py-3 bg-slate-900 border border-slate-600 rounded-lg text-slate-100 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors appearance-none cursor-pointer">
-                                <option value="ongoing" @selected($oldStatus==='ongoing' )>Đang tiến hành</option>
-                                <option value="completed" @selected($oldStatus==='completed' )>Đã hoàn thành</option>
-                                <option value="dropped" @selected($oldStatus==='dropped' )>Tạm dừng</option>
-                            </select>
+                                        <option value="ongoing" @selected($oldStatus==='ongoing' )>Đang tiến hành</option>
+                                        <option value="completed" @selected($oldStatus==='completed' )>Đã hoàn thành</option>
+                                        <option value="dropped" @selected($oldStatus==='dropped' )>Tạm dừng</option>
+                                    </select>
                                     <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-500">
                                         <i class="fas fa-chevron-down text-xs"></i>
                                     </div>
-                        </div>
-                    </div>
+                                </div>
+                            </div>
 
                             <div class="space-y-1.5">
                                 <label class="block text-sm font-semibold text-slate-300">Số chương</label>
                                 <input type="number" name="chapter_count" id="input-chapter" value="{{ old('chapter_count', $comic->chapter_count) }}" min="0"
                                     class="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-slate-100 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
-                    </div>
+                            </div>
 
                             <div class="space-y-1.5">
                                 <label class="block text-sm font-semibold text-slate-300">Ngày phát hành</label>
@@ -117,14 +117,14 @@
                                     class="date-light w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-slate-100 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
                             </div>
                         </div>
-                        </div>
-                        </div>
                     </div>
                 </div>
+            </div>
+        </div>
 
         {{-- === ROW 2: ẢNH BÌA & THỂ LOẠI + NÚT === --}}
         <div class="flex justify-center">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full max-w-4xl">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full max-w-4xl mt-6">
 
                 {{-- === CARD 2: ẢNH BÌA (Bên trái) === --}}
                 <div class="w-full">
@@ -137,10 +137,10 @@
                             <div class="relative w-full max-w-xs mx-auto group">
                                 <div class="relative w-full aspect-[2/3] bg-slate-900 rounded-xl border-2 border-dashed border-slate-600 overflow-hidden flex flex-col items-center justify-center transition-all group-hover:border-blue-500/50 group-hover:bg-slate-900/80 shadow-inner">
                                     {{-- Ảnh cũ --}}
-                                    <img id="cover-old" src="{{ $comic->cover_url }}" 
-                                        class="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-40" 
+                                    <img id="cover-old" src="{{ $comic->cover_url }}"
+                                        class="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-40"
                                         alt="Ảnh bìa hiện tại">
-                                    
+
                                     {{-- Placeholder khi không có ảnh cũ --}}
                                     <div id="cover-placeholder" class="text-center p-4 transition-opacity duration-300 {{ $comic->cover_url ? 'opacity-0 group-hover:opacity-100' : '' }}">
                                         <div class="w-12 h-12 mx-auto bg-slate-800 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-md">
@@ -148,18 +148,18 @@
                                         </div>
                                         <p class="text-xs font-medium text-slate-300">Nhấn để tải ảnh</p>
                                         <p class="text-[10px] text-slate-500 mt-1">hoặc kéo thả</p>
-                            </div>
+                                    </div>
 
                                     {{-- Preview ảnh mới --}}
                                     <img id="cover-preview" src="#" class="absolute inset-0 w-full h-full object-cover hidden" alt="Preview">
-                                    
+
                                     {{-- Input file --}}
                                     <input type="file" name="cover_image" id="cover_image" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept="image/*" onchange="previewCover(this)">
                                 </div>
                             </div>
                         </div>
-                        </div>
                     </div>
+                </div>
 
                 {{-- === CARD 3: THỂ LOẠI + NÚT (Bên phải - Cùng chiều rộng) === --}}
                 <div class="w-full flex flex-col gap-6">
@@ -182,42 +182,42 @@
 
                             {{-- List với scroll --}}
                             <div class="overflow-y-auto custom-scrollbar space-y-1 pr-1 border-t border-slate-700/50 pt-2 flex-1 min-h-0 max-h-[350px]" id="category-list">
-                            @php
+                                @php
                                 $oldCategories = collect(old('category_ids', $selectedCategoryIds ?? $comic->categories->pluck('id')->toArray()));
-                            @endphp
-                            @foreach($categories as $category)
+                                @endphp
+                                @foreach($categories as $category)
                                 <label class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-800 cursor-pointer transition-colors group select-none">
                                     <span class="text-sm text-slate-300 group-hover:text-white transition-colors category-name truncate flex-1">
                                         {{ $category->name }}
                                     </span>
-                                <input type="checkbox"
-                                    name="category_ids[]"
-                                    value="{{ $category->id }}"
+                                    <input type="checkbox"
+                                        name="category_ids[]"
+                                        value="{{ $category->id }}"
                                         data-name="{{ $category->name }}"
                                         class="category-checkbox w-3.5 h-3.5 rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-offset-0 focus:ring-blue-500 transition-all cursor-pointer ml-2 flex-shrink-0"
                                         @checked($oldCategories->contains($category->id))
-                                        onchange="updateTags()">
-                            </label>
-                            @endforeach
+                                    onchange="updateTags()">
+                                </label>
+                                @endforeach
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
                     {{-- Action Buttons --}}
                     <div class="flex gap-4 flex-shrink-0">
-                <a href="{{ route('admin.comics.index') }}"
+                        <a href="{{ route('admin.comics.index') }}"
                             class="flex-1 inline-flex justify-center items-center px-6 py-3 text-sm font-medium text-slate-300 bg-slate-800 border border-slate-600 rounded-lg hover:bg-slate-700 hover:text-white transition-all shadow-md hover:shadow-lg">
                             <i class="fas fa-arrow-left mr-2"></i> Quay lại
-                </a>
+                        </a>
                         <button type="submit" form="edit-comic-form"
                             class="flex-1 inline-flex justify-center items-center px-7 py-3 text-sm font-bold text-white bg-blue-600 rounded-lg shadow-lg shadow-blue-600/20 hover:bg-blue-700 hover:-translate-y-0.5 hover:shadow-xl transition-all">
                             <i class="fas fa-save mr-2"></i> Lưu dữ liệu
-                </button>
+                        </button>
                     </div>
                 </div>
             </div>
-            </div>
-        </form>
+        </div>
+    </form>
 </div>
 
 {{-- SCRIPT --}}

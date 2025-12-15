@@ -6,6 +6,8 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Models\Comic;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -51,5 +53,11 @@ class User extends Authenticatable implements MustVerifyEmail
         // Mặc định: Tạo avatar theo tên từ ui-avatars.com
         $name = urlencode($this->name);
         return "https://ui-avatars.com/api/?name={$name}&background=random&color=fff&size=128";
+    }
+
+    public function followedComics(): BelongsToMany
+    {
+        return $this->belongsToMany(Comic::class, 'comic_follows')
+            ->withTimestamps();
     }
 }
