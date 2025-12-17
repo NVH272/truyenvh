@@ -19,6 +19,7 @@ use App\Http\Controllers\User\ComicReadController;
 use App\Http\Controllers\User\ComicInteractionController;
 use App\Http\Controllers\User\ComicFollowController;
 use App\Http\Controllers\User\ComicSearchController;
+use App\Http\Controllers\User\ComicCommentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,13 +34,25 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/truyen/{comic:slug}', [ComicReadController::class, 'show'])
     ->name('user.comics.show');
 
-// Các route tương tác truyện (theo dõi, đánh giá) - chỉ cho user đã xác thực email
+// Các route tương tác truyện
+
+// Theo dõi & đánh giá: yêu cầu user đã xác thực email
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/comics/{comic}/follow', [ComicInteractionController::class, 'toggleFollow'])
         ->name('comics.follow');
 
     Route::post('/comics/{comic}/rate', [ComicInteractionController::class, 'rate'])
         ->name('comics.rate');
+});
+
+// Bình luận & reaction: chỉ cần đăng nhập
+Route::middleware(['auth'])->group(function () {
+    Route::post('/comics/{comic}/comments', [ComicCommentController::class, 'store'])
+        ->name('comments.store');
+
+    Route::post('/comments/{comment}/reaction/{type}', [ComicCommentController::class, 'toggleReaction'])
+        ->whereIn('type', ['like', 'dislike'])
+        ->name('comments.reaction');
 });
 
 // Trang tìm kiếm truyện

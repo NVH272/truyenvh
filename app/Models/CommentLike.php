@@ -6,8 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class CommentLike extends Model
 {
-    public $timestamps = false; // bảng comment_likes chỉ có created_at (nếu bạn làm vậy)
-    protected $fillable = ['comment_id', 'user_id', 'created_at'];
+    // Bảng này không có created_at / updated_at nên tắt timestamps
+    public $timestamps = false;
+    protected $table = 'comment_likes';
+
+    protected $fillable = ['comment_id', 'user_id', 'type'];
 
     public function comment()
     {

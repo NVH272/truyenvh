@@ -55,4 +55,22 @@ class Comment extends Model
             ->where('user_id', $user->id)
             ->exists();
     }
+
+    // reactions
+    public function reactions()
+    {
+        return $this->hasMany(CommentLike::class, 'comment_id');
+    }
+
+    public function dislikes()
+    {
+        return $this->reactions()->where('type', 'dislike');
+    }
+
+    public function isDislikedBy($user): bool
+    {
+        return $user
+            ? $this->reactions()->where('user_id', $user->id)->where('type', 'dislike')->exists()
+            : false;
+    }
 }
