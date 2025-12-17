@@ -13,6 +13,9 @@ class Comment extends Model
         'user_id',
         'parent_id',
         'content',
+        'likes_count',
+        'dislikes_count',
+        'replies_count',
     ];
 
     // User comment
@@ -41,18 +44,20 @@ class Comment extends Model
         return $this->belongsTo(Comment::class, 'parent_id');
     }
 
-    // Likes
+    // Likes (only type = like)
     public function likes()
     {
-        return $this->hasMany(CommentLike::class);
+        return $this->hasMany(CommentLike::class, 'comment_id')
+            ->where('type', 'like');
     }
 
     public function isLikedBy($user)
     {
         if (!$user) return false;
 
-        return $this->likes()
+        return $this->reactions()
             ->where('user_id', $user->id)
+            ->where('type', 'like')
             ->exists();
     }
 

@@ -66,7 +66,7 @@ class ComicCommentController extends Controller
 
             $userReaction = $type;
         } elseif ($existing->type === $type) {
-            // TH2: Bấm lại đúng loại -> bỏ reaction
+        // TH2: Bấm lại đúng loại -> bỏ reaction
             $existing->delete();
 
             if ($type === 'like') $comment->decrement('likes_count');
@@ -74,15 +74,15 @@ class ComicCommentController extends Controller
 
             $userReaction = null;
         } else {
-            // TH3: Đang like mà bấm dislike (hoặc ngược lại) -> switch
-            $oldType = $existing->type;
-            $existing->update(['type' => $type]);
+        // TH3: Đang like mà bấm dislike (hoặc ngược lại) -> switch
+        $oldType = $existing->type;
+        $existing->update(['type' => $type]);
 
-            if ($oldType === 'like') $comment->decrement('likes_count');
-            else $comment->decrement('dislikes_count');
+        if ($oldType === 'like') $comment->decrement('likes_count');
+        else $comment->decrement('dislikes_count');
 
-            if ($type === 'like') $comment->increment('likes_count');
-            else $comment->increment('dislikes_count');
+        if ($type === 'like') $comment->increment('likes_count');
+        else $comment->increment('dislikes_count');
 
             $userReaction = $type;
         }
