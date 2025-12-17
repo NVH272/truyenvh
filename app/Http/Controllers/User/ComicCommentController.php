@@ -11,6 +11,16 @@ class ComicCommentController extends Controller
 {
     public function store(Request $request, Comic $comic)
     {
+        $content = $request->input('content');
+
+        // Xóa space / tab ở đầu mỗi dòng
+        $content = preg_replace('/^[ \t]+/m', '', $content);
+        // Trim đầu cuối
+        $content = trim($content);
+
+        // Ghi đè content đã làm sạch vào request để validate + lưu
+        $request->merge(['content' => $content]);
+
         $request->validate([
             'content' => 'required|string|max:2000',
             'parent_id' => 'nullable|exists:comments,id',
