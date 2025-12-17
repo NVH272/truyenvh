@@ -278,8 +278,10 @@
         @yield('content')
         @else
         {{-- Các trang khác bị bọc trong khung trắng --}}
-        <div class="bg-white/85 backdrop-blur-sm rounded-xl shadow-lg p-6 border border-gray-300">
-            @yield('content')
+        <div class="bg-white/85 backdrop-blur-sm rounded-xl shadow-lg border border-gray-300 overflow-visible">
+            <div class="p-6">
+                @yield('content')
+            </div>
         </div>
         @endif
 

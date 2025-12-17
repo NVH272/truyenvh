@@ -190,14 +190,12 @@
                                 <tr class="hover:bg-gray-50 transition-colors group">
                                     <td class="px-6 py-3">
                                         <a href="#" class="font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
-                                            Chapter {{ $i }}
+                                            Chapter
                                         </a>
                                     </td>
                                     <td class="px-4 py-3 text-gray-500 text-center text-xs">
-                                        {{ rand(1, 24) }} giờ trước
                                     </td>
                                     <td class="px-4 py-3 text-gray-500 text-right text-xs">
-                                        {{ rand(1000, 50000) }}
                                     </td>
                                 </tr>
                                 @endfor
@@ -206,44 +204,43 @@
                     </div>
                 </div>
 
-                {{-- BÌNH LUẬN (GIAO DIỆN FACEBOOK) --}}
+                {{-- BÌNH LUẬN (UI giống mẫu, dữ liệu thật) --}}
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-                    <div class="px-4 py-3 border-b border-gray-100">
-                        <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-                            Bình luận
+                    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                        <h2 class="text-lg font-bold text-blue-600 flex items-center gap-2">
+                            <i class="fas fa-comments"></i>
+                            <span>Bình luận</span>
                             <span class="text-sm font-normal text-gray-500">({{ $comments->total() }})</span>
                         </h2>
                     </div>
 
-                    <div class="p-4">
-                        {{-- Form bình luận chính (chỉ cần đăng nhập) --}}
+                    <div class="p-6">
+                        {{-- Input Comment --}}
                         @auth
-                        <div class="flex gap-2 mb-6">
+                        <div class="flex gap-4 mb-8">
                             <img src="{{ auth()->user()->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode(auth()->user()->name).'&background=random' }}"
-                                alt="{{ auth()->user()->name }}"
-                                class="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover flex-shrink-0">
+                                class="w-10 h-10 rounded-full object-cover"
+                                alt="{{ auth()->user()->name }}">
 
-                            <form method="POST" action="{{ route('comments.store', $comic) }}" class="flex-1 w-full">
+                            <form method="POST" action="{{ route('comments.store', $comic) }}" class="flex-1">
                                 @csrf
-                                <div class="relative w-full">
-                                    <textarea name="content" required
-                                        placeholder="Viết bình luận công khai..."
-                                        class="w-full bg-[#f0f2f5] border-none rounded-[20px] px-4 py-2.5 text-[15px] focus:ring-0 focus:outline-none resize-none overflow-hidden"
-                                        style="min-height: 40px;"
-                                        rows="1"
-                                        oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'">{{ old('content') }}</textarea>
-
-                                    <button type="submit" class="absolute right-3 bottom-2.5 text-blue-600 hover:text-blue-800">
-                                        <i class="fas fa-paper-plane"></i>
+                                <textarea name="content"
+                                    rows="3"
+                                    class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
+                                    placeholder="Để lại bình luận của bạn...">{{ old('content') }}</textarea>
+                                @error('content')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                                @enderror
+                                <div class="flex justify-end mt-2">
+                                    <button type="submit"
+                                        class="px-4 py-1.5 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700 transition-colors">
+                                        Gửi bình luận
                                     </button>
                                 </div>
-                                @error('content')
-                                <p class="text-red-500 text-xs mt-1 ml-3">{{ $message }}</p>
-                                @enderror
                             </form>
                         </div>
                         @else
-                        <div class="mb-6 p-3 bg-[#f0f2f5] border border-gray-200 rounded-lg flex items-center gap-2 text-sm text-gray-700">
+                        <div class="mb-6 p-3 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-2 text-sm text-gray-700">
                             <i class="fas fa-info-circle"></i>
                             <a href="{{ route('login.form') }}" class="font-medium text-blue-600 underline hover:text-blue-800">
                                 Đăng nhập để bình luận
@@ -251,232 +248,222 @@
                         </div>
                         @endauth
 
-                        {{-- Danh sách bình luận --}}
+                        {{-- Comment List --}}
                         @if($comments->count() > 0)
-                        <div class="space-y-4">
+                        <div class="space-y-6">
                             @foreach($comments as $comment)
-                            <div class="flex gap-2 group" id="comment-{{ $comment->id }}">
-                                {{-- Avatar User --}}
-                                <div class="flex-shrink-0 cursor-pointer pt-1">
-                                    <img src="{{ $comment->user->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode($comment->user->name).'&background=random' }}"
-                                        alt="{{ $comment->user->name }}"
-                                        class="w-8 h-8 rounded-full object-cover">
-                                </div>
+                            <div class="flex gap-4" id="comment-{{ $comment->id }}">
+                                {{-- Avatar --}}
+                                <img src="{{ $comment->user->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode($comment->user->name).'&background=random' }}"
+                                    class="w-10 h-10 rounded-full object-cover"
+                                    alt="{{ $comment->user->name }}">
 
-                                <div class="flex-1 max-w-full">
-                                    {{-- Bong bóng chat (giống Facebook) --}}
-                                    <div class="inline-block bg-[#f0f2f5] rounded-[18px] px-3 py-2">
-                                        <a href="#" class="font-bold text-[13px] text-[#050505] hover:underline block leading-tight text-left">
-                                            {{ $comment->user->name }}
-                                        </a>
-                                        <p class="text-[15px] text-[#050505] leading-snug whitespace-pre-wrap break-words mt-0.5 text-left">
-                                            {{ $comment->content }}
-                                        </p>
+                                <div class="flex-1">
+                                    {{-- Header: tên + thời gian --}}
+                                    <div class="flex items-center gap-2 mb-0.5">
+                                        <span class="font-bold text-gray-800 text-sm">{{ $comment->user->name }}</span>
+                                        {{-- Badge cấp độ (placeholder) --}}
+                                        <span class="px-1.5 py-0.5 bg-blue-100 text-blue-600 text-[10px] rounded font-bold">
+                                            Thành viên
+                                        </span>
+                                        <span class="text-xs text-gray-400 ml-auto">
+                                            <i class="far fa-clock"></i>
+                                            {{ $comment->created_at->diffForHumans() }}
+                                        </span>
                                     </div>
 
-                                    {{-- Action Bar (Thời gian - Thích/Không thích/Trả lời + cụm reaction bên phải) --}}
-                                    <div class="flex items-center justify-between mt-0.5 ml-3">
-                                        {{-- Bên trái: thời gian + text nút --}}
-                                        <div class="flex items-center gap-3 text-xs text-[#65676b]">
-                                            <span class="font-normal">
-                                                {{ $comment->created_at->diffForHumans() }}
-                                            </span>
+                                    {{-- Nội dung bình luận --}}
+                                    <p class="text-gray-600 text-sm leading-relaxed bg-gray-50 p-2 rounded-br-lg rounded-bl-lg rounded-tr-lg whitespace-normal break-words">
+                                        {{ trim($comment->content) }}
+                                    </p>
 
-                                            @auth
-                                            @php
-                                            $currentUser = auth()->user();
-                                            $isLiked = $comment->isLikedBy($currentUser);
-                                            $isDisliked = $comment->isDislikedBy($currentUser);
-                                            @endphp
+                                    {{-- Hàng action: Thích / Không thích / Trả lời --}}
+                                    <div class="flex items-center gap-3 mt-1 text-xs text-gray-500 font-medium">
+                                        @auth
+                                        @php
+                                        $currentUser = auth()->user();
+                                        $isLiked = $comment->isLikedBy($currentUser);
+                                        $isDisliked = $comment->isDislikedBy($currentUser);
+                                        @endphp
 
-                                            {{-- Nút Thích --}}
-                                            <form action="{{ route('comments.reaction', ['comment' => $comment->id, 'type' => 'like']) }}" method="POST" class="inline">
-                                                @csrf
-                                                <button type="submit"
-                                                    data-comment-reaction="like"
-                                                    data-comment-id="{{ $comment->id }}"
-                                                    data-action="{{ route('comments.reaction', ['comment' => $comment->id, 'type' => 'like']) }}"
-                                                    class="js-comment-like-btn text-xs font-bold hover:underline cursor-pointer flex items-center gap-1 {{ $isLiked ? 'text-blue-600' : 'text-[#65676b] hover:text-[#4b4c4f]' }}">
-                                                    <i class="fas fa-thumbs-up text-[11px]"></i>
-                                                </button>
-                                            </form>
-
-                                            {{-- Nút Không thích --}}
-                                            <form action="{{ route('comments.reaction', ['comment' => $comment->id, 'type' => 'dislike']) }}" method="POST" class="inline">
-                                                @csrf
-                                                <button type="submit"
-                                                    data-comment-reaction="dislike"
-                                                    data-comment-id="{{ $comment->id }}"
-                                                    data-action="{{ route('comments.reaction', ['comment' => $comment->id, 'type' => 'dislike']) }}"
-                                                    class="js-comment-dislike-btn text-xs font-bold hover:underline cursor-pointer flex items-center gap-1 {{ $isDisliked ? 'text-red-600' : 'text-[#65676b] hover:text-[#4b4c4f]' }}">
-                                                    <i class="fas fa-thumbs-down text-[11px]"></i>
-                                                </button>
-                                            </form>
-
-                                            {{-- Nút Phản hồi --}}
-                                            <button type="button"
-                                                onclick="document.getElementById('reply-{{ $comment->id }}').classList.toggle('hidden')"
-                                                class="text-xs font-bold text-[#65676b] hover:underline hover:text-[#4b4c4f] cursor-pointer">
-                                                Trả lời
-                                            </button>
-                                            @endauth
-                                        </div>
-
-                                        {{-- Bên phải: cụm reaction (icon tròn + số lượng) --}}
-                                        <div class="flex items-center gap-1 bg-white rounded-full px-2 py-[2px] shadow-sm js-comment-reaction-pill {{ ($comment->likes_count ?? 0) == 0 && ($comment->dislikes_count ?? 0) == 0 ? 'hidden' : '' }}">
-                                            <span class="js-comment-like-wrapper flex items-center gap-1 {{ ($comment->likes_count ?? 0) == 0 ? 'hidden' : '' }}">
-                                                <span class="w-4 h-4 rounded-full bg-[#1877f2] flex items-center justify-center text-white text-[9px]">
-                                                    <i class="fas fa-thumbs-up"></i>
-                                                </span>
-                                                <span class="text-[11px] text-[#65676b] font-medium js-comment-like-count">
-                                                    {{ $comment->likes_count ?? 0 }}
-                                                </span>
-                                            </span>
-                                            <span class="js-comment-dislike-wrapper flex items-center gap-1 ml-1 {{ ($comment->dislikes_count ?? 0) == 0 ? 'hidden' : '' }}">
-                                                <span class="w-4 h-4 rounded-full bg-[#e41e3f] flex items-center justify-center text-white text-[9px]">
-                                                    <i class="fas fa-thumbs-down"></i>
-                                                </span>
-                                                <span class="text-[11px] text-[#65676b] font-medium js-comment-dislike-count">
-                                                    {{ $comment->dislikes_count ?? 0 }}
-                                                </span>
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {{-- Form Reply (Ẩn mặc định) --}}
-                                    @auth
-                                    <div id="reply-{{ $comment->id }}" class="hidden mt-2 flex gap-2 w-full">
-                                        <img src="{{ auth()->user()->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode(auth()->user()->name).'&background=random' }}"
-                                            class="w-6 h-6 rounded-full object-cover">
-
-                                        <form method="POST" action="{{ route('comments.store', $comic) }}" class="flex-1">
+                                        {{-- Thích --}}
+                                        <form action="{{ route('comments.reaction', ['comment' => $comment->id, 'type' => 'like']) }}"
+                                            method="POST" class="inline">
                                             @csrf
-                                            <input type="hidden" name="parent_id" value="{{ $comment->id }}">
-                                            <div class="relative w-full">
-                                                <textarea name="content" required
-                                                    placeholder="Viết phản hồi..."
-                                                    class="w-full bg-[#f0f2f5] border-none rounded-[18px] px-3 py-2 text-[14px] focus:ring-0 focus:outline-none resize-none overflow-hidden"
-                                                    style="min-height: 36px;"
-                                                    rows="1"
-                                                    oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
-                                                <button type="submit" class="absolute right-3 bottom-2 text-blue-600 hover:text-blue-800 text-xs font-bold uppercase">
-                                                    Gửi
-                                                </button>
-                                            </div>
+                                            <button type="button"
+                                                data-comment-reaction="like"
+                                                data-comment-id="{{ $comment->id }}"
+                                                data-action="{{ route('comments.reaction', ['comment' => $comment->id, 'type' => 'like']) }}"
+                                                class="js-comment-like-btn flex items-center gap-1 transition-colors {{ $isLiked ? 'text-blue-600' : 'text-gray-500 hover:text-blue-600' }}">
+                                                <i class="far fa-thumbs-up"></i>
+                                                <span>Thích</span>
+                                            </button>
                                         </form>
+
+                                        {{-- Không thích --}}
+                                        <form action="{{ route('comments.reaction', ['comment' => $comment->id, 'type' => 'dislike']) }}"
+                                            method="POST" class="inline">
+                                            @csrf
+                                            <button type="button"
+                                                data-comment-reaction="dislike"
+                                                data-comment-id="{{ $comment->id }}"
+                                                data-action="{{ route('comments.reaction', ['comment' => $comment->id, 'type' => 'dislike']) }}"
+                                                class="js-comment-dislike-btn flex items-center gap-1 transition-colors {{ $isDisliked ? 'text-red-600' : 'text-gray-500 hover:text-blue-600' }}">
+                                                <i class="far fa-thumbs-down"></i>
+                                                <span>Không thích</span>
+                                            </button>
+                                        </form>
+
+                                        {{-- Trả lời --}}
+                                        <button type="button"
+                                            onclick="document.getElementById('reply-{{ $comment->id }}').classList.toggle('hidden')"
+                                            class="hover:text-blue-600 flex items-center gap-1">
+                                            <i class="far fa-comment-dots"></i>
+                                            <span>Trả lời</span>
+                                        </button>
+                                        @endauth
+                                    </div>
+
+                                    {{-- Thống kê like/dislike nhỏ --}}
+                                    <div class="mt-1 text-[11px] text-gray-500 flex gap-3">
+                                        @if(($comment->likes_count ?? 0) > 0)
+                                        <span>{{ $comment->likes_count }} lượt thích</span>
+                                        @endif
+                                        @if(($comment->dislikes_count ?? 0) > 0)
+                                        <span>{{ $comment->dislikes_count }} không thích</span>
+                                        @endif
+                                    </div>
+
+                                    {{-- Form trả lời cấp 1 --}}
+                                    @auth
+                                    <div id="reply-{{ $comment->id }}" class="hidden mt-3">
+                                        <div class="flex gap-3">
+                                            <img src="{{ auth()->user()->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode(auth()->user()->name).'&background=random' }}"
+                                                class="w-8 h-8 rounded-full object-cover"
+                                                alt="{{ auth()->user()->name }}">
+                                            <form method="POST" action="{{ route('comments.store', $comic) }}" class="flex-1">
+                                                @csrf
+                                                <input type="hidden" name="parent_id" value="{{ $comment->id }}">
+                                                <textarea name="content"
+                                                    rows="2"
+                                                    class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
+                                                    placeholder="Viết phản hồi..."></textarea>
+                                                <div class="flex justify-end mt-2 gap-2">
+                                                    <button type="button"
+                                                        onclick="document.getElementById('reply-{{ $comment->id }}').classList.add('hidden')"
+                                                        class="px-3 py-1 text-xs text-gray-500 hover:text-gray-700">
+                                                        Hủy
+                                                    </button>
+                                                    <button type="submit"
+                                                        class="px-4 py-1 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors">
+                                                        Gửi phản hồi
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
                                     </div>
                                     @endauth
 
-                                    {{-- Danh sách Replies --}}
+                                    {{-- Replies --}}
                                     @if($comment->replies->count() > 0)
-                                    <div class="mt-2 space-y-3">
+                                    <div class="mt-4 space-y-4">
                                         @foreach($comment->replies as $reply)
-                                        <div class="flex gap-2" id="comment-{{ $reply->id }}">
-                                            {{-- Avatar Reply (Nhỏ hơn) --}}
-                                            <div class="flex-shrink-0 cursor-pointer pt-1">
-                                                <img src="{{ $reply->user->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode($reply->user->name).'&background=random' }}"
-                                                    alt="{{ $reply->user->name }}"
-                                                    class="w-6 h-6 rounded-full object-cover">
-                                            </div>
-
+                                        <div class="flex gap-3" id="comment-{{ $reply->id }}">
+                                            <img src="{{ $reply->user->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode($reply->user->name).'&background=random' }}"
+                                                class="w-8 h-8 rounded-full object-cover"
+                                                alt="{{ $reply->user->name }}">
                                             <div class="flex-1">
-                                                {{-- Bong bóng chat reply --}}
-                                                <div class="inline-block bg-[#f0f2f5] rounded-[18px] px-3 py-2">
-                                                    <a href="#" class="font-bold text-[12px] text-[#050505] hover:underline block leading-tight text-left">
-                                                        {{ $reply->user->name }}
-                                                    </a>
-                                                    <p class="text-[14px] text-[#050505] leading-snug whitespace-pre-wrap break-words mt-0.5 text-left">
-                                                        {{ $reply->content }}
-                                                    </p>
+                                                <div class="flex items-center gap-2 mb-0.5">
+                                                    <span class="font-bold text-gray-800 text-xs">{{ $reply->user->name }}</span>
+                                                    <span class="text-[10px] text-gray-400 ml-auto">
+                                                        <i class="far fa-clock"></i>
+                                                        {{ $reply->created_at->diffForHumans() }}
+                                                    </span>
                                                 </div>
+                                                <p class="text-gray-600 text-sm leading-relaxed bg-gray-50 px-2 py-1.5 rounded-br-lg rounded-bl-lg rounded-tr-lg whitespace-normal break-words">
+                                                    {{ trim($reply->content) }}
+                                                </p>
 
-                                                {{-- Action Bar Reply (giống Facebook, thu nhỏ) --}}
-                                                <div class="flex items-center justify-between mt-0.5 ml-3">
-                                                    <div class="flex items-center gap-3 text-[11px] text-[#65676b]">
-                                                        <span class="font-normal">
-                                                            {{ $reply->created_at->diffForHumans() }}
-                                                        </span>
-
-                                                        @auth
-                                                        @php
-                                                        $currentUser = auth()->user();
-                                                        $isReplyLiked = $reply->isLikedBy($currentUser);
-                                                        $isReplyDisliked = $reply->isDislikedBy($currentUser);
-                                                        @endphp
-
-                                                        <form action="{{ route('comments.reaction', ['comment' => $reply->id, 'type' => 'like']) }}" method="POST" class="inline">
-                                                            @csrf
-                                                            <button type="submit"
-                                                                data-comment-reaction="like"
-                                                                data-comment-id="{{ $reply->id }}"
-                                                                data-action="{{ route('comments.reaction', ['comment' => $reply->id, 'type' => 'like']) }}"
-                                                                class="js-comment-like-btn text-[11px] font-bold hover:underline flex items-center gap-1 {{ $isReplyLiked ? 'text-blue-600' : 'text-[#65676b] hover:text-[#4b4c4f]' }}">
-                                                                <i class="fas fa-thumbs-up text-[10px]"></i>
-                                                            </button>
-                                                        </form>
-
-                                                        <form action="{{ route('comments.reaction', ['comment' => $reply->id, 'type' => 'dislike']) }}" method="POST" class="inline">
-                                                            @csrf
-                                                            <button type="submit"
-                                                                data-comment-reaction="dislike"
-                                                                data-comment-id="{{ $reply->id }}"
-                                                                data-action="{{ route('comments.reaction', ['comment' => $reply->id, 'type' => 'dislike']) }}"
-                                                                class="js-comment-dislike-btn text-[11px] font-bold hover:underline flex items-center gap-1 {{ $isReplyDisliked ? 'text-red-600' : 'text-[#65676b] hover:text-[#4b4c4f]' }}">
-                                                                <i class="fas fa-thumbs-down text-[10px]"></i>
-                                                            </button>
-                                                        </form>
-
-                                                        <button onclick="document.getElementById('reply-{{ $reply->id }}').classList.toggle('hidden')"
-                                                            class="text-[11px] font-bold text-[#65676b] hover:underline hover:text-[#4b4c4f]">
-                                                            Trả lời
-                                                        </button>
-                                                        @endauth
-                                                    </div>
-
-                                                    <div class="flex items-center gap-1 bg-white rounded-full px-2 py-[1px] shadow-sm js-comment-reaction-pill {{ ($reply->likes_count ?? 0) == 0 && ($reply->dislikes_count ?? 0) == 0 ? 'hidden' : '' }}">
-                                                        <span class="js-comment-like-wrapper flex items-center gap-1 {{ ($reply->likes_count ?? 0) == 0 ? 'hidden' : '' }}">
-                                                            <span class="w-3.5 h-3.5 rounded-full bg-[#1877f2] flex items-center justify-center text-white text-[8px]">
-                                                                <i class="fas fa-thumbs-up"></i>
-                                                            </span>
-                                                            <span class="text-[10px] text-[#65676b] font-medium js-comment-like-count">
-                                                                {{ $reply->likes_count ?? 0 }}
-                                                            </span>
-                                                        </span>
-                                                        <span class="js-comment-dislike-wrapper flex items-center gap-1 ml-1 {{ ($reply->dislikes_count ?? 0) == 0 ? 'hidden' : '' }}">
-                                                            <span class="w-3.5 h-3.5 rounded-full bg-[#e41e3f] flex items-center justify-center text-white text-[8px]">
-                                                                <i class="fas fa-thumbs-down"></i>
-                                                            </span>
-                                                            <span class="text-[10px] text-[#65676b] font-medium js-comment-dislike-count">
-                                                                {{ $reply->dislikes_count ?? 0 }}
-                                                            </span>
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                {{-- Form Reply Cấp 2 --}}
-                                                @auth
-                                                <div id="reply-{{ $reply->id }}" class="hidden mt-2 flex gap-2 w-full">
-                                                    <img src="{{ auth()->user()->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode(auth()->user()->name).'&background=random' }}"
-                                                        class="w-5 h-5 rounded-full object-cover">
-
-                                                    <form method="POST" action="{{ route('comments.store', $comic) }}" class="flex-1">
+                                                <div class="flex items-center gap-3 mt-0.5 text-[11px] text-gray-500 font-medium">
+                                                    @auth
+                                                    @php
+                                                    $currentUser = auth()->user();
+                                                    $isReplyLiked = $reply->isLikedBy($currentUser);
+                                                    $isReplyDisliked = $reply->isDislikedBy($currentUser);
+                                                    @endphp
+                                                    <form action="{{ route('comments.reaction', ['comment' => $reply->id, 'type' => 'like']) }}"
+                                                        method="POST" class="inline">
                                                         @csrf
-                                                        <input type="hidden" name="parent_id" value="{{ $reply->id }}">
-                                                        <div class="relative w-full">
-                                                            <textarea name="content" required
-                                                                placeholder="Viết phản hồi..."
-                                                                class="w-full bg-[#f0f2f5] border-none rounded-[18px] px-3 py-1.5 text-[13px] focus:ring-0 focus:outline-none resize-none overflow-hidden"
-                                                                style="min-height: 32px;"
-                                                                rows="1"
-                                                                oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
-                                                            <button type="submit" class="absolute right-3 bottom-1.5 text-blue-600 hover:text-blue-800 text-[10px] font-bold uppercase">
-                                                                Gửi
-                                                            </button>
-                                                        </div>
+                                                        <button type="button"
+                                                            data-comment-reaction="like"
+                                                            data-comment-id="{{ $reply->id }}"
+                                                            data-action="{{ route('comments.reaction', ['comment' => $reply->id, 'type' => 'like']) }}"
+                                                            class="js-comment-like-btn flex items-center gap-1 transition-colors {{ $isReplyLiked ? 'text-blue-600' : 'text-gray-500 hover:text-blue-600' }}">
+                                                            <i class="far fa-thumbs-up"></i>
+                                                            <span>Thích</span>
+                                                        </button>
                                                     </form>
+
+                                                    <form action="{{ route('comments.reaction', ['comment' => $reply->id, 'type' => 'dislike']) }}"
+                                                        method="POST" class="inline">
+                                                        @csrf
+                                                        <button type="button"
+                                                            data-comment-reaction="dislike"
+                                                            data-comment-id="{{ $reply->id }}"
+                                                            data-action="{{ route('comments.reaction', ['comment' => $reply->id, 'type' => 'dislike']) }}"
+                                                            class="js-comment-dislike-btn flex items-center gap-1 transition-colors {{ $isReplyDisliked ? 'text-red-600' : 'text-gray-500 hover:text-blue-600' }}">
+                                                            <i class="far fa-thumbs-down"></i>
+                                                            <span>Không thích</span>
+                                                        </button>
+                                                    </form>
+
+                                                    <button type="button"
+                                                        onclick="document.getElementById('reply-{{ $reply->id }}').classList.toggle('hidden')"
+                                                        class="hover:text-blue-600 flex items-center gap-1">
+                                                        <i class="far fa-comment-dots"></i>
+                                                        <span>Trả lời</span>
+                                                    </button>
+                                                    @endauth
+                                                </div>
+
+                                                <div class="mt-1 text-[10px] text-gray-500 flex gap-3">
+                                                    @if(($reply->likes_count ?? 0) > 0)
+                                                    <span>{{ $reply->likes_count }} lượt thích</span>
+                                                    @endif
+                                                    @if(($reply->dislikes_count ?? 0) > 0)
+                                                    <span>{{ $reply->dislikes_count }} không thích</span>
+                                                    @endif
+                                                </div>
+
+                                                {{-- Form trả lời cấp 2 --}}
+                                                @auth
+                                                <div id="reply-{{ $reply->id }}" class="hidden mt-3">
+                                                    <div class="flex gap-2">
+                                                        <img src="{{ auth()->user()->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode(auth()->user()->name).'&background=random' }}"
+                                                            class="w-7 h-7 rounded-full object-cover"
+                                                            alt="{{ auth()->user()->name }}">
+                                                        <form method="POST" action="{{ route('comments.store', $comic) }}" class="flex-1">
+                                                            @csrf
+                                                            <input type="hidden" name="parent_id" value="{{ $reply->id }}">
+                                                            <textarea name="content"
+                                                                rows="2"
+                                                                class="w-full border border-gray-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
+                                                                placeholder="Viết phản hồi..."></textarea>
+                                                            <div class="flex justify-end mt-2 gap-2">
+                                                                <button type="button"
+                                                                    onclick="document.getElementById('reply-{{ $reply->id }}').classList.add('hidden')"
+                                                                    class="px-3 py-1 text-[11px] text-gray-500 hover:text-gray-700">
+                                                                    Hủy
+                                                                </button>
+                                                                <button type="submit"
+                                                                    class="px-3 py-1 bg-blue-600 text-white text-[11px] font-semibold rounded hover:bg-blue-700 transition-colors">
+                                                                    Gửi
+                                                                </button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
                                                 </div>
                                                 @endauth
-
                                             </div>
                                         </div>
                                         @endforeach
@@ -488,16 +475,12 @@
                         </div>
 
                         {{-- Pagination --}}
-                        <div class="mt-6 border-t border-gray-100 pt-4">
+                        <div class="mt-6">
                             {{ $comments->links() }}
                         </div>
                         @else
-                        <div class="text-center py-10">
-                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 text-gray-400">
-                                <i class="fas fa-comment-dots text-2xl"></i>
-                            </div>
-                            <p class="text-gray-500 font-medium">Chưa có bình luận nào</p>
-                            <p class="text-gray-400 text-sm">Hãy là người đầu tiên chia sẻ suy nghĩ của bạn!</p>
+                        <div class="text-center py-10 text-gray-500 text-sm">
+                            Chưa có bình luận nào. Hãy là người đầu tiên bình luận!
                         </div>
                         @endif
                     </div>
@@ -615,7 +598,7 @@
             });
         }
 
-        // ==== Comment like / dislike AJAX ====
+        // === Comment like / dislike AJAX (giữ nguyên chức năng) ===
         const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
         const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : null;
 
@@ -625,59 +608,34 @@
 
             const likeBtn = root.querySelector('.js-comment-like-btn');
             const dislikeBtn = root.querySelector('.js-comment-dislike-btn');
-            const pill = root.querySelector('.js-comment-reaction-pill');
-            const likeWrapper = root.querySelector('.js-comment-like-wrapper');
-            const dislikeWrapper = root.querySelector('.js-comment-dislike-wrapper');
-            const likeCountEl = root.querySelector('.js-comment-like-count');
-            const dislikeCountEl = root.querySelector('.js-comment-dislike-count');
 
             const likes = data.likes_count ?? 0;
             const dislikes = data.dislikes_count ?? 0;
             const userReaction = data.user_reaction; // 'like' | 'dislike' | null
 
-            // Cập nhật class active cho nút like/dislike
             if (likeBtn) {
                 likeBtn.classList.remove('text-blue-600');
-                likeBtn.classList.remove('text-[#65676b]');
-                likeBtn.classList.remove('hover:text-[#4b4c4f]');
+                likeBtn.classList.add('text-gray-500');
                 if (userReaction === 'like') {
+                    likeBtn.classList.remove('text-gray-500');
                     likeBtn.classList.add('text-blue-600');
-                } else {
-                    likeBtn.classList.add('text-[#65676b]', 'hover:text-[#4b4c4f]');
                 }
             }
 
             if (dislikeBtn) {
                 dislikeBtn.classList.remove('text-red-600');
-                dislikeBtn.classList.remove('text-[#65676b]');
-                dislikeBtn.classList.remove('hover:text-[#4b4c4f]');
+                dislikeBtn.classList.add('text-gray-500');
                 if (userReaction === 'dislike') {
+                    dislikeBtn.classList.remove('text-gray-500');
                     dislikeBtn.classList.add('text-red-600');
-                } else {
-                    dislikeBtn.classList.add('text-[#65676b]', 'hover:text-[#4b4c4f]');
                 }
             }
 
-            // Cập nhật cụm reaction pill
-            if (pill) {
-                if (likes === 0 && dislikes === 0) {
-                    pill.classList.add('hidden');
-                } else {
-                    pill.classList.remove('hidden');
-                }
-            }
+            const likeCountEl = root.querySelector('.js-comment-like-count');
+            const dislikeCountEl = root.querySelector('.js-comment-dislike-count');
 
-            if (likeWrapper) {
-                if (likes === 0) likeWrapper.classList.add('hidden');
-                else likeWrapper.classList.remove('hidden');
-            }
-            if (dislikeWrapper) {
-                if (dislikes === 0) dislikeWrapper.classList.add('hidden');
-                else dislikeWrapper.classList.remove('hidden');
-            }
-
-            if (likeCountEl) likeCountEl.textContent = likes;
-            if (dislikeCountEl) dislikeCountEl.textContent = dislikes;
+            if (likeCountEl) likeCountEl.textContent = likes > 0 ? likes : '';
+            if (dislikeCountEl) dislikeCountEl.textContent = dislikes > 0 ? dislikes : '';
         }
 
         if (csrfToken) {
@@ -685,7 +643,6 @@
                 btn.addEventListener('click', function(e) {
                     e.preventDefault();
 
-                    const type = btn.getAttribute('data-comment-reaction'); // like | dislike
                     const commentId = btn.getAttribute('data-comment-id');
                     const action = btn.getAttribute('data-action');
                     if (!action || !commentId) return;
