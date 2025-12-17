@@ -35,35 +35,6 @@
             </div>
         </div>
 
-        {{-- Alerts Area --}}
-        <div class="space-y-4">
-            @if(session('success'))
-            <div class="relative overflow-hidden bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex items-center gap-3 animate-fade-in-down">
-                <div class="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500"></div>
-                <div class="bg-emerald-500/20 p-2 rounded-full text-emerald-400">
-                    <i class="fas fa-check"></i>
-                </div>
-                <div>
-                    <h4 class="font-bold text-emerald-400 text-sm">Thành công</h4>
-                    <p class="text-emerald-400/80 text-xs">{{ session('success') }}</p>
-                </div>
-            </div>
-            @endif
-
-            @if(session('error'))
-            <div class="relative overflow-hidden bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center gap-3 animate-fade-in-down">
-                <div class="absolute left-0 top-0 bottom-0 w-1 bg-red-500"></div>
-                <div class="bg-red-500/20 p-2 rounded-full text-red-400">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
-                <div>
-                    <h4 class="font-bold text-red-400 text-sm">Có lỗi xảy ra</h4>
-                    <p class="text-red-400/80 text-xs">{{ session('error') }}</p>
-                </div>
-            </div>
-            @endif
-        </div>
-
         {{-- Main Content List --}}
         @if($comics->isEmpty())
         <div class="bg-slate-800/50 border border-slate-700/50 border-dashed rounded-3xl p-12 text-center">

@@ -207,57 +207,59 @@
                 </div>
 
                 {{-- BÌNH LUẬN --}}
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                        <h2 class="text-lg font-bold text-blue-600 flex items-center gap-2">
-                            <i class="fas fa-comments"></i> Bình luận (32)
-                        </h2>
-                    </div>
+                @foreach($comments as $comment)
+                <div class="flex gap-4">
+                    <img src="{{ $comment->user->avatar_url ?? 'https://ui-avatars.com/api/?name='.$comment->user->name }}"
+                        class="w-10 h-10 rounded-full">
 
-                    <div class="p-6">
-                        {{-- Input Comment --}}
-                        <div class="flex gap-4 mb-8">
-                            <img src="https://ui-avatars.com/api/?name=User&background=random" class="w-10 h-10 rounded-full" alt="Avatar">
-                            <div class="flex-1">
-                                <textarea class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
-                                    rows="3" placeholder="Để lại bình luận của bạn..."></textarea>
-                                <div class="flex justify-end mt-2">
-                                    <button class="px-4 py-1.5 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700 transition-colors">
-                                        Gửi bình luận
-                                    </button>
-                                </div>
-                            </div>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold">{{ $comment->user->name }}</span>
+                            <span class="text-xs text-gray-400">
+                                {{ $comment->created_at->diffForHumans() }}
+                            </span>
                         </div>
 
-                        {{-- Comment List --}}
-                        <div class="space-y-6">
-                            @foreach([1, 2, 3] as $comment)
-                            <div class="flex gap-4">
-                                <img src="https://ui-avatars.com/api/?name=User+{{ $comment }}&background=random" class="w-10 h-10 rounded-full" alt="Avatar">
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-2 mb-1">
-                                        <span class="font-bold text-gray-800 text-sm">Người dùng {{ $comment }}</span>
-                                        <span class="px-1.5 py-0.5 bg-blue-100 text-blue-600 text-[10px] rounded font-bold">Cấp 5</span>
-                                        <span class="text-xs text-gray-400 ml-auto"><i class="far fa-clock"></i> 2 giờ trước</span>
-                                    </div>
-                                    <p class="text-gray-600 text-sm leading-relaxed bg-gray-50 p-3 rounded-br-lg rounded-bl-lg rounded-tr-lg">
-                                        Truyện này hay quá, hóng chap mới từng ngày luôn! Art đẹp, nội dung cuốn.
-                                    </p>
-                                    <div class="flex gap-4 mt-1.5 text-xs text-gray-500 font-medium">
-                                        <button class="hover:text-blue-600 flex items-center gap-1"><i class="far fa-thumbs-up"></i> Thích</button>
-                                        <button class="hover:text-blue-600 flex items-center gap-1"><i class="far fa-comment-dots"></i> Trả lời</button>
-                                    </div>
-                                </div>
-                            </div>
-                            @endforeach
+                        <p class="bg-gray-50 p-3 rounded mt-1">
+                            {{ $comment->content }}
+                        </p>
 
-                            <div class="text-center pt-2">
-                                <button class="text-sm text-blue-600 font-medium hover:underline">Xem thêm bình luận...</button>
-                            </div>
+                        <div class="flex gap-4 mt-2 text-xs">
+                            {{-- LIKE --}}
+                            <form action="{{ route('comments.like', $comment) }}" method="POST">
+                                @csrf
+                                <button class="flex items-center gap-1
+                    {{ $comment->isLikedBy(auth()->user()) ? 'text-blue-600' : '' }}">
+                                    <i class="far fa-thumbs-up"></i>
+                                    {{ $comment->likes_count }}
+                                </button>
+                            </form>
+
+                            {{-- REPLY --}}
+                            <button onclick="document.getElementById('reply-{{ $comment->id }}').classList.toggle('hidden')">
+                                <i class="far fa-comment-dots"></i> Trả lời
+                            </button>
                         </div>
+
+                        {{-- FORM REPLY --}}
+                        <form id="reply-{{ $comment->id }}" class="hidden mt-3"
+                            method="POST" action="{{ route('comments.store', $comic) }}">
+                            @csrf
+                            <input type="hidden" name="parent_id" value="{{ $comment->id }}">
+                            <textarea name="content" class="w-full border rounded p-2 text-sm"></textarea>
+                            <button class="mt-1 text-xs text-blue-600">Gửi phản hồi</button>
+                        </form>
+
+                        {{-- REPLIES --}}
+                        @foreach($comment->replies as $reply)
+                        <div class="ml-12 mt-4">
+                            <strong>{{ $reply->user->name }}</strong>:
+                            {{ $reply->content }}
+                        </div>
+                        @endforeach
                     </div>
                 </div>
-
+                @endforeach
             </div>
 
             {{-- RIGHT COLUMN: SIDEBAR (Chiếm 1/3) --}}

@@ -66,7 +66,7 @@
                     <span class="text-red-500 text-xs font-bold block"></span>
                 </div>
                 @error('avatar')
-                    <span class="text-red-500 text-xs font-bold block mt-1">{{ $message }}</span>
+                <span class="text-red-500 text-xs font-bold block mt-1">{{ $message }}</span>
                 @enderror
             </div>
 

@@ -18,7 +18,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\User\ComicReadController;
 use App\Http\Controllers\User\ComicInteractionController;
 use App\Http\Controllers\User\ComicFollowController;
-
+use App\Http\Controllers\User\ComicSearchController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,6 +41,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/comics/{comic}/rate', [ComicInteractionController::class, 'rate'])
         ->name('comics.rate');
 });
+
+// Trang tìm kiếm truyện
+Route::get('/search', [ComicSearchController::class, 'index'])
+    ->name('user.comics.search');
 
 /*
 |--------------------------------------------------------------------------

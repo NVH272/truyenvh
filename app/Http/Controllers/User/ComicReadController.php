@@ -25,10 +25,17 @@ class ComicReadController extends Controller
                 ->exists();
         }
 
+        $comments = Comment::where('comic_id', $comic->id)
+            ->whereNull('parent_id')
+            ->with(['user', 'replies.user', 'likes'])
+            ->latest()
+            ->paginate(10);
+
         return view('user.comics.index', [
             'comic'       => $comic,
             'userRating'  => $userRating,
             'isFollowing' => $isFollowing,
+            'comments'    => $comments,
         ]);
     }
 }

@@ -131,27 +131,30 @@
                             <a href="#" class="hover:text-blue-600 text-xs font-semibold">Xem tất cả</a>
                         </div>
                     </div>
-                    <a href="#" class="hover:text-blue-600 transition">Tìm truyện</a>
                 </nav>
             </div>
 
             <!-- Right: Search & User -->
             <div class="flex items-center gap-3">
 
-                <!-- SEARCH BAR (match userMenuBtn height: rounded-full, padding đồng bộ) -->
-                <div class="relative hidden md:block group">
-                    <input type="text"
+                <!-- SEARCH BAR -->
+                <form action="{{ route('user.comics.search') }}" method="GET" class="relative hidden md:block group">
+                    <input
+                        type="text"
+                        name="q"
+                        value="{{ request('q') }}"
                         placeholder="Tìm truyện..."
-                        class="bg-white/90 backdrop-blur-sm border border-slate-200 rounded-full 
-                   pl-4 pr-10 py-2.5 text-sm w-64 shadow-sm
-                   focus:outline-none focus:ring-2 focus:ring-blue-100/70 
-                   hover:border-blue-300 transition-all duration-300">
+                        class="bg-white/90 backdrop-blur-sm border border-slate-200 rounded-full
+                        pl-4 pr-10 py-2.5 text-sm w-64 shadow-sm
+                        focus:outline-none focus:ring-2 focus:ring-blue-100/70
+                        hover:border-blue-300 transition-all duration-300">
 
-                    <button class="absolute right-3 top-1/2 -translate-y-1/2 
-                       text-gray-400 group-hover:text-blue-600 transition">
+                    <button type="submit"
+                        class="absolute right-3 top-1/2 -translate-y-1/2
+                        text-gray-400 group-hover:text-blue-600 transition">
                         <i class="fas fa-search"></i>
                     </button>
-                </div>
+                </form>
 
                 <!-- DARK MODE BUTTON (same height/shape as userMenuBtn avatar size) -->
                 <button class="relative w-10 h-10 bg-white/80 backdrop-blur-md border border-slate-200/60 
@@ -295,6 +298,7 @@
                     <div class="flex gap-4 text-xl">
                         <a href="https://www.facebook.com/viethoang272/" class="hover:text-blue-500 transition"><i class="fab fa-facebook"></i></a>
                         <a href="https://www.instagram.com/viethoang272/" class="hover:text-pink-500 transition"><i class="fab fa-instagram"></i></a>
+                        <a href="https://www.discordapp.com/users/842034711269212200" class="hover:text-[#4752C4] transition"><i class="fab fa-discord"></i></a>
                     </div>
                 </div>
             </div>

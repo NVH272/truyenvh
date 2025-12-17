@@ -160,11 +160,11 @@
         </div>
 
         {{-- PAGINATION --}}
-        <div class="mt-12 mb-8 flex justify-center">
+        <!-- <div class="mt-12 mb-8 flex justify-center">
             <div class="bg-white px-4 py-3 rounded-xl shadow-sm border border-gray-100">
                 {{ $comics->links() }}
             </div>
-        </div>
+        </div> -->
         @endif
     </div>
 </div>

@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ComicReviewResultMail;
+
 
 class ComicController extends Controller
 {
@@ -111,6 +114,8 @@ class ComicController extends Controller
                     ->orWhere('author', 'LIKE', "%{$search}%");
             });
         }
+
+        $query = Comic::where('approval_status', 'approved');
 
         if ($status !== null && $status !== '') {
             $query->where('status', $status);
@@ -305,23 +310,27 @@ class ComicController extends Controller
 
     public function approve(Comic $comic)
     {
-        // Chỉ cho phép duyệt truyện đang ở trạng thái pending
         if ($comic->approval_status !== 'pending') {
             return back()->with('error', 'Truyện này không ở trạng thái chờ duyệt.');
         }
 
-        $comic->approval_status = 'approved';
-        $comic->approved_by     = Auth::id();
-        $comic->approved_at     = now();
+        $comic->approval_status  = 'approved';
+        $comic->approved_by      = Auth::id();
+        $comic->approved_at      = now();
         $comic->rejection_reason = null;
         $comic->save();
+
+        // Gửi mail nếu người đăng KHÔNG phải admin
+        if ($comic->creator && $comic->creator->role !== 'admin') {
+            Mail::to($comic->creator->email)
+                ->send(new ComicReviewResultMail($comic, 'approved'));
+        }
 
         return back()->with('success', 'Đã phê duyệt truyện: ' . $comic->title);
     }
 
     public function reject(Request $request, Comic $comic)
     {
-        // Chỉ cho phép từ chối truyện đang ở trạng thái pending
         if ($comic->approval_status !== 'pending') {
             return back()->with('error', 'Truyện này không ở trạng thái chờ duyệt.');
         }
@@ -330,11 +339,16 @@ class ComicController extends Controller
             'reason' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $comic->approval_status = 'rejected';
-        $comic->approved_by     = Auth::id();
-        $comic->approved_at     = now();
+        $comic->approval_status  = 'rejected';
+        $comic->approved_by      = Auth::id();
+        $comic->approved_at      = now();
         $comic->rejection_reason = $request->input('reason');
         $comic->save();
+
+        if ($comic->creator && $comic->creator->role !== 'admin') {
+            Mail::to($comic->creator->email)
+                ->send(new ComicReviewResultMail($comic, 'rejected'));
+        }
 
         return back()->with('success', 'Đã từ chối truyện: ' . $comic->title);
     }

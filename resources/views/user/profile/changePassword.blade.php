@@ -151,7 +151,7 @@
 
         <!-- RIGHT COLUMN: Image & Overlay Info (giống form cấu hình nhân sự nhưng đặt bên phải) -->
         <div class="w-full md:w-5/12 relative bg-black">
-            <img src="{{ asset('storage/backgrounds/editInfo.jpg') }}"
+            <img src="{{ asset('storage/backgrounds/changePassword.jpg') }}"
                 alt="Character"
                 class="w-full h-full object-cover opacity-90 filter brightness-90 contrast-125">
 
