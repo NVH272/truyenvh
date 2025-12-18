@@ -7,7 +7,7 @@
 <div class="bg-[#f0f2f5] min-h-screen pb-10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-        {{-- === PHẦN THÔNG TIN TRUYỆN (TOP) === --}}
+        {{-- === PHẦN 1: THÔNG TIN TRUYỆN (TOP - FULL WIDTH) === --}}
         <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
             <div class="p-6">
                 <div class="flex flex-col md:flex-row gap-8">
@@ -161,13 +161,14 @@
             </div>
         </div>
 
-        {{-- === MAIN CONTENT LAYOUT (2 Columns: 2/3 - 1/3) === --}}
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {{-- === PHẦN 2: MAIN CONTENT LAYOUT (Tỉ lệ 5:3) === --}}
+        {{-- Sử dụng grid-cols-8 để chia chính xác 5 phần và 3 phần --}}
+        <div class="grid grid-cols-1 lg:grid-cols-8 gap-6">
 
-            {{-- LEFT COLUMN: CHAPTERS & COMMENTS (Chiếm 2/3) --}}
-            <div class="lg:col-span-2 space-y-6">
+            {{-- CỘT TRÁI (LEFT): Chiếm 5/8 --}}
+            <div class="lg:col-span-5 space-y-6">
 
-                {{-- DANH SÁCH CHƯƠNG --}}
+                {{-- 1. DANH SÁCH CHƯƠNG --}}
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                         <h2 class="text-lg font-bold text-blue-600 flex items-center gap-2">
@@ -190,12 +191,14 @@
                                 <tr class="hover:bg-gray-50 transition-colors group">
                                     <td class="px-6 py-3">
                                         <a href="#" class="font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
-                                            Chapter
+                                            Chapter {{ $i }}
                                         </a>
                                     </td>
                                     <td class="px-4 py-3 text-gray-500 text-center text-xs">
+                                        {{ now()->subDays(rand(0, 30))->format('d/m/Y') }}
                                     </td>
                                     <td class="px-4 py-3 text-gray-500 text-right text-xs">
+                                        {{ rand(1000, 50000) }}
                                     </td>
                                 </tr>
                                 @endfor
@@ -204,7 +207,7 @@
                     </div>
                 </div>
 
-                {{-- BÌNH LUẬN (UI giống mẫu, dữ liệu thật) --}}
+                {{-- 2. BÌNH LUẬN --}}
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                         <h2 class="text-lg font-bold text-blue-600 flex items-center gap-2">
@@ -259,7 +262,7 @@
                                     alt="{{ $comment->user->name }}">
 
                                 <div class="flex-1 min-w-0">
-                                    {{-- Bubble comment (bao cả tên và nội dung) --}}
+                                    {{-- Bubble comment --}}
                                     <div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md">
                                         <div class="font-semibold text-gray-800 text-sm mb-0.5">{{ $comment->user->name }}</div>
                                         <p class="text-gray-700 text-sm leading-relaxed whitespace-normal break-words">
@@ -347,7 +350,6 @@
                                                 class="w-10 h-10 rounded-full object-cover flex-shrink-0"
                                                 alt="{{ $reply->user->name }}">
                                             <div class="flex-1 min-w-0">
-                                                {{-- Bubble reply (bao cả tên và nội dung) --}}
                                                 <div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md">
                                                     <div class="font-semibold text-gray-800 text-sm mb-0.5">{{ $reply->user->name }}</div>
                                                     <p class="text-gray-700 text-sm leading-relaxed whitespace-normal break-words">
@@ -355,7 +357,6 @@
                                                     </p>
                                                 </div>
 
-                                                {{-- Hàng action: Like / Trả lời / Thời gian --}}
                                                 <div class="flex items-center gap-4 mt-1.5 ml-1">
                                                     @auth
                                                     @php
@@ -386,7 +387,6 @@
                                                         <i class="far fa-comment-dots"></i>Trả lời
                                                     </button>
 
-                                                    {{-- Thời gian --}}
                                                     <span class="text-xs text-gray-500 ml-auto">
                                                         {{ $reply->created_at->diffForHumans() }}
                                                     </span>
@@ -394,31 +394,31 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        @endforeach
                                     </div>
-                                    @endforeach
+                                    @endif
                                 </div>
-                                @endif
                             </div>
+                            @endforeach
                         </div>
-                        @endforeach
-                    </div>
 
-                    {{-- Pagination --}}
-                    <div class="mt-6">
-                        {{ $comments->links() }}
+                        {{-- Pagination --}}
+                        <div class="mt-6">
+                            {{ $comments->links() }}
+                        </div>
+                        @else
+                        <div class="text-center py-10 text-gray-500 text-sm">
+                            Chưa có bình luận nào. Hãy là người đầu tiên bình luận!
+                        </div>
+                        @endif
                     </div>
-                    @else
-                    <div class="text-center py-10 text-gray-500 text-sm">
-                        Chưa có bình luận nào. Hãy là người đầu tiên bình luận!
-                    </div>
-                    @endif
                 </div>
             </div>
 
-            {{-- RIGHT COLUMN: SIDEBAR (Chiếm 1/3) --}}
-            <div class="lg:col-span-1 space-y-6">
+            {{-- CỘT PHẢI (RIGHT): Chiếm 3/8 --}}
+            <div class="lg:col-span-3 space-y-6">
 
-                {{-- TRUYỆN LIÊN QUAN --}}
+                {{-- 1. TRUYỆN LIÊN QUAN --}}
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                     <div class="px-5 py-3 border-b border-gray-100">
                         <h3 class="font-bold text-gray-800 text-base border-l-4 border-blue-500 pl-3 uppercase">
@@ -449,7 +449,7 @@
                     </div>
                 </div>
 
-                {{-- TOP THEO DÕI --}}
+                {{-- 2. TOP THEO DÕI --}}
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                     <div class="px-5 py-3 border-b border-gray-100 flex justify-between items-center">
                         <h3 class="font-bold text-gray-800 text-base border-l-4 border-red-500 pl-3 uppercase">
@@ -487,7 +487,6 @@
             </div>
         </div>
     </div>
-
 </div>
 
 <style>
