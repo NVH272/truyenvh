@@ -310,32 +310,37 @@
             </div>
         </div>
     </footer>
+
+    {{-- Scripts được push từ các view con (ví dụ: comments.blade.php) --}}
+    @stack('scripts')
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('userMenuBtn');
+            const menu = document.getElementById('userDropdown');
+            const wrap = document.getElementById('userMenu');
+
+            if (!btn || !menu || !wrap) return;
+
+            // CLICK mở/đóng
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                menu.classList.toggle('opacity-100');
+                menu.classList.toggle('visible');
+                menu.classList.toggle('opacity-0');
+                menu.classList.toggle('invisible');
+            });
+
+            // CLICK RA NGOÀI → ĐÓNG
+            document.addEventListener('click', () => {
+                menu.classList.add('opacity-0', 'invisible');
+                menu.classList.remove('opacity-100', 'visible');
+            });
+
+            // Ngăn đóng khi click bên trong menu
+            menu.addEventListener('click', (e) => e.stopPropagation());
+        });
+    </script>
 </body>
 
 </html>
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const btn = document.getElementById('userMenuBtn');
-        const menu = document.getElementById('userDropdown');
-        const wrap = document.getElementById('userMenu');
-
-        // CLICK mở/đóng
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            menu.classList.toggle('opacity-100');
-            menu.classList.toggle('visible');
-            menu.classList.toggle('opacity-0');
-            menu.classList.toggle('invisible');
-        });
-
-        // CLICK RA NGOÀI → ĐÓNG
-        document.addEventListener('click', () => {
-            menu.classList.add('opacity-0', 'invisible');
-            menu.classList.remove('opacity-100', 'visible');
-        });
-
-        // Ngăn đóng khi click bên trong menu
-        menu.addEventListener('click', (e) => e.stopPropagation());
-    });
-</script>

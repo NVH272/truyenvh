@@ -5,13 +5,15 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\Comic;
 use App\Models\Comment;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ComicReadController extends Controller
 {
-    public function show(Comic $comic)
+    public function show(Request $request, Comic $comic)
     {
         $user = Auth::user();
+        $filter = $request->input('filter', 'latest'); // latest | oldest | popular
 
         $userRating  = null;
         $isFollowing = false;
@@ -26,7 +28,7 @@ class ComicReadController extends Controller
                 ->exists();
         }
 
-        $comments = Comment::where('comic_id', $comic->id)
+        $commentsQuery = Comment::where('comic_id', $comic->id)
             ->whereNull('parent_id')
             ->with([
                 'user',
@@ -39,7 +41,8 @@ class ComicReadController extends Controller
                             'reactions as dislikes_count' => function ($q2) {
                                 $q2->where('type', 'dislike');
                             },
-                        ]);
+                        ])
+                        ->orderBy('created_at', 'asc'); // replies: cũ -> mới
                 },
             ])
             ->withCount([
@@ -49,15 +52,41 @@ class ComicReadController extends Controller
                 'reactions as dislikes_count' => function ($q) {
                     $q->where('type', 'dislike');
                 },
-            ])
-            ->latest()
-            ->paginate(10);
+            ]);
+
+        // Áp dụng bộ lọc sắp xếp
+        switch ($filter) {
+            case 'oldest':
+                $commentsQuery->orderBy('created_at', 'asc');
+                break;
+            case 'popular':
+                // Nhiều like nhất -> sort theo likes_count, rồi mới đến created_at mới nhất
+                $commentsQuery->orderByDesc('likes_count')
+                              ->orderByDesc('created_at');
+                break;
+            case 'latest':
+            default:
+                $commentsQuery->orderByDesc('created_at');
+                break;
+        }
+
+        $comments = $commentsQuery->paginate(10)->appends(['filter' => $filter]);
+
+        // Nếu request AJAX (dùng cho filter/pagination comments) thì trả về partial comments
+        if ($request->ajax()) {
+            return view('user.comics.partials.comments', [
+                'comic'         => $comic,
+                'comments'      => $comments,
+                'commentFilter' => $filter,
+            ]);
+        }
 
         return view('user.comics.index', [
-            'comic'       => $comic,
-            'userRating'  => $userRating,
-            'isFollowing' => $isFollowing,
-            'comments'    => $comments,
+            'comic'         => $comic,
+            'userRating'    => $userRating,
+            'isFollowing'   => $isFollowing,
+            'comments'      => $comments,
+            'commentFilter' => $filter,
         ]);
     }
 }

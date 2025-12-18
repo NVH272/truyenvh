@@ -14,14 +14,14 @@ class ComicCommentController extends Controller
         $content = $request->input('content');
 
         // Xóa space / tab ở đầu mỗi dòng
-        $content = preg_replace('/^[ \t]+/m', '', $content);
+        $content = preg_replace('/^[ \t]+/m', '', (string) $content);
         // Trim đầu cuối
         $content = trim($content);
 
         // Ghi đè content đã làm sạch vào request để validate + lưu
         $request->merge(['content' => $content]);
 
-        $request->validate([
+        $validated = $request->validate([
             'content' => 'required|string|max:2000',
             'parent_id' => 'nullable|exists:comments,id',
         ]);
@@ -29,12 +29,37 @@ class ComicCommentController extends Controller
         $comment = Comment::create([
             'comic_id'  => $comic->id,
             'user_id'   => auth()->id(),
-            'parent_id' => $request->parent_id,
-            'content'   => $request->content,
+            'parent_id' => $validated['parent_id'] ?? null,
+            'content'   => $validated['content'],
         ]);
 
         if ($request->parent_id) {
             Comment::where('id', $request->parent_id)->increment('replies_count');
+        }
+
+        $comment->load('user');
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'comment' => [
+                    'id'           => $comment->id,
+                    'comic_id'     => $comment->comic_id,
+                    'parent_id'    => $comment->parent_id,
+                    'content'      => $comment->content,
+                    'created_human'=> $comment->created_at->diffForHumans(),
+                    'timestamp'    => $comment->created_at->timestamp,
+                    'likes_count'  => (int) ($comment->likes_count ?? 0),
+                    'user'         => [
+                        'id'         => $comment->user->id,
+                        'name'       => $comment->user->name,
+                        'avatar_url' => $comment->user->avatar_url
+                            ?? 'https://ui-avatars.com/api/?name='
+                            . urlencode($comment->user->name)
+                            . '&background=random',
+                    ],
+                ],
+            ]);
         }
 
         return back();
