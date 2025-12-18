@@ -215,11 +215,20 @@
                             <span>Bình luận</span>
                             <span class="text-sm font-normal text-gray-500">({{ $comments->total() }})</span>
                         </h2>
+
+                        {{-- Filter Dropdown --}}
+                        <div class="relative">
+                            <select id="comment-filter" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white cursor-pointer hover:border-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                                <option value="latest">Mới nhất</option>
+                                <option value="oldest">Cũ nhất</option>
+                                <option value="popular">Nổi bật</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="p-6">
-                        {{-- Input Comment --}}
                         @auth
+                        {{-- Input Comment --}}
                         <div class="flex gap-4 mb-8">
                             <img src="{{ auth()->user()->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode(auth()->user()->name).'&background=random' }}"
                                 class="w-10 h-10 rounded-full object-cover"
@@ -242,20 +251,12 @@
                                 </div>
                             </form>
                         </div>
-                        @else
-                        <div class="mb-6 p-3 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-2 text-sm text-gray-700">
-                            <i class="fas fa-info-circle"></i>
-                            <a href="{{ route('login.form') }}" class="font-medium text-blue-600 underline hover:text-blue-800">
-                                Đăng nhập để bình luận
-                            </a>
-                        </div>
-                        @endauth
 
                         {{-- Comment List --}}
                         @if($comments->count() > 0)
-                        <div class="space-y-6">
+                        <div class="space-y-6" id="comments-container">
                             @foreach($comments as $comment)
-                            <div class="flex gap-3" id="comment-{{ $comment->id }}">
+                            <div class="flex gap-3" id="comment-{{ $comment->id }}" data-timestamp="{{ $comment->created_at->timestamp }}" data-likes="{{ $comment->likes_count ?? 0 }}">
                                 {{-- Avatar --}}
                                 <img src="{{ $comment->user->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode($comment->user->name).'&background=random' }}"
                                     class="w-10 h-10 rounded-full object-cover flex-shrink-0"
@@ -411,6 +412,15 @@
                             Chưa có bình luận nào. Hãy là người đầu tiên bình luận!
                         </div>
                         @endif
+                        @else
+                        <div class="text-center py-10">
+                            <i class="fas fa-lock text-gray-400 text-3xl mb-3 block"></i>
+                            <p class="text-gray-600 mb-3">Vui lòng đăng nhập để xem bình luận</p>
+                            <a href="{{ route('login.form') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-block">
+                                Đăng nhập ngay
+                            </a>
+                        </div>
+                        @endauth
                     </div>
                 </div>
             </div>
@@ -628,7 +638,53 @@
                 });
             });
         }
+
+        // === Comment Filtering ===
+        const filterSelect = document.getElementById('comment-filter');
+        const commentsContainer = document.getElementById('comments-container');
+
+        if (filterSelect && commentsContainer) {
+            filterSelect.addEventListener('change', function() {
+                sortComments(this.value);
+            });
+        }
+
+        function sortComments(filterType) {
+            if (!commentsContainer) return;
+
+            // Lấy tất cả comment elements
+            const commentElements = Array.from(commentsContainer.querySelectorAll(':scope > div[id^="comment-"]'));
+
+            // Sắp xếp comments dựa trên filter type
+            commentElements.sort(function(a, b) {
+                if (filterType === 'latest') {
+                    // Mới nhất: so sánh data-timestamp (newer first)
+                    const timestampA = parseInt(a.dataset.timestamp) || 0;
+                    const timestampB = parseInt(b.dataset.timestamp) || 0;
+                    return timestampB - timestampA;
+                } else if (filterType === 'oldest') {
+                    // Cũ nhất: so sánh data-timestamp (older first)
+                    const timestampA = parseInt(a.dataset.timestamp) || 0;
+                    const timestampB = parseInt(b.dataset.timestamp) || 0;
+                    return timestampA - timestampB;
+                } else if (filterType === 'popular') {
+                    // Nổi bật: so sánh likes (more likes first)
+                    const likesA = parseInt(a.dataset.likes) || 0;
+                    const likesB = parseInt(b.dataset.likes) || 0;
+                    return likesB - likesA;
+                }
+            });
+
+            // Xóa tất cả comments từ container
+            commentsContainer.innerHTML = '';
+
+            // Thêm lại comments theo thứ tự mới
+            commentElements.forEach(function(element) {
+                commentsContainer.appendChild(element);
+            });
+        }
     });
 </script>
+
 
 @endsection
