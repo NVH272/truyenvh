@@ -111,12 +111,14 @@
                         @endauth
                     </div>
 
-                    {{-- Nút hiện/reply --}}
+                    {{-- Nút hiện/ẩn phản hồi --}}
                     @if($comment->replies->count() > 0)
                     <button
-                        class="text-sm text-blue-500 hover:underline mt-2 reply-toggle"
-                        data-comment-id="{{ $comment->id }}">
-                        {{ $comment->replies->count() }} phản hồi
+                        class="text-xs text-blue-500 hover:text-blue-600 font-medium mt-2 reply-toggle flex items-center gap-1.5 transition-colors"
+                        data-comment-id="{{ $comment->id }}"
+                        data-reply-count="{{ $comment->replies->count() }}">
+                        <i class="fas fa-reply text-xs"></i>
+                        <span class="reply-count-text">{{ $comment->replies->count() }} phản hồi</span>
                     </button>
                     @endif
 
@@ -155,8 +157,9 @@
 
                     {{-- Replies --}}
                     <div
-                        class="replies mt-3 ml-6 space-y-3 hidden"
-                        id="replies-{{ $comment->id }}">
+                        class="replies mt-3 ml-6 space-y-3 hidden transition-all duration-200"
+                        id="replies-{{ $comment->id }}"
+                        data-reply-container="true">
                         <div class="mt-4 space-y-4 js-replies-container" data-parent-id="{{ $comment->id }}">
                             @foreach($comment->replies as $reply)
                             <div class="flex gap-3 js-comment-item" id="comment-{{ $reply->id }}" data-comment-id="{{ $reply->id }}">
@@ -583,21 +586,43 @@
         }
     })();
 
-    // Nút hiện/ẩn phản hồi
+    // Nút hiện/ẩn phản hồi - cải tiến
     document.addEventListener('click', function(e) {
         const btn = e.target.closest('.reply-toggle');
         if (!btn) return;
+        e.preventDefault();
 
         const commentId = btn.dataset.commentId;
         const replies = document.getElementById(`replies-${commentId}`);
         if (!replies) return;
 
-        replies.classList.toggle('hidden');
+        const repliesContainer = replies.querySelector('.js-replies-container');
+        const isHidden = replies.classList.contains('hidden');
+        const replyCount = btn.dataset.replyCount || (repliesContainer ? repliesContainer.children.length : 0);
+        const countText = btn.querySelector('.reply-count-text');
+        const icon = btn.querySelector('i');
 
-        const count = replies.children.length;
-        btn.textContent = replies.classList.contains('hidden') ?
-            `${count} phản hồi` :
-            `Ẩn phản hồi`;
+        if (isHidden) {
+            // Mở phản hồi
+            replies.classList.remove('hidden');
+            if (countText) {
+                countText.textContent = `Ẩn ${replyCount} phản hồi`;
+            }
+            if (icon) {
+                icon.style.transform = 'rotate(180deg)';
+                icon.style.transition = 'transform 0.3s ease';
+            }
+        } else {
+            // Đóng phản hồi
+            replies.classList.add('hidden');
+            if (countText) {
+                countText.textContent = `${replyCount} phản hồi`;
+            }
+            if (icon) {
+                icon.style.transform = 'rotate(0deg)';
+                icon.style.transition = 'transform 0.3s ease';
+            }
+        }
     });
 </script>
 @endpush
