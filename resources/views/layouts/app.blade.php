@@ -126,10 +126,13 @@
                     <div class="group relative cursor-pointer py-4">
                         <span class="hover:text-blue-600 flex items-center gap-1">Thể loại <i class="fas fa-caret-down"></i></span>
                         <div class="absolute top-full left-0 w-56 bg-white shadow-xl rounded-lg hidden group-hover:grid grid-cols-2 gap-2 p-3 border border-gray-100 z-50">
-                            <a href="#" class="hover:text-blue-600 text-xs font-semibold">Action</a>
-                            <a href="#" class="hover:text-blue-600 text-xs font-semibold">Comedy</a>
-                            <a href="#" class="hover:text-blue-600 text-xs font-semibold">Manhwa</a>
-                            <a href="#" class="hover:text-blue-600 text-xs font-semibold">Xem tất cả</a>
+                            {{-- Top 3 categories --}}
+                            @foreach($topCategories as $category)
+                            <a href="{{ route('user.comics.filter') }}" class="hover:text-blue-600 text-xs font-semibold">
+                                {{ $category->name }}
+                            </a>
+                            @endforeach
+                            <a href="{{ route('user.comics.filter') }}" class="hover:text-blue-600 text-xs font-semibold">Xem tất cả</a>
                         </div>
                     </div>
                 </nav>

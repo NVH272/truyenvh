@@ -15,11 +15,12 @@ use App\Http\Controllers\User\UserComicController;
 use App\Http\Controllers\NewPasswordController;
 use App\Http\Controllers\PasswordResetLinkController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\User\ComicReadController;
-use App\Http\Controllers\User\ComicInteractionController;
-use App\Http\Controllers\User\ComicFollowController;
-use App\Http\Controllers\User\ComicSearchController;
-use App\Http\Controllers\User\ComicCommentController;
+use App\Http\Controllers\Comic\ComicReadController;
+use App\Http\Controllers\Comic\ComicInteractionController;
+use App\Http\Controllers\Comic\ComicFollowController;
+use App\Http\Controllers\Comic\ComicSearchController;
+use App\Http\Controllers\Comic\ComicCommentController;
+use App\Http\Controllers\Comic\ComicFilterController;
 
 /*
 |--------------------------------------------------------------------------
@@ -58,6 +59,9 @@ Route::middleware(['auth'])->group(function () {
 // Trang tìm kiếm truyện
 Route::get('/search', [ComicSearchController::class, 'index'])
     ->name('user.comics.search');
+// Trang lọc truyện
+Route::get('/comics/filter', [ComicFilterController::class, 'index'])
+    ->name('user.comics.filter');
 
 /*
 |--------------------------------------------------------------------------

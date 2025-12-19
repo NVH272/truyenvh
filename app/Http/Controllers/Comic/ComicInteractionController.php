@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\User;
+namespace App\Http\Controllers\Comic;
 
 use App\Models\Comic;
 use App\Models\ComicRating;

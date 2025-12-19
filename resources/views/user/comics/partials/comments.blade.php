@@ -21,9 +21,9 @@
     <div class="p-6">
         @auth
         {{-- Input Comment --}}
-        <div class="flex gap-4 mb-8">
+        <div class="flex gap-3 mb-8">
             <img src="{{ auth()->user()->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode(auth()->user()->name).'&background=random' }}"
-                class="w-10 h-10 rounded-full object-cover"
+                class="w-10 h-10 rounded-full object-cover flex-shrink-0"
                 alt="{{ auth()->user()->name }}">
 
             <form method="POST"
@@ -31,20 +31,52 @@
                 class="flex-1 js-comment-form"
                 data-comment-form="main">
                 @csrf
-                <textarea name="content"
-                    rows="3"
-                    class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none js-comment-textarea"
-                    placeholder="Để lại bình luận của bạn...">{{ old('content') }}</textarea>
-                @error('content')
-                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                @enderror
-                <div class="flex justify-end mt-2">
+
+                {{-- PHẦN 1: KHUNG NHẬP COMMENT --}}
+                {{-- Thay đổi: 'items-end' -> 'items-center' để nút luôn nằm giữa --}}
+                <div class="relative flex items-center bg-gray-100 rounded-[20px] px-3 py-2 shadow-sm focus-within:bg-white focus-within:shadow-md focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+
+                    {{-- Textarea --}}
+                    <textarea name="content"
+                        rows="1"
+                        style="min-height: 36px; max-height: 120px;"
+                        class="flex-1 bg-transparent border-none p-0 px-2 text-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-0 transition-all resize-none js-comment-textarea overflow-hidden leading-relaxed py-1"
+                        placeholder="Viết bình luận..."
+                        oninput="this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px';">{{ old('content') }}</textarea>
+
+                    {{-- Button --}}
+                    {{-- Thay đổi: Bỏ 'mb-0.5' vì đã dùng items-center --}}
                     <button type="submit"
-                        class="px-4 py-1.5 bg-blue-600 text-white text-sm font-semibold rounded hover:bg-blue-700 transition-colors">
-                        Gửi bình luận
+                        class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-blue-600 hover:bg-gray-200 transition-colors opacity-80 hover:opacity-100 focus:outline-none ml-1"
+                        title="Gửi bình luận">
+                        <i class="fas fa-paper-plane text-sm transform rotate-12 translate-x-[-2px] translate-y-[1px]"></i>
                     </button>
                 </div>
+
+                {{-- PHẦN 2: THÔNG BÁO LỖI (Bên ngoài) --}}
+                @error('content')
+                <div class="text-xs text-red-500 mt-2 ml-4 text-left">
+                    {{ $message }}
+                </div>
+                @enderror
+
             </form>
+
+            {{-- Script giữ nguyên --}}
+            @push('scripts')
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    const textareas = document.querySelectorAll('.js-comment-textarea');
+                    textareas.forEach(tx => {
+                        if (tx.value !== '') {
+                            tx.style.height = 'auto';
+                            tx.style.height = (tx.scrollHeight) + 'px';
+                        }
+                    });
+                });
+            </script>
+            @endpush
+
         </div>
 
         {{-- Comment List --}}
@@ -127,7 +159,7 @@
                     <div id="reply-{{ $comment->id }}" class="hidden mt-3">
                         <div class="flex gap-3">
                             <img src="{{ auth()->user()->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode(auth()->user()->name).'&background=random' }}"
-                                class="w-8 h-8 rounded-full object-cover"
+                                class="w-8 h-8 rounded-full object-cover flex-shrink-0"
                                 alt="{{ auth()->user()->name }}">
                             <form method="POST"
                                 action="{{ route('comments.store', $comic) }}"
@@ -135,22 +167,40 @@
                                 data-comment-form="reply">
                                 @csrf
                                 <input type="hidden" name="parent_id" value="{{ $comment->id }}">
-                                <textarea name="content"
-                                    rows="2"
-                                    class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none js-comment-textarea"
-                                    placeholder="Viết phản hồi..."></textarea>
-                                <div class="flex justify-end mt-2 gap-2">
-                                    <button type="button"
-                                        onclick="document.getElementById('reply-{{ $comment->id }}').classList.add('hidden')"
-                                        class="px-3 py-1 text-xs text-gray-500 hover:text-gray-700">
-                                        Hủy
-                                    </button>
+
+                                {{-- PHẦN 1: KHUNG NHẬP REPLY (Bong bóng xám nhỏ gọn) --}}
+                                <div class="relative flex items-center bg-gray-100 rounded-[18px] px-2 py-1 shadow-sm focus-within:bg-white focus-within:shadow-md focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+
+                                    {{-- Textarea: Font chữ nhỏ (13px), tự giãn dòng --}}
+                                    <textarea name="content"
+                                        rows="1"
+                                        style="min-height: 32px; max-height: 80px;"
+                                        class="flex-1 bg-transparent border-none p-0 px-2 text-[13px] text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-0 transition-all resize-none js-comment-textarea overflow-hidden leading-relaxed py-1.5"
+                                        placeholder="Viết phản hồi..."
+                                        oninput="this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px';"></textarea>
+
+                                    {{-- Button: Nút nhỏ (w-7 h-7), luôn nằm giữa theo chiều dọc --}}
                                     <button type="submit"
-                                        class="px-4 py-1 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors">
-                                        Gửi phản hồi
+                                        class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full text-blue-600 hover:bg-gray-200 transition-colors opacity-80 hover:opacity-100 focus:outline-none ml-1"
+                                        title="Gửi phản hồi">
+                                        <i class="fas fa-paper-plane text-xs transform rotate-12 translate-x-[-1px] translate-y-[1px]"></i>
                                     </button>
                                 </div>
+                                {{-- Đóng thẻ div khung xám --}}
+
+                                {{-- PHẦN 2: THÔNG BÁO LỖI (Nằm ngoài) --}}
+                                @error('content')
+                                <div class="text-[11px] text-red-500 mt-1 ml-3 text-left">
+                                    {{ $message }}
+                                </div>
+                                @enderror
+
                             </form>
+                            <button type="button"
+                                onclick="document.getElementById('reply-{{ $comment->id }}').classList.add('hidden')"
+                                class="px-3 py-1 text-xs text-gray-500 hover:text-gray-700 flex-shrink-0">
+                                Hủy
+                            </button>
                         </div>
                     </div>
                     @endauth

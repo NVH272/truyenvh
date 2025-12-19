@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\User;
+namespace App\Http\Controllers\Comic;
 
 use App\Http\Controllers\Controller;
 use App\Models\Comic;
@@ -62,7 +62,7 @@ class ComicReadController extends Controller
             case 'popular':
                 // Nhiều like nhất -> sort theo likes_count, rồi mới đến created_at mới nhất
                 $commentsQuery->orderByDesc('likes_count')
-                              ->orderByDesc('created_at');
+                    ->orderByDesc('created_at');
                 break;
             case 'latest':
             default:
