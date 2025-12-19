@@ -35,7 +35,7 @@ class Comment extends Model
     {
         return $this->hasMany(Comment::class, 'parent_id')
             ->with('user')
-            ->latest();
+            ->oldest();
     }
 
     // Parent
