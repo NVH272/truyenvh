@@ -94,126 +94,127 @@
                     alt="{{ $comment->user->name }}">
 
                 <div class="flex-1 min-w-0">
-                    <div class="flex items-start gap-2">
-                        <div class="min-w-0">
-                            {{-- Bubble comment --}}
-                            <div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md">
-                                <div class="font-semibold text-gray-800 text-sm mb-0.5">{{ $comment->user->name }}</div>
-                                <p class="text-gray-700 text-sm leading-relaxed whitespace-normal break-words js-comment-content">
-                                    {{ trim($comment->content) }}
-                                </p>
-                            </div>
-
-                            {{-- Hàng action: Like / Trả lời / Thời gian --}}
-                            <div class="flex items-center gap-4 mt-1.5 ml-1">
-                                @auth
-                                @php
-                                $currentUser = auth()->user();
-                                $isLiked = $comment->isLikedBy($currentUser);
-                                @endphp
-
-                                {{-- Like --}}
-                                <div class="flex items-center gap-1">
-                                    <form action="{{ route('comments.reaction', ['comment' => $comment->id, 'type' => 'like']) }}"
-                                        method="POST" class="inline">
-                                        @csrf
-                                        <button type="button"
-                                            data-comment-reaction="like"
-                                            data-comment-id="{{ $comment->id }}"
-                                            data-action="{{ route('comments.reaction', ['comment' => $comment->id, 'type' => 'like']) }}"
-                                            class="js-comment-like-btn text-xs font-medium transition-colors {{ $isLiked ? 'text-blue-600' : 'text-gray-500 hover:text-blue-600' }}"
-                                            title="Thích">
-                                            <i class="fas fa-thumbs-up mr-1"></i>Thích
-                                        </button>
-                                    </form>
-                                    <span class="js-comment-like-count text-xs text-gray-500 {{ ($comment->likes_count ?? 0) == 0 ? 'hidden' : '' }}">
-                                        {{ $comment->likes_count ?? 0 }}
-                                    </span>
-                                </div>
-
-                                {{-- Trả lời --}}
-                                <button type="button"
-                                    onclick="window.showReplyForm('{{ $comment->id }}')"
-                                    class="text-xs font-medium text-gray-500 hover:text-blue-600 transition-colors flex items-center gap-1">
-                                    <i class="far fa-comment-dots"></i>Trả lời
-                                </button>
-
-                                {{-- Thời gian --}}
-                                <span class="text-xs text-gray-500 ml-auto">
-                                    {{ $comment->created_at->diffForHumans() }}
-                                </span>
-                                @endauth
-                            </div>
+                    {{-- Bubble comment + dấu ... --}}
+                    <div class="flex items-center gap-2 group/comment">
+                        {{-- Bubble comment --}}
+                        <div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md">
+                            <div class="font-semibold text-gray-800 text-sm mb-0.5">{{ $comment->user->name }}</div>
+                            <p class="text-gray-700 text-sm leading-relaxed whitespace-normal break-words js-comment-content">
+                                {{ trim($comment->content) }}
+                            </p>
                         </div>
 
-                        {{-- Dấu ... bên phải (giống ảnh) --}}
+                        {{-- Dấu ... bên phải bubble --}}
                         <button type="button"
-                            class="mt-1 opacity-0 group-hover:opacity-100 transition-opacity
+                            class="opacity-0 group-hover/comment:opacity-100 transition-opacity
                             text-gray-500 hover:text-gray-700
                             w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200/70 flex-shrink-0"
                             title="Tùy chọn">
                             <i class="fas fa-ellipsis-h text-sm"></i>
                         </button>
+                    </div>
 
-                        {{-- Nút hiện/ẩn phản hồi --}}
-                        @if($comment->replies->count() > 0)
-                        <button
-                            class="text-xs text-blue-500 hover:text-blue-600 font-medium mt-2 reply-toggle flex items-center gap-1.5 transition-colors"
-                            data-comment-id="{{ $comment->id }}"
-                            data-reply-count="{{ $comment->replies->count() }}">
-                            <i class="fas fa-reply text-xs"></i>
-                            <span class="reply-count-text">{{ $comment->replies->count() }} phản hồi</span>
-                        </button>
-                        @endif
-
-                        {{-- Form trả lời cấp 1 --}}
+                    {{-- Hàng action: Like / Trả lời / Thời gian --}}
+                    <div class="flex items-center gap-4 mt-1.5 ml-1">
                         @auth
-                        <div id="reply-{{ $comment->id }}" class="hidden mt-3">
-                            <div class="flex gap-3">
-                                <img src="{{ auth()->user()->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode(auth()->user()->name).'&background=random' }}"
-                                    class="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                                    alt="{{ auth()->user()->name }}">
-                                <form method="POST"
-                                    action="{{ route('comments.store', $comic) }}"
-                                    class="flex-1 js-comment-form"
-                                    data-comment-form="reply">
-                                    @csrf
-                                    <input type="hidden" name="parent_id" value="{{ $comment->id }}">
+                        @php
+                        $currentUser = auth()->user();
+                        $isLiked = $comment->isLikedBy($currentUser);
+                        @endphp
 
-                                    {{-- PHẦN 1: KHUNG NHẬP REPLY (Bong bóng xám nhỏ gọn) --}}
-                                    <div class="relative flex items-center bg-gray-100 rounded-[18px] px-2 py-1 shadow-sm focus-within:bg-white focus-within:shadow-md focus-within:ring-2 focus-within:ring-blue-100 transition-all">
-
-                                        {{-- Textarea: Font chữ nhỏ (13px), tự giãn dòng --}}
-                                        <textarea name="content"
-                                            rows="1"
-                                            style="min-height: 32px; max-height: 80px;"
-                                            class="flex-1 bg-transparent border-none p-0 px-2 text-[13px] text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-0 transition-all resize-none js-comment-textarea overflow-hidden leading-relaxed py-1.5"
-                                            placeholder="Viết phản hồi..."
-                                            oninput="this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px';"></textarea>
-
-                                        {{-- Button: Nút nhỏ (w-7 h-7), luôn nằm giữa theo chiều dọc --}}
-                                        <button type="submit"
-                                            class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full text-blue-600 hover:bg-gray-200 transition-colors opacity-80 hover:opacity-100 focus:outline-none ml-1"
-                                            title="Gửi phản hồi">
-                                            <i class="fas fa-paper-plane text-xs transform rotate-12 translate-x-[-1px] translate-y-[1px]"></i>
-                                        </button>
-                                    </div>
-                                    {{-- Đóng thẻ div khung xám --}}
-
-                                    {{-- PHẦN 2: THÔNG BÁO LỖI (Nằm ngoài) --}}
-                                    @error('content')
-                                    <div class="text-[11px] text-red-500 mt-1 ml-3 text-left">
-                                        {{ $message }}
-                                    </div>
-                                    @enderror
-
-                                </form>
+                        {{-- Like --}}
+                        <div class="flex items-center gap-1">
+                            <form action="{{ route('comments.reaction', ['comment' => $comment->id, 'type' => 'like']) }}"
+                                method="POST" class="inline">
+                                @csrf
                                 <button type="button"
-                                    onclick="document.getElementById('reply-{{ $comment->id }}').classList.add('hidden')"
-                                    class="px-3 py-1 text-xs text-gray-500 hover:text-gray-700 flex-shrink-0">
-                                    Hủy
+                                    data-comment-reaction="like"
+                                    data-comment-id="{{ $comment->id }}"
+                                    data-action="{{ route('comments.reaction', ['comment' => $comment->id, 'type' => 'like']) }}"
+                                    class="js-comment-like-btn text-xs font-medium transition-colors {{ $isLiked ? 'text-blue-600' : 'text-gray-500 hover:text-blue-600' }}"
+                                    title="Thích">
+                                    <i class="fas fa-thumbs-up mr-1"></i>Thích
                                 </button>
-                            </div>
+                            </form>
+                            <span class="js-comment-like-count text-xs text-gray-500 {{ ($comment->likes_count ?? 0) == 0 ? 'hidden' : '' }}">
+                                {{ $comment->likes_count ?? 0 }}
+                            </span>
+                        </div>
+
+                        {{-- Trả lời --}}
+                        <button type="button"
+                            onclick="window.showReplyForm('{{ $comment->id }}')"
+                            class="text-xs font-medium text-gray-500 hover:text-blue-600 transition-colors flex items-center gap-1">
+                            <i class="far fa-comment-dots"></i>Trả lời
+                        </button>
+
+                        {{-- Thời gian --}}
+                        <span class="text-xs text-gray-500 ml-auto">
+                            {{ $comment->created_at->diffForHumans() }}
+                        </span>
+                        @endauth
+                    </div>
+
+                    {{-- Nút hiện/ẩn phản hồi --}}
+                    @if($comment->replies->count() > 0)
+                    <button
+                        class="text-xs text-blue-500 hover:text-blue-600 font-medium mt-2 reply-toggle flex items-center gap-1.5 transition-colors"
+                        data-comment-id="{{ $comment->id }}"
+                        data-reply-count="{{ $comment->replies->count() }}">
+                        <i class="fas fa-reply text-xs"></i>
+                        <span class="reply-count-text">{{ $comment->replies->count() }} phản hồi</span>
+                    </button>
+                    @endif
+
+                    {{-- Phần reply form --}}
+
+                    {{-- Form trả lời cấp 1 --}}
+                    @auth
+                    <div id="reply-{{ $comment->id }}" class="hidden mt-3">
+                        <div class="flex gap-3">
+                            <img src="{{ auth()->user()->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode(auth()->user()->name).'&background=random' }}"
+                                class="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                                alt="{{ auth()->user()->name }}">
+                            <form method="POST"
+                                action="{{ route('comments.store', $comic) }}"
+                                class="flex-1 js-comment-form"
+                                data-comment-form="reply">
+                                @csrf
+                                <input type="hidden" name="parent_id" value="{{ $comment->id }}">
+
+                                {{-- PHẦN 1: KHUNG NHẬP REPLY (Bong bóng xám nhỏ gọn) --}}
+                                <div class="relative flex items-center bg-gray-100 rounded-[18px] px-2 py-1 shadow-sm focus-within:bg-white focus-within:shadow-md focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+
+                                    {{-- Textarea: Font chữ nhỏ (13px), tự giãn dòng --}}
+                                    <textarea name="content"
+                                        rows="1"
+                                        style="min-height: 32px; max-height: 80px;"
+                                        class="flex-1 bg-transparent border-none p-0 px-2 text-[13px] text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-0 transition-all resize-none js-comment-textarea overflow-hidden leading-relaxed py-1.5"
+                                        placeholder="Viết phản hồi..."
+                                        oninput="this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px';"></textarea>
+
+                                    {{-- Button: Nút nhỏ (w-7 h-7), luôn nằm giữa theo chiều dọc --}}
+                                    <button type="submit"
+                                        class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full text-blue-600 hover:bg-gray-200 transition-colors opacity-80 hover:opacity-100 focus:outline-none ml-1"
+                                        title="Gửi phản hồi">
+                                        <i class="fas fa-paper-plane text-xs transform rotate-12 translate-x-[-1px] translate-y-[1px]"></i>
+                                    </button>
+                                </div>
+                                {{-- Đóng thẻ div khung xám --}}
+
+                                {{-- PHẦN 2: THÔNG BÁO LỖI (Nằm ngoài) --}}
+                                @error('content')
+                                <div class="text-[11px] text-red-500 mt-1 ml-3 text-left">
+                                    {{ $message }}
+                                </div>
+                                @enderror
+
+                            </form>
+                            <button type="button"
+                                onclick="document.getElementById('reply-{{ $comment->id }}').classList.add('hidden')"
+                                class="px-3 py-1 text-xs text-gray-500 hover:text-gray-700 flex-shrink-0">
+                                Hủy
+                            </button>
                         </div>
                     </div>
                     @endauth
@@ -229,7 +230,8 @@
                                 <img src="{{ $reply->user->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode($reply->user->name).'&background=random' }}"
                                     class="w-10 h-10 rounded-full object-cover flex-shrink-0"
                                     alt="{{ $reply->user->name }}">
-                                <div class="flex-1 min-w-0">
+                                {{-- Bubble reply + dấu ... --}}
+                                <div class="flex items-center gap-2 group/comment">
                                     <div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md">
                                         <div class="font-semibold text-gray-800 text-sm mb-0.5">{{ $reply->user->name }}</div>
                                         <p class="text-gray-700 text-sm leading-relaxed whitespace-normal break-words js-comment-content">
@@ -237,41 +239,51 @@
                                         </p>
                                     </div>
 
-                                    <div class="flex items-center gap-4 mt-1.5 ml-1">
-                                        @auth
-                                        @php
-                                        $currentUser = auth()->user();
-                                        $isReplyLiked = $reply->isLikedBy($currentUser);
-                                        @endphp
-                                        <div class="flex items-center gap-1">
-                                            <form action="{{ route('comments.reaction', ['comment' => $reply->id, 'type' => 'like']) }}"
-                                                method="POST" class="inline">
-                                                @csrf
-                                                <button type="button"
-                                                    data-comment-reaction="like"
-                                                    data-comment-id="{{ $reply->id }}"
-                                                    data-action="{{ route('comments.reaction', ['comment' => $reply->id, 'type' => 'like']) }}"
-                                                    class="js-comment-like-btn text-xs font-medium transition-colors {{ $isReplyLiked ? 'text-blue-600' : 'text-gray-500 hover:text-blue-600' }}"
-                                                    title="Thích">
-                                                    <i class="fas fa-thumbs-up mr-1"></i>Thích
-                                                </button>
-                                            </form>
-                                            <span class="js-comment-like-count text-xs text-gray-500 {{ ($reply->likes_count ?? 0) == 0 ? 'hidden' : '' }}">
-                                                {{ $reply->likes_count ?? 0 }}
-                                            </span>
-                                        </div>
+                                    {{-- Dấu ... bên phải bubble --}}
+                                    <button type="button"
+                                        class="opacity-0 group-hover/comment:opacity-100 transition-opacity
+                                        text-gray-500 hover:text-gray-700
+                                        w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200/70 flex-shrink-0"
+                                        title="Tùy chọn">
+                                        <i class="fas fa-ellipsis-h text-sm"></i>
+                                    </button>
+                                </div>
 
-                                        <button type="button"
-                                            onclick="scrollToReplyForm('{{ $comment->id }}', '{{ $reply->user->name }}')"
-                                            class="text-xs font-medium text-gray-500 hover:text-blue-600 transition-colors flex items-center gap-1">
-                                            <i class="far fa-comment-dots"></i>Trả lời
-                                        </button>
-
-                                        <span class="text-xs text-gray-500 ml-auto">
-                                            {{ $reply->created_at->diffForHumans() }}
+                                {{-- Action buttons --}}
+                                <div class="flex items-center gap-4 mt-1.5 ml-1">
+                                    @auth
+                                    @php
+                                    $currentUser = auth()->user();
+                                    $isReplyLiked = $reply->isLikedBy($currentUser);
+                                    @endphp
+                                    <div class="flex items-center gap-1">
+                                        <form action="{{ route('comments.reaction', ['comment' => $reply->id, 'type' => 'like']) }}"
+                                            method="POST" class="inline">
+                                            @csrf
+                                            <button type="button"
+                                                data-comment-reaction="like"
+                                                data-comment-id="{{ $reply->id }}"
+                                                data-action="{{ route('comments.reaction', ['comment' => $reply->id, 'type' => 'like']) }}"
+                                                class="js-comment-like-btn text-xs font-medium transition-colors {{ $isReplyLiked ? 'text-blue-600' : 'text-gray-500 hover:text-blue-600' }}"
+                                                title="Thích">
+                                                <i class="fas fa-thumbs-up mr-1"></i>Thích
+                                            </button>
+                                        </form>
+                                        <span class="js-comment-like-count text-xs text-gray-500 {{ ($reply->likes_count ?? 0) == 0 ? 'hidden' : '' }}">
+                                            {{ $reply->likes_count ?? 0 }}
                                         </span>
-                                        @endauth
                                     </div>
+
+                                    <button type="button"
+                                        onclick="scrollToReplyForm('{{ $comment->id }}', '{{ $reply->user->name }}')"
+                                        class="text-xs font-medium text-gray-500 hover:text-blue-600 transition-colors flex items-center gap-1">
+                                        <i class="far fa-comment-dots"></i>Trả lời
+                                    </button>
+
+                                    <span class="text-xs text-gray-500 ml-auto">
+                                        {{ $reply->created_at->diffForHumans() }}
+                                    </span>
+                                    @endauth
                                 </div>
                             </div>
                             @endforeach
