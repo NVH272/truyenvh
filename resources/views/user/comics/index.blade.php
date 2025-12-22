@@ -101,9 +101,17 @@
                             <div class="flex items-center gap-2">
                                 <span class="text-gray-500 w-24 flex-shrink-0"><i class="fas fa-tags mr-1.5"></i> Thể loại:</span>
                                 <div class="flex flex-wrap gap-1">
-                                    <a href="#" class="text-blue-500 hover:underline">Hành động</a>,
-                                    <a href="#" class="text-blue-500 hover:underline">Hài hước</a>,
-                                    <a href="#" class="text-blue-500 hover:underline">Shounen</a>
+                                    @forelse ($comic->categories as $category)
+                                    <a href="{{ route('user.comics.filter', ['categories[0]' => $category->slug]) }}"
+                                        class="text-blue-500 hover:underline">
+                                        {{ $category->name }}
+                                    </a>
+                                    @if (!$loop->last)
+                                    <span class="text-black-400">, </span>
+                                    @endif
+                                    @empty
+                                    <span class="text-gray-400">Đang cập nhật</span>
+                                    @endforelse
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">

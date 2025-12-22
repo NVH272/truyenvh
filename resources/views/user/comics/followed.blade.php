@@ -67,7 +67,9 @@
         {{-- COMIC GRID --}}
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-6 gap-y-10">
             @foreach($comics as $comic)
-            <a href="{{ route('user.comics.show', $comic) }}" class="group relative flex flex-col bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-transparent hover:border-gray-100 pb-3">
+            <a href="{{ route('user.comics.show', $comic) }}"
+                class="group relative flex flex-col bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-transparent hover:border-gray-100 pb-3">
+
                 {{-- Card Image Wrapper --}}
                 <div class="relative w-full aspect-[2/3] rounded-t-xl overflow-hidden mb-3">
 
@@ -77,82 +79,70 @@
                         class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500 ease-in-out">
 
                     {{-- Overlay Gradient --}}
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-70 group-hover:opacity-90 transition-opacity"></div>
 
-                    {{-- Badges Top --}}
-                    <div class="absolute top-2 left-2 right-2 flex justify-between items-start">
-                        {{-- Heart Icon (Indicator) --}}
-                        <div class="bg-white/20 backdrop-blur-md text-white p-1.5 rounded-full shadow-lg border border-white/30">
-                            <i class="fas fa-heart text-red-500 text-xs"></i>
-                        </div>
+                    {{-- Badge: Chapter (Top Left) --}}
+                    <div class="absolute top-2 left-2 pointer-events-none z-20">
+                        <span class="px-2 py-1 text-[10px] font-bold bg-black/70 text-white rounded-md backdrop-blur-sm shadow-sm">
+                            {{ $comic->chapter_count ?? 0 }} chương
+                        </span>
+                    </div>
 
-                        @if($comic->status === 'completed')
-                        <span class="bg-emerald-500/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm border border-emerald-400/50 uppercase tracking-wide">
-                            Full
+                    {{-- Badge: Status (Top Right - dạng chữ như mẫu) --}}
+                    <div class="absolute top-2 right-2 pointer-events-none z-20">
+                        @if($comic->status === 'ongoing')
+                        <span class="px-2 py-1 text-[10px] font-bold bg-blue-600/90 text-white rounded-md shadow-sm">
+                            Đang tiến hành
+                        </span>
+                        @elseif($comic->status === 'completed')
+                        <span class="px-2 py-1 text-[10px] font-bold bg-green-600/90 text-white rounded-md shadow-sm">
+                            Hoàn thành
+                        </span>
+                        @else
+                        <span class="px-2 py-1 text-[10px] font-bold bg-yellow-600/90 text-white rounded-md shadow-sm">
+                            Tạm dừng
                         </span>
                         @endif
                     </div>
 
-                    {{-- Hover Action: Read Now --}}
-                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
-                        <span class="bg-white text-indigo-600 rounded-full px-4 py-2 font-bold text-xs shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
-                            <i class="fas fa-book-reader mr-1"></i> Đọc ngay
+                    {{-- Overlay Stats (Bottom) --}}
+                    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent pt-7 pb-2 px-3 flex justify-between items-end text-[11px] text-white/90 pointer-events-none z-20">
+                        <span class="flex items-center gap-1">
+                            <i class="fas fa-eye text-[10px]"></i>
+                            {{ number_format($comic->views ?? 0) }}
                         </span>
-                    </div>
-
-                    {{-- Info Bottom Overlay (Stats) --}}
-                    <div class="absolute bottom-0 left-0 right-0 p-2 text-white">
-                        <div class="flex items-center justify-between text-[10px] font-medium text-gray-200">
-                            <span class="flex items-center gap-1">
-                                <i class="fas fa-list-ol"></i> {{ $comic->chapter_count ?? 0 }} chap
-                            </span>
-                            <span class="flex items-center gap-1">
-                                <i class="fas fa-eye"></i> {{ number_format($comic->views ?? 0) }}
-                            </span>
-                        </div>
+                        <span class="flex items-center gap-1">
+                            <i class="fas fa-heart text-red-400 text-[10px]"></i>
+                            {{ number_format($comic->follows ?? 0) }}
+                        </span>
                     </div>
                 </div>
 
                 {{-- Card Body --}}
                 <div class="px-3 flex flex-col gap-1.5">
                     {{-- Title --}}
-                    <h3 class="font-bold text-gray-800 text-sm leading-tight line-clamp-2 min-h-[2.5em] group-hover:text-indigo-600 transition-colors" title="{{ $comic->title }}">
+                    <h3 class="font-bold text-gray-800 text-sm leading-tight line-clamp-2 min-h-[2.5em] group-hover:text-indigo-600 transition-colors"
+                        title="{{ $comic->title }}">
                         {{ $comic->title }}
                     </h3>
 
+                    {{-- Rating (sao + (avg • count)) --}}
+                    @php
+                    $avgRating = (float)($comic->rating_avg ?? $comic->rating ?? 0);
+                    $ratingCount = (int)($comic->reviews_count ?? $comic->rating_count ?? 0);
+                    $rounded = round($avgRating);
+                    @endphp
+                    <div class="flex items-center gap-0.5 text-yellow-500 text-[11px]">
+                        @for($i = 1; $i <= 5; $i++)
+                            <i class="fas fa-star {{ $i <= $rounded ? '' : 'text-slate-300' }}"></i>
+                            @endfor
+                            <span class="text-gray-500 ml-1">({{ number_format($avgRating, 1) }} • {{ $ratingCount }})</span>
+                    </div>
+
                     {{-- Author --}}
                     <div class="flex items-center text-xs text-gray-500">
-                        <i class="fas fa-pen-nib text-[10px] mr-1.5 w-3 text-center"></i>
+                        <i class="fas fa-user-edit text-[10px] mr-1.5 w-3 text-center"></i>
                         <span class="truncate">{{ $comic->author ?? 'Đang cập nhật' }}</span>
-                    </div>
-
-                    {{-- Rating Section --}}
-                    <div class="flex items-center justify-between text-xs mt-0.5">
-                        {{-- Average Rating --}}
-                        <div class="flex items-center gap-1 text-yellow-500 font-bold bg-yellow-50 px-1.5 py-0.5 rounded border border-yellow-100">
-                            <span>{{ number_format($comic->rating ?? 0, 1) }}</span>
-                            <i class="fas fa-star text-[10px]"></i>
-                        </div>
-
-                        {{-- Reviews Count --}}
-                        <span class="text-gray-400 text-[11px]">
-                            ({{ number_format($comic->rating_count ?? 0) }} đánh giá)
-                        </span>
-                    </div>
-
-                    {{-- Line Separator --}}
-                    <div class="h-px bg-gray-100 my-1"></div>
-
-                    {{-- Categories --}}
-                    <div class="flex flex-wrap gap-1">
-                        @foreach($comic->categories->take(2) as $cat)
-                        <span class="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors">
-                            {{ $cat->name }}
-                        </span>
-                        @endforeach
-                        @if($comic->categories->count() > 2)
-                        <span class="text-[10px] text-gray-400 px-1">+{{ $comic->categories->count() - 2 }}</span>
-                        @endif
                     </div>
                 </div>
             </a>

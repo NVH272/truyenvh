@@ -45,96 +45,114 @@
                         <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Kết Quả</span> Tìm Kiếm
                     </h1>
                     <p class="text-xs text-slate-500 font-medium">
-                        Hiển thị 35 truyện phù hợp nhất
+                        Hiển thị {{ $comics->count() }} / {{ $comics->total() }} truyện phù hợp
                     </p>
-                </div>
-                <div class="bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm">
-                    <span class="text-[10px] text-slate-400">Tổng</span>
-                    <span class="text-brand-blue font-bold text-sm ml-1">14,379</span>
                 </div>
             </div>
 
             {{-- Grid Comics: 5 Cột (lg:grid-cols-5) --}}
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
-                @php
-                // Mock Data 35 items (7 hàng x 5 cột)
-                $baseComics = [
-                (object)['slug' => 'inuyasha', 'title' => 'Inuyasha (Khuyển Dạ Xoa)', 'cover_url' => 'https://upload.wikimedia.org/wikipedia/en/9/9c/Inuyashavolume1.jpg', 'chapter_count' => 558, 'status' => 'completed', 'views' => 976000, 'follows' => 1200, 'rating_avg' => 4.5],
-                (object)['slug' => 'isekai-nonbiri', 'title' => 'Cuộc Sống Nhàn Nhã Ở Thế Giới Khác', 'cover_url' => 'https://m.media-amazon.com/images/I/81xVw9+N7rL._AC_UF1000,1000_QL80_.jpg', 'chapter_count' => 89, 'status' => 'ongoing', 'views' => 292000, 'follows' => 3400, 'rating_avg' => 5],
-                (object)['slug' => 'nu-tho-san', 'title' => 'Phương Pháp Tán Tỉnh Của Nữ Thợ Săn', 'cover_url' => 'https://i.pinimg.com/736x/2b/86/e5/2b86e5c5450417643261642861c85317.jpg', 'chapter_count' => 45, 'status' => 'ongoing', 'views' => 5720000, 'follows' => 15000, 'rating_avg' => 3.5],
-                (object)['slug' => 'the-live', 'title' => 'The Live (Cuộc Sống Mới)', 'cover_url' => 'https://m.media-amazon.com/images/I/61r56D-c+LL._AC_UF1000,1000_QL80_.jpg', 'chapter_count' => 120, 'status' => 'ongoing', 'views' => 1110000, 'follows' => 8900, 'rating_avg' => 4],
-                (object)['slug' => 'tensei-ken', 'title' => 'Chuyển Sinh Thành Kiếm', 'cover_url' => 'https://upload.wikimedia.org/wikipedia/en/3/36/Reincarnated_as_a_Sword_light_novel_volume_1_cover.jpg', 'chapter_count' => 67, 'status' => 'pause', 'views' => 322000, 'follows' => 2100, 'rating_avg' => 4.8],
-                ];
+                @forelse($comics as $comic)
+                <div class="group relative flex flex-col transition-all duration-300 hover:-translate-y-1">
 
-                $comicsData = [];
-                for($i=0; $i<7; $i++) { // Lặp 7 lần để tạo 7 hàng (5x7=35)
-                    foreach($baseComics as $c) {
-                    $clone=clone $c;
-                    $clone->chapter_count += rand(1, 10); // Random chút số liệu
-                    $comicsData[] = $clone;
-                    }
-                    }
-                    @endphp
+                    {{-- Stretched link phủ toàn bộ thẻ --}}
+                    <a href="{{ route('user.comics.show', $comic->slug) }}"
+                        class="absolute inset-0 z-30"
+                        aria-label="{{ $comic->title }}"></a>
 
-                    @foreach($comicsData as $comic)
-                    <div class="group relative flex flex-col">
-                        {{-- Stretched link --}}
-                        <a href="{{ route('user.comics.show', $comic->slug) }}" class="absolute inset-0 z-30" aria-label="{{ $comic->title }}"></a>
+                    {{-- Cover Image Wrapper (GIỮ KÍCH THƯỚC: aspect-[2/3]) --}}
+                    <div class="relative aspect-[2/3] rounded-lg overflow-hidden shadow-sm border border-slate-200
+                group-hover:shadow-md group-hover:border-brand-blue/50 transition-all duration-300">
+                        <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}"
+                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
 
-                        {{-- Cover Image --}}
-                        <div class="relative aspect-[2/3] rounded-lg overflow-hidden shadow-sm border border-slate-200 group-hover:shadow-md group-hover:border-brand-blue/50 transition-all duration-300">
-                            <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}"
-                                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
-
-                            {{-- Badges --}}
-                            <div class="absolute top-1.5 left-1.5 pointer-events-none z-20">
-                                <span class="px-1 py-0.5 text-[9px] font-bold bg-black/60 text-white rounded backdrop-blur-sm border border-white/10">
-                                    {{ $comic->chapter_count }} ch
-                                </span>
-                            </div>
-                            <div class="absolute top-1.5 right-1.5 pointer-events-none z-20">
-                                @if($comic->status === 'ongoing')
-                                <div class="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_5px_rgba(59,130,246,0.8)]"></div>
-                                @elseif($comic->status === 'completed')
-                                <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.8)]"></div>
-                                @else
-                                <div class="w-2 h-2 rounded-full bg-yellow-500 shadow-[0_0_5px_rgba(234,179,8,0.8)]"></div>
-                                @endif
-                            </div>
-
-                            {{-- Overlay Stats --}}
-                            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pt-6 pb-1.5 px-2 flex justify-between items-end text-[9px] text-white/90 pointer-events-none z-20 font-medium">
-                                <span class="flex items-center gap-0.5"><i class="fas fa-eye text-[8px]"></i> {{ number_format($comic->views/1000, 1) }}K</span>
-                                <span class="flex items-center gap-0.5"><i class="fas fa-heart text-red-400 text-[8px]"></i> {{ number_format($comic->follows) }}</span>
-                            </div>
+                        {{-- Badge: Chapter (Top Left) --}}
+                        <div class="absolute top-1.5 left-1.5 pointer-events-none z-20">
+                            <span class="px-1.5 py-0.5 text-[9px] font-bold bg-black/70 text-white rounded backdrop-blur-sm shadow-sm">
+                                {{ $comic->chapter_count ?? 0 }} chương
+                            </span>
                         </div>
 
-                        {{-- Content --}}
-                        <div class="mt-2 space-y-0.5 relative z-20 pointer-events-none px-0.5">
-                            <h3 class="text-[13px] font-bold text-slate-700 line-clamp-2 leading-snug group-hover:text-brand-blue transition-colors min-h-[2.6em]" title="{{ $comic->title }}">
-                                {{ $comic->title }}
-                            </h3>
-                            <div class="flex items-center gap-0.5 text-yellow-400 text-[9px]">
-                                @for($i = 1; $i <= 5; $i++)
-                                    <i class="fas fa-star {{ $i <= round($comic->rating_avg) ? '' : 'text-slate-200' }}"></i>
-                                    @endfor
-                                    <span class="text-slate-400 ml-1">{{ number_format($comic->rating_avg, 1) }}</span>
-                            </div>
+                        {{-- Badge: Status (Top Right) (dạng chữ như mẫu) --}}
+                        <div class="absolute top-1.5 right-1.5 pointer-events-none z-20">
+                            @if($comic->status === 'ongoing')
+                            <span class="px-1.5 py-0.5 text-[9px] font-bold bg-blue-600/90 text-white rounded shadow-sm">
+                                Đang tiến hành
+                            </span>
+                            @elseif($comic->status === 'completed')
+                            <span class="px-1.5 py-0.5 text-[9px] font-bold bg-green-600/90 text-white rounded shadow-sm">
+                                Hoàn thành
+                            </span>
+                            @else
+                            <span class="px-1.5 py-0.5 text-[9px] font-bold bg-yellow-600/90 text-white rounded shadow-sm">
+                                Tạm dừng
+                            </span>
+                            @endif
+                        </div>
+
+                        {{-- Overlay Stats (Bottom on Image) --}}
+                        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent
+                    pt-6 pb-1.5 px-2 flex justify-between items-end text-[10px] text-white/90
+                    pointer-events-none z-20">
+                            <span class="flex items-center gap-1">
+                                <i class="fas fa-eye text-[9px]"></i>
+                                {{ number_format($comic->views ?? 0) }}
+                            </span>
+                            <span class="flex items-center gap-1">
+                                <i class="fas fa-heart text-red-400 text-[9px]"></i>
+                                {{ number_format($comic->follows ?? 0) }}
+                            </span>
                         </div>
                     </div>
-                    @endforeach
+
+                    {{-- Content Below Image --}}
+                    <div class="mt-2 space-y-1 relative z-20 pointer-events-none px-0.5">
+                        <h3 class="text-[13px] font-bold text-slate-700 line-clamp-2 leading-snug
+                   group-hover:text-brand-blue transition-colors min-h-[2.6em]"
+                            title="{{ $comic->title }}">
+                            {{ $comic->title }}
+                        </h3>
+
+                        {{-- Rating (read-only) --}}
+                        @php
+                        $avgRating = (float)($comic->rating_avg ?? $comic->rating ?? 0);
+                        $ratingCount = (int)($comic->reviews_count ?? $comic->rating_count ?? 0);
+                        $rounded = round($avgRating);
+                        @endphp
+
+                        <div class="flex items-center gap-0.5 text-yellow-500 text-[10px]">
+                            @for($i = 1; $i <= 5; $i++)
+                                <i class="fas fa-star {{ $i <= $rounded ? '' : 'text-slate-300' }}"></i>
+                                @endfor
+                                <span class="text-slate-500 ml-1">({{ number_format($avgRating, 1) }} • {{ $ratingCount }})</span>
+                        </div>
+
+                        {{-- Author --}}
+                        <div class="text-[11px] text-slate-500 truncate" title="Tác giả">
+                            <i class="fas fa-user-edit text-[9px] mr-1"></i>
+                            {{ $comic->author ?? 'Đang cập nhật' }}
+                        </div>
+                    </div>
+                </div>
+
+                @empty
+                <div class="col-span-full text-center text-slate-400 py-10">
+                    Không tìm thấy truyện phù hợp.
+                </div>
+                @endforelse
             </div>
 
             {{-- Pagination --}}
             <div class="flex justify-center mt-10">
-                <div class="flex items-center bg-white rounded-full px-2 py-1.5 border border-slate-200 shadow-sm gap-1">
+                <!-- <div class="flex items-center bg-white rounded-full px-2 py-1.5 border border-slate-200 shadow-sm gap-1">
                     <a href="#" class="w-7 h-7 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 transition-all"><i class="fas fa-chevron-left text-[10px]"></i></a>
                     <a href="#" class="w-7 h-7 flex items-center justify-center rounded-full bg-brand-blue text-white font-bold text-xs shadow-sm">1</a>
                     <a href="#" class="w-7 h-7 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-brand-blue transition-all text-xs font-medium">2</a>
                     <a href="#" class="w-7 h-7 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-brand-blue transition-all text-xs font-medium">3</a>
                     <span class="w-7 h-7 flex items-center justify-center text-slate-300 font-bold text-[10px]">...</span>
                     <a href="#" class="w-7 h-7 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 transition-all"><i class="fas fa-chevron-right text-[10px]"></i></a>
-                </div>
+                </div> -->
+                {{ $comics->links() }}
             </div>
         </div>
 

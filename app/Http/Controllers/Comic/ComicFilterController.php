@@ -50,4 +50,46 @@ class ComicFilterController extends Controller
             'sort'
         ));
     }
+
+    public function search(Request $request)
+    {
+        $query = Comic::query();
+
+        // keyword
+        if ($request->filled('keyword')) {
+            $kw = $request->keyword;
+            $query->where(function ($q) use ($kw) {
+                $q->where('title', 'like', "%{$kw}%")
+                    ->orWhere('slug', 'like', "%{$kw}%");
+            });
+        }
+
+        // filter categories (nếu bạn đang dùng categories[]=slug)
+        $selected = $request->input('categories', []);
+        if (!empty($selected)) {
+            $query->whereHas('categories', function ($q) use ($selected) {
+                $q->whereIn('slug', $selected);
+            });
+        }
+
+        // sort
+        switch ($request->input('sort', 'latest')) {
+            case 'views':
+                $query->orderByDesc('views');
+                break;
+            case 'rating':
+                $query->orderByDesc('rating'); // hoặc rating_avg nếu bạn lưu riêng
+                break;
+            case 'chapters':
+                $query->orderByDesc('chapter_count');
+                break;
+            default:
+                $query->orderByDesc('updated_at'); // mới cập nhật
+                break;
+        }
+
+        $comics = $query->paginate(35)->withQueryString();
+
+        return view('user.search', compact('comics'));
+    }
 }
