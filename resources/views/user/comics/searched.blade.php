@@ -21,10 +21,6 @@
                     Tìm thấy <span class="font-bold text-gray-900">{{ $comics->total() }}</span> truyện
                 </p>
             </div>
-
-            <a href="{{ url('/') }}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm hover:shadow hover:border-blue-200">
-                <i class="fas fa-arrow-left mr-2"></i> Về trang chủ
-            </a>
         </div>
 
         @if($q === '')
@@ -63,8 +59,7 @@
                         alt="{{ $comic->title }}"
                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
 
-                    {{-- Gradient Overlay (Làm tối phần dưới để text dễ đọc) --}}
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity pointer-events-none"></div>
+                    {{-- Bỏ gradient tối dưới ảnh, chỉ giữ nội dung khác --}}
 
                     {{-- Badge: Chapter (Top Left) --}}
                     <div class="absolute top-1.5 left-1.5 pointer-events-none z-20">
@@ -84,8 +79,8 @@
                         @endif
                     </div>
 
-                    {{-- Stats (Bottom Overlay) --}}
-                    <div class="absolute bottom-0 left-0 right-0 p-2 flex justify-between items-end text-white/95 text-[10px] pointer-events-none z-20 font-medium">
+                    {{-- Stats (Bottom Overlay - vệt đen mỏng đủ để đọc chữ) --}}
+                    <div class="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex justify-between items-end text-white/95 text-[10px] pointer-events-none z-20 font-medium">
                         <span class="flex items-center gap-1">
                             <i class="fas fa-eye text-sky-300"></i>
                             {{ number_format($comic->views ?? 0) }}

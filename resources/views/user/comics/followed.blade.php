@@ -7,23 +7,6 @@
     {{-- HEADER SECTION WITH GRADIENT BACKGROUND --}}
     <div class="bg-white border-b border-gray-200 mb-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {{-- Breadcrumb --}}
-            <nav class="flex text-sm font-medium text-gray-500 mb-4" aria-label="Breadcrumb">
-                <ol class="inline-flex items-center space-x-2">
-                    <li class="inline-flex items-center">
-                        <a href="{{ url('/') }}" class="hover:text-indigo-600 transition-colors flex items-center">
-                            <i class="fas fa-home mr-2"></i> Trang chủ
-                        </a>
-                    </li>
-                    <li>
-                        <div class="flex items-center">
-                            <i class="fas fa-chevron-right text-gray-400 text-xs mx-2"></i>
-                            <span class="text-gray-800">Tủ truyện</span>
-                        </div>
-                    </li>
-                </ol>
-            </nav>
-
             {{-- Title & Stats --}}
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
@@ -33,7 +16,6 @@
                         </span>
                         Truyện Đang Theo Dõi
                     </h1>
-                    <p class="mt-2 text-gray-500 text-sm">Danh sách các bộ truyện bạn đã lưu lại để đọc dần.</p>
                 </div>
 
                 <div class="flex items-center gap-2 bg-indigo-50 px-4 py-2 rounded-full border border-indigo-100">
@@ -78,8 +60,7 @@
                         alt="{{ $comic->title }}"
                         class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500 ease-in-out">
 
-                    {{-- Overlay Gradient --}}
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-70 group-hover:opacity-90 transition-opacity"></div>
+                    {{-- Bỏ overlay gradient tối, chỉ giữ ảnh --}}
 
                     {{-- Badge: Chapter (Top Left) --}}
                     <div class="absolute top-2 left-2 pointer-events-none z-20">
@@ -105,8 +86,8 @@
                         @endif
                     </div>
 
-                    {{-- Overlay Stats (Bottom) --}}
-                    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent pt-7 pb-2 px-3 flex justify-between items-end text-[11px] text-white/90 pointer-events-none z-20">
+                    {{-- Overlay Stats (Bottom - vệt đen mỏng đủ đọc chữ) --}}
+                    <div class="absolute inset-x-0 bottom-0 pt-4 pb-2 px-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex justify-between items-end text-[11px] text-white/90 pointer-events-none z-20">
                         <span class="flex items-center gap-1">
                             <i class="fas fa-eye text-[10px]"></i>
                             {{ number_format($comic->views ?? 0) }}

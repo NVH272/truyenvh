@@ -163,8 +163,8 @@
                         @endif
                     </div>
 
-                    {{-- Overlay Stats (Bottom on Image) --}}
-                    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-6 pb-1.5 px-2 flex justify-between items-end text-[10px] text-white/90 pointer-events-none z-20">
+                    {{-- Overlay Stats (Bottom on Image - bỏ nền đen, chỉ giữ text) --}}
+                    <div class="absolute inset-x-0 bottom-0 pt-3 pb-1.5 px-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex justify-between items-end text-[10px] text-white/90 pointer-events-none z-20">
                         <span class="flex items-center gap-1">
                             <i class="fas fa-eye text-[9px]"></i>
                             {{ number_format($comic->views ?? 0) }}
@@ -326,7 +326,7 @@
                 <div class="relative rounded-lg overflow-hidden shadow-sm aspect-[2/3] mb-2 cursor-pointer">
                     ${item.isHot ? '<span class="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm z-10">HOT</span>' : ''}
                     <img src="${item.img}" class="w-full h-full object-cover" alt="${item.title}">
-                    <div class="absolute bottom-0 w-full bg-gradient-to-t from-black/70 to-transparent p-2 flex justify-between text-white/90 text-[10px]">
+                    <div class="absolute bottom-0 w-full p-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex justify-between text-white/90 text-[10px]">
                         <span><i class="fas fa-eye"></i> 15K</span>
                         <span><i class="fas fa-heart"></i> 200</span>
                     </div>

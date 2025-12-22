@@ -90,10 +90,8 @@
                             @endif
                         </div>
 
-                        {{-- Overlay Stats (Bottom on Image) --}}
-                        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent
-                    pt-6 pb-1.5 px-2 flex justify-between items-end text-[10px] text-white/90
-                    pointer-events-none z-20">
+                        {{-- Overlay Stats (Bottom on Image - vệt đen mỏng đủ đọc chữ) --}}
+                        <div class="absolute inset-x-0 bottom-0 pt-3 pb-1.5 px-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex justify-between items-end text-[10px] text-white/90 pointer-events-none z-20">
                             <span class="flex items-center gap-1">
                                 <i class="fas fa-eye text-[9px]"></i>
                                 {{ number_format($comic->views ?? 0) }}
