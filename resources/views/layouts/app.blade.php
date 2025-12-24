@@ -143,7 +143,7 @@
             <div class="flex items-center gap-3">
 
                 <!-- SEARCH BAR -->
-                <form action="{{ route('user.comics.search') }}" method="GET" class="relative hidden md:block group">
+                <form action="{{ route('user.comics.filter') }}" method="GET" class="relative hidden md:block group">
                     <input
                         type="text"
                         name="q"

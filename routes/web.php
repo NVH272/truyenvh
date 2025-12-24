@@ -58,7 +58,7 @@ Route::middleware(['auth'])->group(function () {
 
 // Trang tìm kiếm truyện
 Route::get('/search', [ComicSearchController::class, 'index'])
-    ->name('user.comics.search');
+    ->name('user.comics.filter');
 // Trang lọc truyện
 Route::get('/comics/filter', [ComicFilterController::class, 'index'])
     ->name('user.comics.filter');

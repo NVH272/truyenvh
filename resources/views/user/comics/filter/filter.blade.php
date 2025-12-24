@@ -168,34 +168,71 @@
                     </div>
 
                     {{-- Search Name --}}
-                    <div class="group relative mb-4">
-                        <label class="text-[11px] font-bold text-slate-400 uppercase mb-1.5 block ml-1 tracking-wide">Tìm kiếm</label>
-                        <div class="relative">
-                            <input type="text"
-                                name="keyword"
-                                value="{{ request('keyword') }}"
-                                placeholder="Nhập tên truyện..."
-                                class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 pl-9 text-xs text-slate-700 font-medium 
-                                focus:bg-white focus:border-brand-blue focus:ring-1 focus:ring-brand-blue outline-none transition-all placeholder-slate-400">
-                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs group-focus-within:text-brand-blue transition-colors"></i>
+                    <form method="GET" action="{{ route('user.comics.filter') }}">
+                        <div class="group relative mb-4">
+                            <label class="text-[11px] font-bold text-slate-400 uppercase mb-1.5 block ml-1 tracking-wide">
+                                Tìm kiếm
+                            </label>
+
+                            <div class="relative">
+                                <input
+                                    type="text"
+                                    name="q"
+                                    value="{{ request('q') }}"
+                                    placeholder="Nhập tên truyện..."
+                                    class="w-full bg-slate-50 border border-slate-200 rounded-lg
+                                    px-3 py-2 pl-9 text-xs text-slate-700 font-medium
+                                    focus:bg-white focus:border-brand-blue focus:ring-1 focus:ring-brand-blue
+                                    outline-none transition-all placeholder-slate-400">
+
+                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2
+                                text-slate-400 text-xs group-focus-within:text-brand-blue transition-colors"></i>
+                            </div>
                         </div>
-                    </div>
+                    </form>
 
                     {{-- Sort Dropdown --}}
                     <div class="relative mb-4">
-                        <label class="text-[11px] font-bold text-slate-400 uppercase mb-1.5 block ml-1 tracking-wide">Sắp xếp</label>
-                        <div class="relative group">
-                            <select name="sort" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 font-medium 
-                            focus:bg-white focus:border-brand-blue focus:ring-1 focus:ring-brand-blue outline-none appearance-none cursor-pointer transition-all hover:border-slate-300">
-                                <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Mới cập nhật</option>
-                                <option value="views" {{ request('sort') == 'views' ? 'selected' : '' }}>Xem nhiều nhất</option>
-                                <option value="rating" {{ request('sort') == 'rating' ? 'selected' : '' }}>Đánh giá cao</option>
-                                <option value="chapters" {{ request('sort') == 'chapters' ? 'selected' : '' }}>Số chương</option>
-                            </select>
-                            <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                                <i class="fas fa-chevron-down text-slate-400 text-[10px]"></i>
+                        <label class="text-[11px] font-bold text-slate-400 uppercase mb-1.5 block ml-1 tracking-wide">
+                            Sắp xếp
+                        </label>
+                        <form method="GET" action="{{ route('user.comics.filter') }}">
+                            <div class="relative group">
+                                <select name="sort" id="sort-select"
+                                    class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 font-medium
+                                    focus:bg-white focus:border-brand-blue focus:ring-1 focus:ring-brand-blue outline-none appearance-none
+                                    cursor-pointer transition-all hover:border-slate-300">
+
+                                    {{-- Lượt xem --}}
+                                    <option value="views_desc" {{ request('sort') == 'views_desc' ? 'selected' : '' }}>
+                                        Lượt xem (Cao → Thấp)
+                                    </option>
+                                    <option value="views_asc" {{ request('sort') == 'views_asc'  ? 'selected' : '' }}>
+                                        Lượt xem (Thấp → Cao)
+                                    </option>
+
+                                    {{-- Đánh giá --}}
+                                    <option value="rating_desc" {{ request('sort') == 'rating_desc' ? 'selected' : '' }}>
+                                        Đánh giá (Cao → Thấp)
+                                    </option>
+                                    <option value="rating_asc" {{ request('sort') == 'rating_asc'  ? 'selected' : '' }}>
+                                        Đánh giá (Thấp → Cao)
+                                    </option>
+
+                                    {{-- Số chương --}}
+                                    <option value="chapters_desc" {{ request('sort') == 'chapters_desc' ? 'selected' : '' }}>
+                                        Số chương (Nhiều → Ít)
+                                    </option>
+                                    <option value="chapters_asc" {{ request('sort') == 'chapters_asc'  ? 'selected' : '' }}>
+                                        Số chương (Ít → Nhiều)
+                                    </option>
+                                </select>
+
+                                <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                    <i class="fas fa-chevron-down text-slate-400 text-[10px]"></i>
+                                </div>
                             </div>
-                        </div>
+                        </form>
                     </div>
 
                     {{-- Tags Section --}}
@@ -239,12 +276,6 @@
                         </div>
                     </div>
 
-                    {{-- Search Button --}}
-                    <button type="submit" class="w-full bg-slate-900 hover:bg-brand-blue text-white font-bold py-2.5 rounded-lg uppercase tracking-wide text-xs transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] flex items-center justify-center gap-2">
-                        <i class="fas fa-filter text-[10px]"></i>
-                        <span>Áp dụng</span>
-                    </button>
-
                 </div>
             </div>
         </div>
@@ -252,3 +283,16 @@
     </div>
 </div>
 @endsection
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sortSelect = document.getElementById('sort-select');
+        if (!sortSelect) return;
+
+        sortSelect.addEventListener('change', function() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('sort') === this.value) return;
+            this.form.submit();
+        });
+    });
+</script>
