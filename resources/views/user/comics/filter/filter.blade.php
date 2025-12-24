@@ -196,43 +196,41 @@
                         <label class="text-[11px] font-bold text-slate-400 uppercase mb-1.5 block ml-1 tracking-wide">
                             Sắp xếp
                         </label>
-                        <form method="GET" action="{{ route('user.comics.filter') }}">
-                            <div class="relative group">
-                                <select name="sort" id="sort-select"
-                                    class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 font-medium
-                                    focus:bg-white focus:border-brand-blue focus:ring-1 focus:ring-brand-blue outline-none appearance-none
-                                    cursor-pointer transition-all hover:border-slate-300">
+                        <div class="relative group">
+                            <select id="sort-select"
+                                class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 font-medium
+                                focus:bg-white focus:border-brand-blue focus:ring-1 focus:ring-brand-blue outline-none appearance-none
+                                cursor-pointer transition-all hover:border-slate-300">
 
-                                    {{-- Lượt xem --}}
-                                    <option value="views_desc" {{ request('sort') == 'views_desc' ? 'selected' : '' }}>
-                                        Lượt xem (Cao → Thấp)
-                                    </option>
-                                    <option value="views_asc" {{ request('sort') == 'views_asc'  ? 'selected' : '' }}>
-                                        Lượt xem (Thấp → Cao)
-                                    </option>
+                                {{-- Lượt xem --}}
+                                <option value="views_desc" {{ request('sort') == 'views_desc' ? 'selected' : '' }}>
+                                    Lượt xem (Cao → Thấp)
+                                </option>
+                                <option value="views_asc" {{ request('sort') == 'views_asc'  ? 'selected' : '' }}>
+                                    Lượt xem (Thấp → Cao)
+                                </option>
 
-                                    {{-- Đánh giá --}}
-                                    <option value="rating_desc" {{ request('sort') == 'rating_desc' ? 'selected' : '' }}>
-                                        Đánh giá (Cao → Thấp)
-                                    </option>
-                                    <option value="rating_asc" {{ request('sort') == 'rating_asc'  ? 'selected' : '' }}>
-                                        Đánh giá (Thấp → Cao)
-                                    </option>
+                                {{-- Đánh giá --}}
+                                <option value="rating_desc" {{ request('sort') == 'rating_desc' ? 'selected' : '' }}>
+                                    Đánh giá (Cao → Thấp)
+                                </option>
+                                <option value="rating_asc" {{ request('sort') == 'rating_asc'  ? 'selected' : '' }}>
+                                    Đánh giá (Thấp → Cao)
+                                </option>
 
-                                    {{-- Số chương --}}
-                                    <option value="chapters_desc" {{ request('sort') == 'chapters_desc' ? 'selected' : '' }}>
-                                        Số chương (Nhiều → Ít)
-                                    </option>
-                                    <option value="chapters_asc" {{ request('sort') == 'chapters_asc'  ? 'selected' : '' }}>
-                                        Số chương (Ít → Nhiều)
-                                    </option>
-                                </select>
+                                {{-- Số chương --}}
+                                <option value="chapters_desc" {{ request('sort') == 'chapters_desc' ? 'selected' : '' }}>
+                                    Số chương (Nhiều → Ít)
+                                </option>
+                                <option value="chapters_asc" {{ request('sort') == 'chapters_asc'  ? 'selected' : '' }}>
+                                    Số chương (Ít → Nhiều)
+                                </option>
+                            </select>
 
-                                <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                                    <i class="fas fa-chevron-down text-slate-400 text-[10px]"></i>
-                                </div>
+                            <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                <i class="fas fa-chevron-down text-slate-400 text-[10px]"></i>
                             </div>
-                        </form>
+                        </div>
                     </div>
 
                     {{-- Tags Section --}}
@@ -292,7 +290,12 @@
         sortSelect.addEventListener('change', function() {
             const params = new URLSearchParams(window.location.search);
             if (params.get('sort') === this.value) return;
-            this.form.submit();
+
+            // Cập nhật sort parameter
+            params.set('sort', this.value);
+
+            // Chuyển hướng với tham số được bảo toàn
+            window.location.href = '{{ route("user.comics.filter") }}?' + params.toString();
         });
     });
 </script>

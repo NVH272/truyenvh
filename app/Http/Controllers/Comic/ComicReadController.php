@@ -72,6 +72,41 @@ class ComicReadController extends Controller
 
         $comments = $commentsQuery->paginate(10)->appends(['filter' => $filter]);
 
+        $limit = 5;
+
+        // Lấy danh sách category id của truyện hiện tại
+        $categoryIds = $comic->categories()->pluck('categories.id')->all(); // comic phải có relation categories()
+
+        // 1) Ưu tiên: cùng tác giả
+        $relatedComics = Comic::query()
+            ->where('approval_status', 'approved')
+            ->where('id', '!=', $comic->id)
+            ->when(!empty($comic->author), function ($q) use ($comic) {
+                $q->where('author', $comic->author);
+            })
+            ->with('categories')
+            ->withAvg('ratings', 'rating')
+            ->withCount('ratings')
+            ->orderByRaw('ratings_avg_rating IS NULL, ratings_avg_rating DESC')
+            ->limit($limit)
+            ->get();
+
+        // 2) Fallback: cùng thể loại nếu không có cùng tác giả
+        if ($relatedComics->isEmpty() && !empty($categoryIds)) {
+            $relatedComics = Comic::query()
+                ->where('approval_status', 'approved')
+                ->where('id', '!=', $comic->id)
+                ->whereHas('categories', function ($q) use ($categoryIds) {
+                    $q->whereIn('categories.id', $categoryIds);
+                })
+                ->with('categories')
+                ->withAvg('ratings', 'rating')
+                ->withCount('ratings')
+                ->orderByRaw('ratings_avg_rating IS NULL, ratings_avg_rating DESC')
+                ->limit($limit)
+                ->get();
+        }
+
         // Nếu request AJAX (dùng cho filter/pagination comments) thì trả về partial comments
         if ($request->ajax()) {
             return view('user.comics.partials.comments', [
@@ -81,12 +116,13 @@ class ComicReadController extends Controller
             ]);
         }
 
-        return view('user.comics.index', [
+        return view('user.comics.show', [
             'comic'         => $comic,
             'userRating'    => $userRating,
             'isFollowing'   => $isFollowing,
             'comments'      => $comments,
             'commentFilter' => $filter,
+            'relatedComics' => $relatedComics,
         ]);
     }
 }

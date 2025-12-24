@@ -33,7 +33,6 @@
                 @csrf
 
                 {{-- PHẦN 1: KHUNG NHẬP COMMENT --}}
-                {{-- Thay đổi: 'items-end' -> 'items-center' để nút luôn nằm giữa --}}
                 <div class="relative flex items-center bg-gray-100 rounded-[20px] px-3 py-2 shadow-sm focus-within:bg-white focus-within:shadow-md focus-within:ring-2 focus-within:ring-blue-100 transition-all">
 
                     {{-- Textarea --}}
@@ -45,7 +44,6 @@
                         oninput="this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px';">{{ old('content') }}</textarea>
 
                     {{-- Button --}}
-                    {{-- Thay đổi: Bỏ 'mb-0.5' vì đã dùng items-center --}}
                     <button type="submit"
                         class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full text-blue-600 hover:bg-gray-200 transition-colors opacity-80 hover:opacity-100 focus:outline-none ml-1"
                         title="Gửi bình luận">
@@ -62,7 +60,6 @@
 
             </form>
 
-            {{-- Script giữ nguyên --}}
             @push('scripts')
             <script>
                 document.addEventListener("DOMContentLoaded", function() {
@@ -104,14 +101,62 @@
                             </p>
                         </div>
 
-                        {{-- Dấu ... bên phải bubble --}}
-                        <button type="button"
-                            class="opacity-0 group-hover/comment:opacity-100 transition-opacity
-                            text-gray-500 hover:text-gray-700
-                            w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200/70 flex-shrink-0"
-                            title="Tùy chọn">
-                            <i class="fas fa-ellipsis-h text-sm"></i>
-                        </button>
+                        @php
+                        $isOwner = auth()->check() && (int)$comment->user_id === (int)auth()->id();
+                        @endphp
+
+                        <div class="relative flex-shrink-0">
+                            {{-- Nút ... --}}
+                            <button type="button"
+                                class="opacity-0 group-hover/comment:opacity-100 transition-opacity
+                                text-gray-500 hover:text-gray-700
+                                w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200/70 flex-shrink-0"
+                                title="Tùy chọn"
+                                data-comment-menu-btn>
+                                <i class="fas fa-ellipsis-h text-sm"></i>
+                            </button>
+
+                            {{-- ========================================================== --}}
+                            {{-- MENU DROPDOWN (Phiên bản w-max: tự động co theo chữ) --}}
+                            {{-- ========================================================== --}}
+                            <div class="hidden absolute top-8 left-1/2 -translate-x-1/2 z-50 w-max filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.12)]"
+                                data-comment-menu>
+
+                                {{-- 1. Phần nhọn (Mũi tên) --}}
+                                <div class="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-white transform rotate-45 z-0"></div>
+
+                                {{-- 2. Phần nội dung menu: Thêm whitespace-nowrap để chữ không xuống dòng --}}
+                                <div class="relative z-10 bg-white rounded-lg overflow-hidden py-1 shadow-sm whitespace-nowrap">
+
+                                    {{-- Item 1: Báo cáo với quản trị viên --}}
+                                    <button type="button"
+                                        class="w-full text-left px-3.5 py-1.5 text-[13px] font-medium text-gray-900 hover:bg-gray-100 transition-colors">
+                                        Báo cáo với quản trị viên
+                                    </button>
+
+                                    {{-- Item 2: Báo cáo bình luận (hoặc Xóa) --}}
+                                    @if(isset($isOwner) && $isOwner)
+                                    <form method="POST" action=""
+                                        onsubmit="return confirm('Bạn có chắc muốn xoá bình luận này không?');" class="w-full">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                            class="w-full text-left px-3.5 py-1.5 text-[13px] font-medium text-red-600 hover:bg-gray-100 transition-colors">
+                                            Xoá bình luận
+                                        </button>
+                                    </form>
+                                    @else
+                                    <button type="button"
+                                        class="w-full text-left px-3.5 py-1.5 text-[13px] font-medium text-gray-900 hover:bg-gray-100 transition-colors">
+                                        Báo cáo bình luận
+                                    </button>
+                                    @endif
+                                </div>
+                            </div>
+                            {{-- KẾT THÚC MENU DROPDOWN --}}
+
+                        </div>
+
                     </div>
 
                     {{-- Hàng action: Like / Trả lời / Thời gian --}}
@@ -182,10 +227,10 @@
                                 @csrf
                                 <input type="hidden" name="parent_id" value="{{ $comment->id }}">
 
-                                {{-- PHẦN 1: KHUNG NHẬP REPLY (Bong bóng xám nhỏ gọn) --}}
+                                {{-- PHẦN 1: KHUNG NHẬP REPLY --}}
                                 <div class="relative flex items-center bg-gray-100 rounded-[18px] px-2 py-1 shadow-sm focus-within:bg-white focus-within:shadow-md focus-within:ring-2 focus-within:ring-blue-100 transition-all">
 
-                                    {{-- Textarea: Font chữ nhỏ (13px), tự giãn dòng --}}
+                                    {{-- Textarea --}}
                                     <textarea name="content"
                                         rows="1"
                                         style="min-height: 32px; max-height: 80px;"
@@ -193,16 +238,15 @@
                                         placeholder="Viết phản hồi..."
                                         oninput="this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px';"></textarea>
 
-                                    {{-- Button: Nút nhỏ (w-7 h-7), luôn nằm giữa theo chiều dọc --}}
+                                    {{-- Button --}}
                                     <button type="submit"
                                         class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full text-blue-600 hover:bg-gray-200 transition-colors opacity-80 hover:opacity-100 focus:outline-none ml-1"
                                         title="Gửi phản hồi">
                                         <i class="fas fa-paper-plane text-xs transform rotate-12 translate-x-[-1px] translate-y-[1px]"></i>
                                     </button>
                                 </div>
-                                {{-- Đóng thẻ div khung xám --}}
 
-                                {{-- PHẦN 2: THÔNG BÁO LỖI (Nằm ngoài) --}}
+                                {{-- PHẦN 2: THÔNG BÁO LỖI --}}
                                 @error('content')
                                 <div class="text-[11px] text-red-500 mt-1 ml-3 text-left">
                                     {{ $message }}
@@ -230,60 +274,110 @@
                                 <img src="{{ $reply->user->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode($reply->user->name).'&background=random' }}"
                                     class="w-10 h-10 rounded-full object-cover flex-shrink-0"
                                     alt="{{ $reply->user->name }}">
-                                {{-- Bubble reply + dấu ... --}}
-                                <div class="flex items-center gap-2 group/comment">
-                                    <div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md">
-                                        <div class="font-semibold text-gray-800 text-sm mb-0.5">{{ $reply->user->name }}</div>
-                                        <p class="text-gray-700 text-sm leading-relaxed whitespace-normal break-words js-comment-content">
-                                            {{ trim($reply->content) }}
-                                        </p>
-                                    </div>
 
-                                    {{-- Dấu ... bên phải bubble --}}
-                                    <button type="button"
-                                        class="opacity-0 group-hover/comment:opacity-100 transition-opacity
-                                        text-gray-500 hover:text-gray-700
-                                        w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200/70 flex-shrink-0"
-                                        title="Tùy chọn">
-                                        <i class="fas fa-ellipsis-h text-sm"></i>
-                                    </button>
-                                </div>
+                                <div class="flex-1 min-w-0">
+                                    {{-- Bubble reply + dấu ... --}}
+                                    <div class="flex items-center gap-2 group/comment">
+                                        <div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md">
+                                            <div class="font-semibold text-gray-800 text-sm mb-0.5">{{ $reply->user->name }}</div>
+                                            <p class="text-gray-700 text-sm leading-relaxed whitespace-normal break-words js-comment-content">
+                                                {{ trim($reply->content) }}
+                                            </p>
+                                        </div>
 
-                                {{-- Action buttons --}}
-                                <div class="flex items-center gap-4 mt-1.5 ml-1">
-                                    @auth
-                                    @php
-                                    $currentUser = auth()->user();
-                                    $isReplyLiked = $reply->isLikedBy($currentUser);
-                                    @endphp
-                                    <div class="flex items-center gap-1">
-                                        <form action="{{ route('comments.reaction', ['comment' => $reply->id, 'type' => 'like']) }}"
-                                            method="POST" class="inline">
-                                            @csrf
+                                        {{-- Dấu ... bên phải bubble --}}
+                                        @php
+                                        $isOwner = auth()->check() && (int)$reply->user_id === (int)auth()->id();
+                                        @endphp
+
+                                        <div class="relative flex-shrink-0">
                                             <button type="button"
-                                                data-comment-reaction="like"
-                                                data-comment-id="{{ $reply->id }}"
-                                                data-action="{{ route('comments.reaction', ['comment' => $reply->id, 'type' => 'like']) }}"
-                                                class="js-comment-like-btn text-xs font-medium transition-colors {{ $isReplyLiked ? 'text-blue-600' : 'text-gray-500 hover:text-blue-600' }}"
-                                                title="Thích">
-                                                <i class="fas fa-thumbs-up mr-1"></i>Thích
+                                                class="opacity-0 group-hover/comment:opacity-100 transition-opacity
+                                                text-gray-500 hover:text-gray-700
+                                                w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200/70 flex-shrink-0"
+                                                title="Tùy chọn"
+                                                data-comment-menu-btn>
+                                                <i class="fas fa-ellipsis-h text-sm"></i>
                                             </button>
-                                        </form>
-                                        <span class="js-comment-like-count text-xs text-gray-500 {{ ($reply->likes_count ?? 0) == 0 ? 'hidden' : '' }}">
-                                            {{ $reply->likes_count ?? 0 }}
-                                        </span>
+
+                                            {{-- ========================================================== --}}
+                                            {{-- MENU DROPDOWN (Phiên bản w-max: tự động co theo chữ) --}}
+                                            {{-- ========================================================== --}}
+                                            <div class="hidden absolute top-8 left-1/2 -translate-x-1/2 z-50 w-max filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.12)]"
+                                                data-comment-menu>
+
+                                                {{-- 1. Phần nhọn (Mũi tên) --}}
+                                                <div class="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-white transform rotate-45 z-0"></div>
+
+                                                {{-- 2. Phần nội dung menu: Thêm whitespace-nowrap để chữ không xuống dòng --}}
+                                                <div class="relative z-10 bg-white rounded-lg overflow-hidden py-1 shadow-sm whitespace-nowrap">
+
+                                                    {{-- Item 1: Báo cáo với quản trị viên --}}
+                                                    <button type="button"
+                                                        class="w-full text-left px-3.5 py-1.5 text-[13px] font-medium text-gray-900 hover:bg-gray-100 transition-colors">
+                                                        Báo cáo với quản trị viên
+                                                    </button>
+
+                                                    {{-- Item 2: Báo cáo bình luận (hoặc Xóa) --}}
+                                                    @if(isset($isOwner) && $isOwner)
+                                                    <form method="POST" action=""
+                                                        onsubmit="return confirm('Bạn có chắc muốn xoá bình luận này không?');" class="w-full">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit"
+                                                            class="w-full text-left px-3.5 py-1.5 text-[13px] font-medium text-red-600 hover:bg-gray-100 transition-colors">
+                                                            Xoá bình luận
+                                                        </button>
+                                                    </form>
+                                                    @else
+                                                    <button type="button"
+                                                        class="w-full text-left px-3.5 py-1.5 text-[13px] font-medium text-gray-900 hover:bg-gray-100 transition-colors">
+                                                        Báo cáo bình luận
+                                                    </button>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            {{-- KẾT THÚC MENU DROPDOWN --}}
+
+                                        </div>
                                     </div>
 
-                                    <button type="button"
-                                        onclick="scrollToReplyForm('{{ $comment->id }}', '{{ $reply->user->name }}')"
-                                        class="text-xs font-medium text-gray-500 hover:text-blue-600 transition-colors flex items-center gap-1">
-                                        <i class="far fa-comment-dots"></i>Trả lời
-                                    </button>
+                                    {{-- Action buttons --}}
+                                    <div class="flex items-center gap-4 mt-1.5 ml-1">
+                                        @auth
+                                        @php
+                                        $currentUser = auth()->user();
+                                        $isReplyLiked = $reply->isLikedBy($currentUser);
+                                        @endphp
+                                        <div class="flex items-center gap-1">
+                                            <form action="{{ route('comments.reaction', ['comment' => $reply->id, 'type' => 'like']) }}"
+                                                method="POST" class="inline">
+                                                @csrf
+                                                <button type="button"
+                                                    data-comment-reaction="like"
+                                                    data-comment-id="{{ $reply->id }}"
+                                                    data-action="{{ route('comments.reaction', ['comment' => $reply->id, 'type' => 'like']) }}"
+                                                    class="js-comment-like-btn text-xs font-medium transition-colors {{ $isReplyLiked ? 'text-blue-600' : 'text-gray-500 hover:text-blue-600' }}"
+                                                    title="Thích">
+                                                    <i class="fas fa-thumbs-up mr-1"></i>Thích
+                                                </button>
+                                            </form>
+                                            <span class="js-comment-like-count text-xs text-gray-500 {{ ($reply->likes_count ?? 0) == 0 ? 'hidden' : '' }}">
+                                                {{ $reply->likes_count ?? 0 }}
+                                            </span>
+                                        </div>
 
-                                    <span class="text-xs text-gray-500 ml-auto">
-                                        {{ $reply->created_at->diffForHumans() }}
-                                    </span>
-                                    @endauth
+                                        <button type="button"
+                                            onclick="scrollToReplyForm('{{ $comment->id }}', '{{ $reply->user->name }}')"
+                                            class="text-xs font-medium text-gray-500 hover:text-blue-600 transition-colors flex items-center gap-1">
+                                            <i class="far fa-comment-dots"></i>Trả lời
+                                        </button>
+
+                                        <span class="text-xs text-gray-500 ml-auto">
+                                            {{ $reply->created_at->diffForHumans() }}
+                                        </span>
+                                        @endauth
+                                    </div>
                                 </div>
                             </div>
                             @endforeach

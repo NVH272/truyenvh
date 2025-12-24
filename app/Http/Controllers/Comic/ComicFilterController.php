@@ -38,6 +38,14 @@ class ComicFilterController extends Controller
         $sort = $request->input('sort', 'rating_desc');
 
         switch ($sort) {
+            case 'views_desc':
+                $comicsQuery->orderByDesc('views');
+                break;
+
+            case 'views_asc':
+                $comicsQuery->orderBy('views');
+                break;
+
             case 'rating_desc':
                 // NULL (chưa có rating) sẽ xuống cuối
                 $comicsQuery->orderByRaw('ratings_avg_rating IS NULL, ratings_avg_rating DESC');
@@ -98,18 +106,30 @@ class ComicFilterController extends Controller
 
         $sort = $request->input('sort', 'rating_desc');
         switch ($sort) {
+            case 'views_desc':
+                $query->orderByDesc('views');
+                break;
+
+            case 'views_asc':
+                $query->orderBy('views');
+                break;
+
             case 'rating_desc':
                 $query->orderByRaw('ratings_avg_rating IS NULL, ratings_avg_rating DESC');
                 break;
+
             case 'rating_asc':
                 $query->orderByRaw('ratings_avg_rating IS NULL, ratings_avg_rating ASC');
                 break;
+
             case 'chapters_desc':
                 $query->orderByDesc('chapter_count');
                 break;
+
             case 'chapters_asc':
                 $query->orderBy('chapter_count');
                 break;
+
             default:
                 $query->orderByDesc('updated_at');
                 break;

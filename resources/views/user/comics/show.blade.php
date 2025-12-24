@@ -224,70 +224,11 @@
             <div class="lg:col-span-3 space-y-6">
 
                 {{-- 1. TRUYỆN LIÊN QUAN --}}
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-                    <div class="px-5 py-3 border-b border-gray-100">
-                        <h3 class="font-bold text-gray-800 text-base border-l-4 border-blue-500 pl-3 uppercase">
-                            Truyện liên quan
-                        </h3>
-                    </div>
-                    <div class="p-4 space-y-4">
-                        @foreach(range(1, 5) as $item)
-                        <div class="flex gap-3 group cursor-pointer">
-                            <div class="w-16 h-24 flex-shrink-0 rounded overflow-hidden relative">
-                                <img src="https://placehold.co/100x150?text=Manga" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" alt="Related">
-                            </div>
-                            <div class="flex-1 min-w-0 py-1">
-                                <h4 class="text-sm font-bold text-gray-800 group-hover:text-blue-600 truncate transition-colors">
-                                    Tên truyện liên quan số {{ $item }}
-                                </h4>
-                                <div class="flex items-center text-xs text-yellow-500 my-1">
-                                    <i class="fas fa-star"></i>
-                                    <span class="text-gray-400 ml-1">4.8</span>
-                                </div>
-                                <div class="flex flex-wrap gap-1">
-                                    <span class="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded">Hành động</span>
-                                    <span class="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded">Fantasy</span>
-                                </div>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-                </div>
+                @include('user.comics.partials.relate')
 
-                {{-- 2. TOP THEO DÕI --}}
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-                    <div class="px-5 py-3 border-b border-gray-100 flex justify-between items-center">
-                        <h3 class="font-bold text-gray-800 text-base border-l-4 border-red-500 pl-3 uppercase">
-                            Top Theo Dõi
-                        </h3>
-                        <div class="flex gap-1">
-                            <button class="text-[10px] px-2 py-0.5 bg-red-500 text-white rounded-full">Ngày</button>
-                            <button class="text-[10px] px-2 py-0.5 bg-gray-200 text-gray-500 rounded-full hover:bg-gray-300">Tuần</button>
-                        </div>
-                    </div>
-                    <div class="divide-y divide-gray-100">
-                        @foreach(range(1, 5) as $index => $item)
-                        <div class="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors cursor-pointer group">
-                            <span class="w-6 h-6 flex-shrink-0 flex items-center justify-center rounded-full {{ $index < 3 ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-600' }} text-xs font-bold">
-                                {{ $index + 1 }}
-                            </span>
-                            <div class="w-12 h-16 flex-shrink-0 rounded overflow-hidden">
-                                <img src="https://placehold.co/80x120?text=Top" class="w-full h-full object-cover" alt="Top">
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <h4 class="text-sm font-medium text-gray-800 group-hover:text-red-500 truncate transition-colors">
-                                    Siêu Phẩm Top {{ $index + 1 }}
-                                </h4>
-                                <p class="text-xs text-gray-500 mt-1">
-                                    <i class="fas fa-eye text-gray-400"></i> 1.2M
-                                    <span class="mx-1">•</span>
-                                    Chapter 200
-                                </p>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-                </div>
+
+                {{-- 2. TOP LƯỢT XEM --}}
+                @include('user.comics.partials.topview')
 
             </div>
         </div>
@@ -478,6 +419,33 @@
                 commentsContainer.appendChild(element);
             });
         }
+    });
+
+    // === Comment menu toggle ===
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('[data-comment-menu-btn]');
+        const menus = document.querySelectorAll('[data-comment-menu]');
+
+        // Click nút ...
+        if (btn) {
+            const wrap = btn.parentElement; // div.relative
+            const menu = wrap.querySelector('[data-comment-menu]');
+
+            // đóng tất cả menu khác
+            menus.forEach(m => {
+                if (m !== menu) m.classList.add('hidden');
+            });
+
+            // toggle menu hiện tại
+            menu.classList.toggle('hidden');
+            return;
+        }
+
+        // Click bên trong menu -> không đóng (để bấm item)
+        if (e.target.closest('[data-comment-menu]')) return;
+
+        // Click ngoài -> đóng hết
+        menus.forEach(m => m.classList.add('hidden'));
     });
 </script>
 
