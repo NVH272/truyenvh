@@ -108,7 +108,7 @@
                         @php
                         $user = auth()->user();
                         $isAdmin = $user && (($user->role ?? null) === 'admin' || ($user->is_admin ?? false));
-                        $isComicOwner = $user && ((int)($comment->comic->created_by ?? 0) === (int)$user->id);
+                        $isComicOwner = $user && ((int)($comic->created_by ?? 0) === (int)$user->id);
 
                         $canDelete = $isAdmin || $isComicOwner;
                         @endphp
@@ -310,7 +310,7 @@
                                         @php
                                         $user = auth()->user();
                                         $isAdmin = $user && (($user->role ?? null) === 'admin' || ($user->is_admin ?? false));
-                                        $isComicOwner = $user && ((int)($reply->comic->created_by ?? 0) === (int)$user->id);
+                                        $isComicOwner = $user && ((int)($comic->created_by ?? 0) === (int)$user->id);
                                         $canDelete = $isAdmin || $isComicOwner;
                                         @endphp
 
@@ -345,7 +345,7 @@
 
                                                     {{-- Item 2: Xóa (Chủ sở hữu) HOẶC Báo cáo bình luận (Khách) --}}
                                                     @if($canDelete)
-                                                    <form method="POST" action="{{ route('comments.destroy', $reply->id) }}">
+                                                    <form method="POST" action="{{ route('comments.destroy', $reply->id) }}"
                                                         onsubmit="return confirm('Bạn có chắc muốn xoá bình luận này không?');" class="w-full">
                                                         @csrf
                                                         @method('DELETE')
