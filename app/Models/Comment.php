@@ -13,10 +13,16 @@ class Comment extends Model
         'user_id',
         'parent_id',
         'content',
+        'is_deleted',
         'likes_count',
         'dislikes_count',
         'replies_count',
     ];
+
+    protected $casts = [
+        'is_deleted' => 'boolean',
+    ];
+
 
     // User comment
     public function user()

@@ -32,8 +32,12 @@ class ComicReadController extends Controller
             ->whereNull('parent_id')
             ->with([
                 'user',
+                'comic:id,created_by',
                 'replies' => function ($q) {
-                    $q->with('user')
+                    $q->with([
+                        'user',
+                        'comic:id,created_by',
+                    ])
                         ->withCount([
                             'reactions as likes_count' => function ($q2) {
                                 $q2->where('type', 'like');
@@ -42,7 +46,7 @@ class ComicReadController extends Controller
                                 $q2->where('type', 'dislike');
                             },
                         ])
-                        ->orderBy('created_at', 'asc'); // replies: cũ -> mới
+                        ->orderBy('created_at', 'asc');
                 },
             ])
             ->withCount([
@@ -53,6 +57,7 @@ class ComicReadController extends Controller
                     $q->where('type', 'dislike');
                 },
             ]);
+
 
         // Áp dụng bộ lọc sắp xếp
         switch ($filter) {

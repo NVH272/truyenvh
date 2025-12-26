@@ -54,6 +54,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/comments/{comment}/reaction/{type}', [ComicCommentController::class, 'toggleReaction'])
         ->whereIn('type', ['like', 'dislike'])
         ->name('comments.reaction');
+    Route::delete('/comments/{comment}', [ComicCommentController::class, 'destroy'])
+        ->name('comments.destroy')
+        ->middleware('auth');
 });
 
 // Trang tìm kiếm truyện

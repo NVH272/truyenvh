@@ -93,16 +93,24 @@
                 <div class="flex-1 min-w-0">
                     {{-- Bubble comment + dấu ... --}}
                     <div class="flex items-center gap-2 group/comment">
+
                         {{-- Bubble comment --}}
                         <div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md">
-                            <div class="font-semibold text-gray-800 text-sm mb-0.5">{{ $comment->user->name }}</div>
+                            <div class="font-semibold text-gray-800 text-sm mb-0.5">
+                                {{ $comment->user->name }}
+                            </div>
+
                             <p class="text-gray-700 text-sm leading-relaxed whitespace-normal break-words js-comment-content">
                                 {{ trim($comment->content) }}
                             </p>
                         </div>
 
                         @php
-                        $isOwner = auth()->check() && (int)$comment->user_id === (int)auth()->id();
+                        $user = auth()->user();
+                        $isAdmin = $user && (($user->role ?? null) === 'admin' || ($user->is_admin ?? false));
+                        $isComicOwner = $user && ((int)($comment->comic->created_by ?? 0) === (int)$user->id);
+
+                        $canDelete = $isAdmin || $isComicOwner;
                         @endphp
 
                         <div class="relative flex-shrink-0">
@@ -117,43 +125,39 @@
                             </button>
 
                             {{-- ========================================================== --}}
-                            {{-- MENU DROPDOWN (Phiên bản w-max: tự động co theo chữ) --}}
+                            {{-- MENU DROPDOWN (Phiên bản siêu gọn - ôm sát nội dung) --}}
                             {{-- ========================================================== --}}
                             <div class="hidden absolute top-8 left-1/2 -translate-x-1/2 z-50 w-max filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.12)]"
                                 data-comment-menu>
 
-                                {{-- 1. Phần nhọn (Mũi tên) --}}
+                                {{-- 1. Mũi tên (Căn giữa) --}}
                                 <div class="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-white transform rotate-45 z-0"></div>
 
-                                {{-- 2. Phần nội dung menu: Thêm whitespace-nowrap để chữ không xuống dòng --}}
-                                <div class="relative z-10 bg-white rounded-lg overflow-hidden py-1 shadow-sm whitespace-nowrap">
+                                {{-- 2. Nội dung menu --}}
+                                {{-- Bỏ w-full để menu co giãn tự động, không bị kéo dài --}}
+                                <div class="relative z-10 bg-white rounded-lg overflow-hidden py-1 shadow-sm flex flex-col">
 
-                                    {{-- Item 1: Báo cáo với quản trị viên --}}
+                                    {{-- Item 1: Báo cáo bình luận --}}
                                     <button type="button"
-                                        class="w-full text-left px-3.5 py-1.5 text-[13px] font-medium text-gray-900 hover:bg-gray-100 transition-colors">
-                                        Báo cáo với quản trị viên
+                                        class="w-full text-left px-3 py-1.5 text-[13px] font-medium text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap">
+                                        Báo cáo bình luận
                                     </button>
 
-                                    {{-- Item 2: Báo cáo bình luận (hoặc Xóa) --}}
-                                    @if(isset($isOwner) && $isOwner)
-                                    <form method="POST" action=""
+                                    {{-- Item 2: Xóa (Chủ sở hữu) HOẶC Báo cáo bình luận (Khách) --}}
+                                    @if($canDelete)
+                                    <form method="POST" action="{{ route('comments.destroy', $comment->id) }}"
                                         onsubmit="return confirm('Bạn có chắc muốn xoá bình luận này không?');" class="w-full">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
-                                            class="w-full text-left px-3.5 py-1.5 text-[13px] font-medium text-red-600 hover:bg-gray-100 transition-colors">
+                                            class="w-full text-left px-3 py-1.5 text-[13px] font-medium text-red-600 hover:bg-gray-100 transition-colors whitespace-nowrap">
                                             Xoá bình luận
                                         </button>
                                     </form>
-                                    @else
-                                    <button type="button"
-                                        class="w-full text-left px-3.5 py-1.5 text-[13px] font-medium text-gray-900 hover:bg-gray-100 transition-colors">
-                                        Báo cáo bình luận
-                                    </button>
                                     @endif
                                 </div>
                             </div>
-                            {{-- KẾT THÚC MENU DROPDOWN --}}
+                            {{-- END MENU DROPDOWN --}}
 
                         </div>
 
@@ -278,16 +282,36 @@
                                 <div class="flex-1 min-w-0">
                                     {{-- Bubble reply + dấu ... --}}
                                     <div class="flex items-center gap-2 group/comment">
+
+                                        {{-- Bubble reply --}}
                                         <div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md">
-                                            <div class="font-semibold text-gray-800 text-sm mb-0.5">{{ $reply->user->name }}</div>
+                                            @if($reply->is_deleted)
+                                            {{-- Bình luận đã bị xoá --}}
+                                            <div class="flex items-center gap-2 text-sm text-gray-500 italic">
+                                                <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                                                    <i class="fas fa-user text-[11px] text-gray-400"></i>
+                                                </div>
+                                                <span>Bình luận này đã bị xoá.</span>
+                                            </div>
+                                            @else
+                                            {{-- Bình luận bình thường --}}
+                                            <div class="font-semibold text-gray-800 text-sm mb-0.5">
+                                                {{ $reply->user->name }}
+                                            </div>
+
                                             <p class="text-gray-700 text-sm leading-relaxed whitespace-normal break-words js-comment-content">
                                                 {{ trim($reply->content) }}
                                             </p>
+                                            @endif
                                         </div>
 
                                         {{-- Dấu ... bên phải bubble --}}
+
                                         @php
-                                        $isOwner = auth()->check() && (int)$reply->user_id === (int)auth()->id();
+                                        $user = auth()->user();
+                                        $isAdmin = $user && (($user->role ?? null) === 'admin' || ($user->is_admin ?? false));
+                                        $isComicOwner = $user && ((int)($reply->comic->created_by ?? 0) === (int)$user->id);
+                                        $canDelete = $isAdmin || $isComicOwner;
                                         @endphp
 
                                         <div class="relative flex-shrink-0">
@@ -301,43 +325,39 @@
                                             </button>
 
                                             {{-- ========================================================== --}}
-                                            {{-- MENU DROPDOWN (Phiên bản w-max: tự động co theo chữ) --}}
+                                            {{-- MENU DROPDOWN (Phiên bản siêu gọn - ôm sát nội dung) --}}
                                             {{-- ========================================================== --}}
                                             <div class="hidden absolute top-8 left-1/2 -translate-x-1/2 z-50 w-max filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.12)]"
                                                 data-comment-menu>
 
-                                                {{-- 1. Phần nhọn (Mũi tên) --}}
+                                                {{-- 1. Mũi tên (Căn giữa) --}}
                                                 <div class="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-white transform rotate-45 z-0"></div>
 
-                                                {{-- 2. Phần nội dung menu: Thêm whitespace-nowrap để chữ không xuống dòng --}}
-                                                <div class="relative z-10 bg-white rounded-lg overflow-hidden py-1 shadow-sm whitespace-nowrap">
+                                                {{-- 2. Nội dung menu --}}
+                                                {{-- Bỏ w-full để menu co giãn tự động, không bị kéo dài --}}
+                                                <div class="relative z-10 bg-white rounded-lg overflow-hidden py-1 shadow-sm flex flex-col">
 
-                                                    {{-- Item 1: Báo cáo với quản trị viên --}}
+                                                    {{-- Item 1: Báo cáo bình luận --}}
                                                     <button type="button"
-                                                        class="w-full text-left px-3.5 py-1.5 text-[13px] font-medium text-gray-900 hover:bg-gray-100 transition-colors">
-                                                        Báo cáo với quản trị viên
+                                                        class="w-full text-left px-3 py-1.5 text-[13px] font-medium text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap">
+                                                        Báo cáo bình luận
                                                     </button>
 
-                                                    {{-- Item 2: Báo cáo bình luận (hoặc Xóa) --}}
-                                                    @if(isset($isOwner) && $isOwner)
-                                                    <form method="POST" action=""
+                                                    {{-- Item 2: Xóa (Chủ sở hữu) HOẶC Báo cáo bình luận (Khách) --}}
+                                                    @if($canDelete)
+                                                    <form method="POST" action="{{ route('comments.destroy', $reply->id) }}">
                                                         onsubmit="return confirm('Bạn có chắc muốn xoá bình luận này không?');" class="w-full">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit"
-                                                            class="w-full text-left px-3.5 py-1.5 text-[13px] font-medium text-red-600 hover:bg-gray-100 transition-colors">
+                                                            class="w-full text-left px-3 py-1.5 text-[13px] font-medium text-red-600 hover:bg-gray-100 transition-colors whitespace-nowrap">
                                                             Xoá bình luận
                                                         </button>
                                                     </form>
-                                                    @else
-                                                    <button type="button"
-                                                        class="w-full text-left px-3.5 py-1.5 text-[13px] font-medium text-gray-900 hover:bg-gray-100 transition-colors">
-                                                        Báo cáo bình luận
-                                                    </button>
                                                     @endif
                                                 </div>
                                             </div>
-                                            {{-- KẾT THÚC MENU DROPDOWN --}}
+                                            {{-- END MENU DROPDOWN --}}
 
                                         </div>
                                     </div>

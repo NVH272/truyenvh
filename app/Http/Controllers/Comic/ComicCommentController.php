@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Comic;
 use App\Models\Comment;
+use Illuminate\Support\Facades\Auth;
 
 class ComicCommentController extends Controller
 {
@@ -124,5 +125,42 @@ class ComicCommentController extends Controller
         }
 
         return back();
+    }
+
+    // Delete comment
+    public function destroy(Request $request, Comment $comment)
+    {
+        $user = Auth::user();
+        if (!$user) abort(403);
+
+        // Lấy truyện của comment để check "chủ truyện"
+        // comment phải có relation comic()
+        $comic = $comment->comic()->first(); // hoặc $comment->load('comic')->comic
+
+        if (!$comic) abort(404);
+
+        // ====== QUYỀN XOÁ ======
+        $comicOwnerId = $comic->created_by;
+
+        $isAdmin = ($user->role ?? null) === 'admin' || ($user->is_admin ?? false);
+        $isComicOwner = $comicOwnerId && ((int)$comicOwnerId === (int)$user->id);
+
+        if (!$isAdmin && !$isComicOwner) {
+            abort(403);
+        }
+
+        // ====== XOÁ THEO LOẠI ======
+        // Nếu là comment cha (parent_id = null) => xoá toàn bộ replies
+        if ($comment->parent_id === null) {
+            // Xoá replies trước để tránh mồ côi / ràng buộc FK
+            Comment::where('parent_id', $comment->id)->delete();
+        }
+
+        // Xoá chính comment/reply
+        $comment->delete();
+
+        return $request->ajax()
+            ? response()->json(['ok' => true, 'deleted_id' => $comment->id])
+            : back()->with('success', 'Đã xoá bình luận.');
     }
 }
