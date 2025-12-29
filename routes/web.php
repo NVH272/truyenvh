@@ -6,21 +6,29 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\NewPasswordController;
+use App\Http\Controllers\PasswordResetLinkController;
+use App\Http\Controllers\HomeController;
+
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ComicController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\ViolationController;
+
 use App\Http\Controllers\User\UserProfileController;
 use App\Http\Controllers\User\UserComicController;
-use App\Http\Controllers\NewPasswordController;
-use App\Http\Controllers\PasswordResetLinkController;
-use App\Http\Controllers\HomeController;
+use App\Http\Controllers\User\CommentReportController;
+
+
 use App\Http\Controllers\Comic\ComicReadController;
 use App\Http\Controllers\Comic\ComicInteractionController;
 use App\Http\Controllers\Comic\ComicFollowController;
 use App\Http\Controllers\Comic\ComicSearchController;
 use App\Http\Controllers\Comic\ComicCommentController;
 use App\Http\Controllers\Comic\ComicFilterController;
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -57,6 +65,8 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/comments/{comment}', [ComicCommentController::class, 'destroy'])
         ->name('comments.destroy')
         ->middleware('auth');
+    Route::post('/comments/{comment}/report', [CommentReportController::class, 'store'])
+        ->name('comments.report');
 });
 
 // Trang tìm kiếm truyện
@@ -203,4 +213,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'isAdmin', 'verified
         ->name('comics.review_history');
 
     Route::patch('users/{user}/toggle-active', [UserController::class, 'toggleActive'])->name('users.toggle-active');
+    Route::get('violation', [ViolationController::class, 'index'])->name('violation.index');
+});
+Route::middleware(['auth'])->prefix('admin')->group(function () {
+    Route::get('/violation', [ViolationController::class, 'index'])->name('admin.violation.index');
 });

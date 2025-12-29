@@ -4,7 +4,7 @@
         <h2 class="text-lg font-bold text-blue-600 flex items-center gap-2">
             <i class="fas fa-comments"></i>
             <span>Bình luận</span>
-            <span class="text-sm font-normal text-gray-500">({{ $comments->total() }})</span>
+            <span class="text-sm font-normal text-gray-500">({{ $totalCommentsCount ?? 0 }})</span>
         </h2>
 
         {{-- Filter Dropdown --}}
@@ -32,7 +32,6 @@
                 data-comment-form="main">
                 @csrf
 
-                {{-- PHẦN 1: KHUNG NHẬP COMMENT --}}
                 <div class="relative flex items-center bg-gray-100 rounded-[20px] px-3 py-2 shadow-sm focus-within:bg-white focus-within:shadow-md focus-within:ring-2 focus-within:ring-blue-100 transition-all">
 
                     {{-- Textarea --}}
@@ -50,13 +49,6 @@
                         <i class="fas fa-paper-plane text-sm transform rotate-12 translate-x-[-2px] translate-y-[1px]"></i>
                     </button>
                 </div>
-
-                {{-- PHẦN 2: THÔNG BÁO LỖI (Bên ngoài) --}}
-                @error('content')
-                <div class="text-xs text-red-500 mt-2 ml-4 text-left">
-                    {{ $message }}
-                </div>
-                @enderror
 
             </form>
 
@@ -80,9 +72,9 @@
         @if($comments->count() > 0)
         <div class="space-y-6" id="comments-container">
             @foreach($comments as $comment)
-            <div class="flex gap-3 js-comment-item group"
+            <div class="flex gap-3 js-comment-item group scroll-mt-28"
                 id="comment-{{ $comment->id }}"
-                data-comment-id="{{ $comment->id }}"
+                data-comment-id="{{ $comment->id }}" data-is-reply="0"
                 data-timestamp="{{ $comment->created_at->timestamp }}"
                 data-likes="{{ $comment->likes_count ?? 0 }}">
                 {{-- Avatar --}}
@@ -92,10 +84,10 @@
 
                 <div class="flex-1 min-w-0">
                     {{-- Bubble comment + dấu ... --}}
-                    <div class="flex items-center gap-2 group/comment">
+                    <div class="flex items-center gap-2 group/comment justify-center">
 
                         {{-- Bubble comment --}}
-                        <div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md">
+                        <div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md js-bubble mx-auto">
                             <div class="font-semibold text-gray-800 text-sm mb-0.5">
                                 {{ $comment->user->name }}
                             </div>
@@ -138,10 +130,13 @@
                                 <div class="relative z-10 bg-white rounded-lg overflow-hidden py-1 shadow-sm flex flex-col">
 
                                     {{-- Item 1: Báo cáo bình luận --}}
-                                    <button type="button"
-                                        class="w-full text-left px-3 py-1.5 text-[13px] font-medium text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap">
-                                        Báo cáo bình luận
-                                    </button>
+                                    <form method="POST" action="{{ route('comments.report', $comment->id) }}" class="w-full">
+                                        @csrf
+                                        <button type="submit"
+                                            class="w-full text-left px-3 py-1.5 text-[13px] font-medium text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap">
+                                            Báo cáo bình luận
+                                        </button>
+                                    </form>
 
                                     {{-- Item 2: Xóa (Chủ sở hữu) HOẶC Báo cáo bình luận (Khách) --}}
                                     @if($canDelete)
@@ -209,7 +204,8 @@
                     <button
                         class="text-xs text-blue-500 hover:text-blue-600 font-medium mt-2 reply-toggle flex items-center gap-1.5 transition-colors"
                         data-comment-id="{{ $comment->id }}"
-                        data-reply-count="{{ $comment->replies->count() }}">
+                        data-reply-count="{{ $comment->replies->count() }}"
+                        data-toggle-replies="{{ $comment->id }}">
                         <i class="fas fa-reply text-xs"></i>
                         <span class="reply-count-text">{{ $comment->replies->count() }} phản hồi</span>
                     </button>
@@ -231,7 +227,6 @@
                                 @csrf
                                 <input type="hidden" name="parent_id" value="{{ $comment->id }}">
 
-                                {{-- PHẦN 1: KHUNG NHẬP REPLY --}}
                                 <div class="relative flex items-center bg-gray-100 rounded-[18px] px-2 py-1 shadow-sm focus-within:bg-white focus-within:shadow-md focus-within:ring-2 focus-within:ring-blue-100 transition-all">
 
                                     {{-- Textarea --}}
@@ -250,13 +245,6 @@
                                     </button>
                                 </div>
 
-                                {{-- PHẦN 2: THÔNG BÁO LỖI --}}
-                                @error('content')
-                                <div class="text-[11px] text-red-500 mt-1 ml-3 text-left">
-                                    {{ $message }}
-                                </div>
-                                @enderror
-
                             </form>
                             <button type="button"
                                 onclick="document.getElementById('reply-{{ $comment->id }}').classList.add('hidden')"
@@ -271,20 +259,25 @@
                     <div
                         class="replies mt-3 ml-6 space-y-3 hidden transition-all duration-200"
                         id="replies-{{ $comment->id }}"
+                        data-replies-container="{{ $comment->id }}"
                         data-reply-container="true">
                         <div class="mt-4 space-y-4 js-replies-container" data-parent-id="{{ $comment->id }}">
                             @foreach($comment->replies as $reply)
-                            <div class="flex gap-3 js-comment-item group" id="comment-{{ $reply->id }}" data-comment-id="{{ $reply->id }}">
+                            <div class="flex gap-3 js-comment-item group"
+                                id="comment-{{ $reply->id }}"
+                                data-comment-id="{{ $reply->id }}"
+                                data-is-reply="1"
+                                data-parent-id="{{ $reply->parent_id }}">
                                 <img src="{{ $reply->user->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode($reply->user->name).'&background=random' }}"
                                     class="w-10 h-10 rounded-full object-cover flex-shrink-0"
                                     alt="{{ $reply->user->name }}">
 
                                 <div class="flex-1 min-w-0">
                                     {{-- Bubble reply + dấu ... --}}
-                                    <div class="flex items-center gap-2 group/comment">
+                                    <div class="flex items-center gap-2 group/comment justify-center">
 
                                         {{-- Bubble reply --}}
-                                        <div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md">
+                                        <div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md js-bubble mx-auto">
                                             @if($reply->is_deleted)
                                             {{-- Bình luận đã bị xoá --}}
                                             <div class="flex items-center gap-2 text-sm text-gray-500 italic">
@@ -465,7 +458,8 @@
                     'class="w-10 h-10 rounded-full object-cover flex-shrink-0" ' +
                     'alt="' + (comment.user.name || '') + '">' +
                     '<div class="flex-1 min-w-0">' +
-                    '<div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md">' +
+                    '<div class="flex items-center gap-2 group/comment justify-center">' +
+                    '<div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md js-bubble mx-auto">' +
                     '<div class="font-semibold text-gray-800 text-sm mb-0.5">' + (comment.user.name || '') + '</div>' +
                     '<p class="text-gray-700 text-sm leading-relaxed whitespace-normal break-words js-comment-content"></p>' +
                     '</div>' +
@@ -557,7 +551,8 @@
                 'class="w-10 h-10 rounded-full object-cover flex-shrink-0" ' +
                 'alt="' + (comment.user.name || '') + '">' +
                 '<div class="flex-1 min-w-0">' +
-                '<div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md">' +
+                '<div class="flex items-center gap-2 group/comment justify-center">' +
+                '<div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md js-bubble mx-auto">' +
                 '<div class="font-semibold text-gray-800 text-sm mb-0.5">' + (comment.user.name || '') + '</div>' +
                 '<p class="text-gray-700 text-sm leading-relaxed whitespace-normal break-words js-comment-content"></p>' +
                 '</div>' +
@@ -623,26 +618,26 @@
                     body: formData
                 });
 
-                if (!response.ok) {
-                    if (response.status === 422) {
-                        var errorData = await response.json().catch(function() {
-                            return null;
-                        });
-                        var msg = errorData && errorData.errors && errorData.errors.content ?
-                            errorData.errors.content.join(' ') :
-                            'Nội dung bình luận không hợp lệ.';
-                        if (!errorEl && textarea) {
-                            errorEl = document.createElement('p');
-                            errorEl.className = 'js-comment-error text-xs text-red-500 mt-1';
-                            textarea.parentNode.insertBefore(errorEl, textarea.nextSibling);
-                        }
-                        if (errorEl) {
-                            errorEl.textContent = msg;
-                            errorEl.classList.remove('hidden');
-                        }
-                    }
-                    return;
-                }
+                // if (!response.ok) {
+                //     if (response.status === 422) {
+                //         var errorData = await response.json().catch(function() {
+                //             return null;
+                //         });
+                //         var msg = errorData && errorData.errors && errorData.errors.content ?
+                //             errorData.errors.content.join(' ') :
+                //             'Nội dung bình luận không hợp lệ.';
+                //         if (!errorEl && textarea) {
+                //             errorEl = document.createElement('p');
+                //             errorEl.className = 'js-comment-error text-xs text-red-500 mt-1';
+                //             textarea.parentNode.insertBefore(errorEl, textarea.nextSibling);
+                //         }
+                //         if (errorEl) {
+                //             errorEl.textContent = msg;
+                //             errorEl.classList.remove('hidden');
+                //         }
+                //     }
+                //     return;
+                // }
 
                 var data = await response.json();
                 if (data && data.status === 'success') {
@@ -659,6 +654,19 @@
                             replyBlock.classList.add('hidden');
                         }
                     }
+                    
+                    // Flash bubble cho comment/reply mới được thêm
+                    setTimeout(function() {
+                        var newCommentId = 'comment-' + data.comment.id;
+                        var newCommentEl = document.getElementById(newCommentId);
+                        if (newCommentEl) {
+                            newCommentEl.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'center'
+                            });
+                            flashBubble(newCommentEl);
+                        }
+                    }, 100);
                 }
             } catch (e) {
                 console.error('Error submitting comment form', e);
@@ -812,6 +820,70 @@
                 icon.style.transition = 'transform 0.3s ease';
             }
         }
+
+        function openRepliesOfParent(parentId) {
+            const container = document.querySelector(`[data-replies-container="${parentId}"]`);
+            if (container) container.classList.remove('hidden');
+
+            // đồng bộ text/icon bằng cách trigger đúng nút toggle (nếu có)
+            const toggleBtn = document.querySelector(`[data-toggle-replies="${parentId}"]`);
+            if (toggleBtn) {
+                // nếu replies đang hidden thì click để mở
+                const repliesEl = document.getElementById(`replies-${parentId}`);
+                if (repliesEl && repliesEl.classList.contains('hidden')) toggleBtn.click();
+            }
+        }
+
+        function flashBubble(target) {
+            const bubble = target.querySelector('.js-bubble') || target;
+            if (!bubble) return;
+            
+            // Thêm các class cho hiệu ứng flash vàng
+            bubble.classList.add('ring-2', 'ring-yellow-400', 'ring-offset-2');
+            bubble.style.transition = 'all 0.3s ease';
+            bubble.style.backgroundColor = '#fef9c3'; // bg-yellow-100
+            bubble.style.boxShadow = '0 0 0 2px rgba(250, 204, 21, 0.5)'; // ring effect
+            
+            // Xóa hiệu ứng sau 1.5 giây
+            setTimeout(() => {
+                bubble.style.backgroundColor = '';
+                bubble.style.boxShadow = '';
+                bubble.classList.remove('ring-2', 'ring-yellow-400', 'ring-offset-2');
+            }, 1500);
+        }
+
+        function focusToHash() {
+            const hash = window.location.hash;
+            if (!hash || !hash.startsWith('#comment-')) return;
+
+            const target = document.querySelector(hash);
+            if (!target) return;
+
+            // nếu là reply -> mở replies của cha trước
+            if (target.getAttribute('data-is-reply') === '1') {
+                const parentId = target.getAttribute('data-parent-id');
+                if (parentId) openRepliesOfParent(parentId);
+            }
+
+            // chờ 2 frame cho layout cập nhật sau khi mở replies
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+                    flashBubble(target);
+                });
+            });
+        }
+
+        // chạy ngay khi load + khi hashchange
+        window.addEventListener('load', focusToHash);
+        window.addEventListener('hashchange', focusToHash);
+
+        // nếu bạn load comments bằng AJAX replace DOM, gọi lại focusToHash sau khi replace
+        window.__focusCommentHash = focusToHash;
+
     });
 </script>
 @endpush

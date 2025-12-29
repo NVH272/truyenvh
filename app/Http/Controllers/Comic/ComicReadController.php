@@ -77,6 +77,9 @@ class ComicReadController extends Controller
 
         $comments = $commentsQuery->paginate(10)->appends(['filter' => $filter]);
 
+        // Đếm tổng số comment và reply của truyện
+        $totalCommentsCount = Comment::where('comic_id', $comic->id)->count();
+
         $limit = 5;
 
         // Lấy danh sách category id của truyện hiện tại
@@ -115,19 +118,21 @@ class ComicReadController extends Controller
         // Nếu request AJAX (dùng cho filter/pagination comments) thì trả về partial comments
         if ($request->ajax()) {
             return view('user.comics.partials.comments', [
-                'comic'         => $comic,
-                'comments'      => $comments,
-                'commentFilter' => $filter,
+                'comic'             => $comic,
+                'comments'          => $comments,
+                'commentFilter'     => $filter,
+                'totalCommentsCount' => $totalCommentsCount,
             ]);
         }
 
         return view('user.comics.show', [
-            'comic'         => $comic,
-            'userRating'    => $userRating,
-            'isFollowing'   => $isFollowing,
-            'comments'      => $comments,
-            'commentFilter' => $filter,
-            'relatedComics' => $relatedComics,
+            'comic'             => $comic,
+            'userRating'        => $userRating,
+            'isFollowing'       => $isFollowing,
+            'comments'          => $comments,
+            'commentFilter'     => $filter,
+            'relatedComics'     => $relatedComics,
+            'totalCommentsCount' => $totalCommentsCount,
         ]);
     }
 }
