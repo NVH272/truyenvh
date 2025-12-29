@@ -32,6 +32,7 @@
                 data-comment-form="main">
                 @csrf
 
+                {{-- KHUNG NHẬP COMMENT --}}
                 <div class="relative flex items-center bg-gray-100 rounded-[20px] px-3 py-2 shadow-sm focus-within:bg-white focus-within:shadow-md focus-within:ring-2 focus-within:ring-blue-100 transition-all">
 
                     {{-- Textarea --}}
@@ -84,10 +85,10 @@
 
                 <div class="flex-1 min-w-0">
                     {{-- Bubble comment + dấu ... --}}
-                    <div class="flex items-center gap-2 group/comment justify-center">
+                    <div class="flex items-center gap-2 group/comment">
 
                         {{-- Bubble comment --}}
-                        <div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md js-bubble mx-auto">
+                        <div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md js-bubble">
                             <div class="font-semibold text-gray-800 text-sm mb-0.5">
                                 {{ $comment->user->name }}
                             </div>
@@ -213,7 +214,7 @@
 
                     {{-- Phần reply form --}}
 
-                    {{-- Form trả lời cấp 1 --}}
+                    {{-- Form trả lời --}}
                     @auth
                     <div id="reply-{{ $comment->id }}" class="hidden mt-3">
                         <div class="flex gap-3">
@@ -227,6 +228,7 @@
                                 @csrf
                                 <input type="hidden" name="parent_id" value="{{ $comment->id }}">
 
+                                {{-- KHUNG NHẬP REPLY --}}
                                 <div class="relative flex items-center bg-gray-100 rounded-[18px] px-2 py-1 shadow-sm focus-within:bg-white focus-within:shadow-md focus-within:ring-2 focus-within:ring-blue-100 transition-all">
 
                                     {{-- Textarea --}}
@@ -274,10 +276,10 @@
 
                                 <div class="flex-1 min-w-0">
                                     {{-- Bubble reply + dấu ... --}}
-                                    <div class="flex items-center gap-2 group/comment justify-center">
+                                    <div class="flex items-center gap-2 group/comment">
 
                                         {{-- Bubble reply --}}
-                                        <div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md js-bubble mx-auto">
+                                        <div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md js-bubble">
                                             @if($reply->is_deleted)
                                             {{-- Bình luận đã bị xoá --}}
                                             <div class="flex items-center gap-2 text-sm text-gray-500 italic">
@@ -331,10 +333,13 @@
                                                 <div class="relative z-10 bg-white rounded-lg overflow-hidden py-1 shadow-sm flex flex-col">
 
                                                     {{-- Item 1: Báo cáo bình luận --}}
-                                                    <button type="button"
-                                                        class="w-full text-left px-3 py-1.5 text-[13px] font-medium text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap">
-                                                        Báo cáo bình luận
-                                                    </button>
+                                                    <form method="POST" action="{{ route('comments.report', $reply->id) }}" class="w-full">
+                                                        @csrf
+                                                        <button type="submit"
+                                                            class="w-full text-left px-3 py-1.5 text-[13px] font-medium text-gray-900 hover:bg-gray-100 transition-colors whitespace-nowrap">
+                                                            Báo cáo bình luận
+                                                        </button>
+                                                    </form>
 
                                                     {{-- Item 2: Xóa (Chủ sở hữu) HOẶC Báo cáo bình luận (Khách) --}}
                                                     @if($canDelete)
@@ -458,8 +463,7 @@
                     'class="w-10 h-10 rounded-full object-cover flex-shrink-0" ' +
                     'alt="' + (comment.user.name || '') + '">' +
                     '<div class="flex-1 min-w-0">' +
-                    '<div class="flex items-center gap-2 group/comment justify-center">' +
-                    '<div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md js-bubble mx-auto">' +
+                    '<div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md js-bubble">' +
                     '<div class="font-semibold text-gray-800 text-sm mb-0.5">' + (comment.user.name || '') + '</div>' +
                     '<p class="text-gray-700 text-sm leading-relaxed whitespace-normal break-words js-comment-content"></p>' +
                     '</div>' +
@@ -543,6 +547,8 @@
             replyWrapper.className = 'flex gap-3 js-comment-item';
             replyWrapper.id = 'comment-' + comment.id;
             replyWrapper.setAttribute('data-comment-id', comment.id);
+            replyWrapper.setAttribute('data-is-reply', '1');
+            replyWrapper.setAttribute('data-parent-id', comment.parent_id || '');
 
             var likeUrlReply = '/comments/' + comment.id + '/reaction/like';
 
@@ -551,8 +557,7 @@
                 'class="w-10 h-10 rounded-full object-cover flex-shrink-0" ' +
                 'alt="' + (comment.user.name || '') + '">' +
                 '<div class="flex-1 min-w-0">' +
-                '<div class="flex items-center gap-2 group/comment justify-center">' +
-                '<div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md js-bubble mx-auto">' +
+                '<div class="bg-gray-100 rounded-2xl px-4 py-2.5 inline-block max-w-md js-bubble">' +
                 '<div class="font-semibold text-gray-800 text-sm mb-0.5">' + (comment.user.name || '') + '</div>' +
                 '<p class="text-gray-700 text-sm leading-relaxed whitespace-normal break-words js-comment-content"></p>' +
                 '</div>' +
@@ -618,27 +623,6 @@
                     body: formData
                 });
 
-                // if (!response.ok) {
-                //     if (response.status === 422) {
-                //         var errorData = await response.json().catch(function() {
-                //             return null;
-                //         });
-                //         var msg = errorData && errorData.errors && errorData.errors.content ?
-                //             errorData.errors.content.join(' ') :
-                //             'Nội dung bình luận không hợp lệ.';
-                //         if (!errorEl && textarea) {
-                //             errorEl = document.createElement('p');
-                //             errorEl.className = 'js-comment-error text-xs text-red-500 mt-1';
-                //             textarea.parentNode.insertBefore(errorEl, textarea.nextSibling);
-                //         }
-                //         if (errorEl) {
-                //             errorEl.textContent = msg;
-                //             errorEl.classList.remove('hidden');
-                //         }
-                //     }
-                //     return;
-                // }
-
                 var data = await response.json();
                 if (data && data.status === 'success') {
                     appendCommentToDom(data.comment, form);
@@ -654,19 +638,6 @@
                             replyBlock.classList.add('hidden');
                         }
                     }
-                    
-                    // Flash bubble cho comment/reply mới được thêm
-                    setTimeout(function() {
-                        var newCommentId = 'comment-' + data.comment.id;
-                        var newCommentEl = document.getElementById(newCommentId);
-                        if (newCommentEl) {
-                            newCommentEl.scrollIntoView({
-                                behavior: 'smooth',
-                                block: 'center'
-                            });
-                            flashBubble(newCommentEl);
-                        }
-                    }, 100);
                 }
             } catch (e) {
                 console.error('Error submitting comment form', e);
@@ -820,69 +791,6 @@
                 icon.style.transition = 'transform 0.3s ease';
             }
         }
-
-        function openRepliesOfParent(parentId) {
-            const container = document.querySelector(`[data-replies-container="${parentId}"]`);
-            if (container) container.classList.remove('hidden');
-
-            // đồng bộ text/icon bằng cách trigger đúng nút toggle (nếu có)
-            const toggleBtn = document.querySelector(`[data-toggle-replies="${parentId}"]`);
-            if (toggleBtn) {
-                // nếu replies đang hidden thì click để mở
-                const repliesEl = document.getElementById(`replies-${parentId}`);
-                if (repliesEl && repliesEl.classList.contains('hidden')) toggleBtn.click();
-            }
-        }
-
-        function flashBubble(target) {
-            const bubble = target.querySelector('.js-bubble') || target;
-            if (!bubble) return;
-            
-            // Thêm các class cho hiệu ứng flash vàng
-            bubble.classList.add('ring-2', 'ring-yellow-400', 'ring-offset-2');
-            bubble.style.transition = 'all 0.3s ease';
-            bubble.style.backgroundColor = '#fef9c3'; // bg-yellow-100
-            bubble.style.boxShadow = '0 0 0 2px rgba(250, 204, 21, 0.5)'; // ring effect
-            
-            // Xóa hiệu ứng sau 1.5 giây
-            setTimeout(() => {
-                bubble.style.backgroundColor = '';
-                bubble.style.boxShadow = '';
-                bubble.classList.remove('ring-2', 'ring-yellow-400', 'ring-offset-2');
-            }, 1500);
-        }
-
-        function focusToHash() {
-            const hash = window.location.hash;
-            if (!hash || !hash.startsWith('#comment-')) return;
-
-            const target = document.querySelector(hash);
-            if (!target) return;
-
-            // nếu là reply -> mở replies của cha trước
-            if (target.getAttribute('data-is-reply') === '1') {
-                const parentId = target.getAttribute('data-parent-id');
-                if (parentId) openRepliesOfParent(parentId);
-            }
-
-            // chờ 2 frame cho layout cập nhật sau khi mở replies
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'center'
-                    });
-                    flashBubble(target);
-                });
-            });
-        }
-
-        // chạy ngay khi load + khi hashchange
-        window.addEventListener('load', focusToHash);
-        window.addEventListener('hashchange', focusToHash);
-
-        // nếu bạn load comments bằng AJAX replace DOM, gọi lại focusToHash sau khi replace
-        window.__focusCommentHash = focusToHash;
 
     });
 </script>
