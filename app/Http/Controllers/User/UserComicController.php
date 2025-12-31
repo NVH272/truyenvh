@@ -43,7 +43,9 @@ class UserComicController extends Controller
         $comic->description   = $data['description'] ?? null;
         $comic->author        = $data['author'] ?? null;
         $comic->status        = $data['status'];
-        $comic->chapter_count = $data['chapter_count'] ?? 0;
+        // $comic->chapter_count = isset($data['chapter_count'])
+        //     ? (int) $data['chapter_count']
+        //     : 0;
         $comic->published_at  = $data['published_at'] ?? null;
 
         // Thống kê mặc định
@@ -102,7 +104,9 @@ class UserComicController extends Controller
         $comic->description   = $data['description'] ?? null;
         $comic->author        = $data['author'] ?? null;
         $comic->status        = $data['status'];
-        $comic->chapter_count = $data['chapter_count'] ?? 0;
+        // $comic->chapter_count = isset($data['chapter_count'])
+        //     ? (int) $data['chapter_count']
+        //     : 0;
         $comic->published_at  = $data['published_at'] ?? null;
 
         // Ảnh bìa mới (nếu có)
@@ -170,7 +174,7 @@ class UserComicController extends Controller
             'author'        => ['nullable', 'string', 'max:255'],
             'description'   => ['nullable', 'string'],
             'status'        => ['required', 'in:ongoing,completed,dropped'],
-            'chapter_count' => ['nullable', 'integer', 'min:0'],
+            // 'chapter_count' => ['nullable', 'numeric', 'min:0'],
             'published_at'  => ['nullable', 'date'],
             'category_ids'  => ['required', 'array', 'min:1'],
             'category_ids.*' => ['required', 'integer', 'exists:categories,id'],

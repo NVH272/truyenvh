@@ -63,7 +63,7 @@
                             </div>
 
                             <div class="space-y-1.5">
-                                <label class="block text-sm font-semibold text-gray-700">Tác giả</label>
+                                <label class="block text-sm font-semibold text-gray-700">Tác giả <span class="text-red-500">*</span></label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i class="fas fa-pen-nib text-gray-400"></i>
@@ -75,47 +75,62 @@
                             </div>
                         </div>
 
-                        {{-- Description --}}
-                        <div class="space-y-1.5">
-                            <label class="block text-sm font-semibold text-gray-700">Tóm tắt nội dung</label>
-                            <textarea name="description" id="input-description" rows="4"
-                                class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors resize-y leading-relaxed custom-scrollbar"
-                                placeholder="Viết mô tả hấp dẫn cho truyện...">{{ old('description', $comic->description) }}</textarea>
-                        </div>
-
-                        <div class="border-t border-gray-200 my-4"></div>
-
                         {{-- Status, Chapter, Date --}}
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                            {{-- Trạng thái --}}
                             <div class="space-y-1.5">
                                 <label class="block text-sm font-semibold text-gray-700">
-                                    Trạng thái <span class="text-red-500">*</span>
+                                    Trạng thái
                                 </label>
                                 <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i id="status-icon" class="fas fa-sync text-slate-500 transition-all duration-300"></i>
+                                    </div>
+
                                     @php $oldStatus = old('status', $comic->status); @endphp
-                                    <select name="status" id="input-status" class="w-full pl-4 pr-10 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors appearance-none cursor-pointer">
+                                    <select name="status" id="input-status"
+                                        class="w-full pl-10 pr-10 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors appearance-none cursor-pointer">
                                         <option value="ongoing" @selected($oldStatus==='ongoing' )>Đang tiến hành</option>
                                         <option value="completed" @selected($oldStatus==='completed' )>Đã hoàn thành</option>
                                         <option value="dropped" @selected($oldStatus==='dropped' )>Tạm dừng</option>
                                     </select>
+
                                     <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
                                         <i class="fas fa-chevron-down text-xs"></i>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="space-y-1.5">
+                            <!-- <div class="space-y-1.5">
                                 <label class="block text-sm font-semibold text-gray-700">Số chương</label>
                                 <input type="number" name="chapter_count" id="input-chapter" value="{{ old('chapter_count', $comic->chapter_count) }}" min="0"
                                     class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
-                            </div>
+                            </div> -->
 
+                            {{-- Ngày phát hành --}}
                             <div class="space-y-1.5">
                                 <label class="block text-sm font-semibold text-gray-700">Ngày phát hành</label>
-                                <input type="date" name="published_at" id="input-published-at"
-                                    value="{{ old('published_at', optional($comic->published_at)->format('Y-m-d')) }}"
-                                    class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="far fa-calendar-alt text-gray-400"></i>
+                                    </div>
+
+                                    <input type="date" name="published_at" id="input-published-at"
+                                        value="{{ old('published_at', optional($comic->published_at)->format('Y-m-d')) }}"
+                                        class="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                                </div>
                             </div>
+                        </div>
+
+                        <div class="border-t border-gray-200 my-4"></div>
+
+                        {{-- Description --}}
+                        <div class="space-y-1.5">
+                            <label class="block text-sm font-semibold text-gray-700">Tóm tắt nội dung</label>
+                            <textarea name="description" id="input-description" rows="4"
+                                class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors resize-y leading-relaxed custom-scrollbar"
+                                placeholder="Viết mô tả hấp dẫn cho truyện...">{{ old('description', $comic->description) }}</textarea>
                         </div>
                     </div>
                 </div>

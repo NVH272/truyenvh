@@ -45,7 +45,7 @@ class ComicController extends Controller
 
             'cover_image'   => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
 
-            'chapter_count' => 'nullable|integer|min:0',
+            // 'chapter_count' => 'nullable|numeric|min:0',
             'published_at'  => 'nullable|date',
 
             // many-to-many categories
@@ -158,7 +158,9 @@ class ComicController extends Controller
         $comic->author        = $data['author'] ?? null;
         $comic->status        = $data['status'];
 
-        $comic->chapter_count = $data['chapter_count'] ?? 0;
+        // $comic->chapter_count = isset($data['chapter_count'])
+        //     ? (int) $data['chapter_count']
+        //     : 0;
         $comic->published_at  = $data['published_at'] ?? null;
 
         // Gán người tạo truyện
@@ -220,7 +222,9 @@ class ComicController extends Controller
         $comic->description   = $validated['description'] ?? null;
         $comic->author        = $validated['author'] ?? null;
         $comic->status        = $validated['status'];
-        $comic->chapter_count = $validated['chapter_count'] ?? $comic->chapter_count;
+        // $comic->chapter_count = isset($validated['chapter_count'])
+        //     ? (int) $validated['chapter_count']
+        //     : $comic->chapter_count;
         $comic->published_at  = $validated['published_at'] ?? $comic->published_at;
 
         // xử lý ảnh bìa

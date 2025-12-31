@@ -175,7 +175,7 @@
                     class="group flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-sm font-bold 
                     shadow-md hover:shadow-xl hover:shadow-blue-600/20 transition-all duration-300 hover:-translate-y-0.5">
                     <span>Đăng nhập</span>
-                    <i class="fas fa-arrow-right text-xs opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300"></i>
+                    <i class="fas fa-arrow-right-to-bracket text-xs opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300"></i>
                 </a>
                 @else
 
@@ -242,6 +242,10 @@
                         <a href="{{ route('user.my-comics.index') }}"
                             class="block px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
                             <i class="fas fa-book mr-2"></i>Danh sách truyện của bạn
+                        </a>
+                        <a href="#"
+                            class="block px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
+                            <i class="fas fa-pen-to-square mr-2"></i>Chương truyện của bạn
                         </a>
                         <div class="border-t border-gray-200"></div>
                         @endif

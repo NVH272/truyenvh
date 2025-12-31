@@ -37,6 +37,7 @@ class Comic extends Model
         'published_at'    => 'datetime',
         'last_chapter_at' => 'datetime',
         'approved_at'     => 'datetime',
+        'chapter_count' => 'integer',
     ];
 
     // Lấy URL ảnh bìa

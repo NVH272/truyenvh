@@ -76,7 +76,7 @@
                     <label class="block text-gray-700 text-sm font-bold mb-2 uppercase tracking-wide group-hover:text-orange-600 transition">
                         <span class="mr-2">></span>Email
                     </label>
-                    <input type="email" name="email" value="{{ old('email') }}"
+                    <input type="email" name="email" value="{{ old('email') }}" autofocus
                         class="w-full p-3 sg-input text-gray-800 placeholder-gray-400"
                         placeholder="okabe@labmem.com" required>
                 </div>

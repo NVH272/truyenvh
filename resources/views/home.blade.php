@@ -55,7 +55,7 @@
                 <h3 class="text-xl font-extrabold text-blue-700 uppercase flex items-center gap-2">
                     <i class="fas fa-clock text-blue-500"></i> Mới cập nhật
                 </h3>
-                <a href="#"
+                <a href="{{ route('home') }}"
                     class="text-xs font-semibold text-gray-400 hover:text-blue-600">
                     Xem tất cả <i class="fas fa-angle-double-right"></i>
                 </a>
@@ -134,7 +134,6 @@
         <div id="genre-{{ $section['slug'] }}"
             class="flex gap-4 overflow-x-auto hide-scrollbar scrolling-wrapper pb-2">
             @forelse($section['comics'] as $comic)
-            @forelse($section['comics'] as $comic)
             <div class="flex-none w-[140px] group relative bg-transparent rounded-md overflow-hidden transition-all duration-300 hover:-translate-y-1">
 
                 {{-- Stretched link phủ toàn bộ thẻ --}}
@@ -203,10 +202,6 @@
                 </div>
             </div>
             @empty
-            {{-- empty --}}
-            @endforelse
-
-            @empty
             <p class="text-xs text-gray-400 italic">
                 Chưa có truyện cho thể loại này.
             </p>
@@ -243,6 +238,7 @@
                 (index === currentSlideIndex ? 'opacity-100 z-10' : 'opacity-0 z-0');
 
             slideEl.innerHTML = `
+                <a href="${slide.url}" class="block w-full h-full">
                 <img src="${slide.img}" class="w-full h-full object-cover object-top" alt="${slide.title}">
                 <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
                 <div class="absolute bottom-0 left-0 p-6 md:p-12 w-full md:w-2/3 text-white">
@@ -250,6 +246,7 @@
                     <h2 class="text-3xl md:text-5xl font-extrabold mb-3 leading-tight drop-shadow-lg">${slide.title}</h2>
                     <p class="text-gray-200 line-clamp-2 drop-shadow-md text-sm md:text-base">${slide.desc ?? ''}</p>
                 </div>
+                </a>
             `;
             sliderContainer.appendChild(slideEl);
 
@@ -291,6 +288,7 @@
             wrapper.className = 'flex-none w-[160px] md:w-[180px] group cursor-pointer relative';
 
             wrapper.innerHTML = `
+                <a href="${item.url}" class="block">
                 <div class="aspect-[2/3] rounded-lg overflow-hidden shadow-md relative mb-3">
                     <img src="${item.img}" class="w-full h-full object-cover" alt="${item.title}">
                     <span class="rank-text ${rankClass}">${index + 1}</span>
@@ -300,6 +298,7 @@
                     <span>Chap ${item.chap}</span>
                     <span><i class="fas fa-eye"></i> ${item.view}</span>
                 </div>
+                </a>
             `;
             trendingContainer.appendChild(wrapper);
         });
@@ -316,13 +315,14 @@
             item.chaps.forEach(function(chap) {
                 chapsHtml += `
                     <div class="flex justify-between items-center text-xs">
-                        <a href="#" class="bg-gray-100 hover:bg-blue-100 px-2 py-0.5 rounded text-gray-600 font-semibold transition">Chap ${chap.num}</a>
+                        <a href="${item.url}" class="bg-gray-100 hover:bg-blue-100 px-2 py-0.5 rounded text-gray-600 font-semibold transition">Chap ${chap.num}</a>
                         <span class="text-gray-400 italic text-[10px]">${chap.time}</span>
                     </div>
                 `;
             });
 
             card.innerHTML = `
+                <a href="${item.url}" class="block">
                 <div class="relative rounded-lg overflow-hidden shadow-sm aspect-[2/3] mb-2 cursor-pointer">
                     ${item.isHot ? '<span class="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm z-10">HOT</span>' : ''}
                     <img src="${item.img}" class="w-full h-full object-cover" alt="${item.title}">
@@ -332,6 +332,7 @@
                     </div>
                 </div>
                 <h4 class="font-bold text-sm text-slate-800 line-clamp-1 group-hover:text-blue-600 transition cursor-pointer">${item.title}</h4>
+                </a>
                 <div class="mt-2 space-y-1">
                     ${chapsHtml}
                 </div>
@@ -350,6 +351,7 @@
                 'flex gap-3 items-center border-b border-gray-50 last:border-0 pb-2 cursor-pointer group';
 
             row.innerHTML = `
+                <a href="${item.url}" class="flex gap-3 items-center w-full">
                 <span class="text-xl font-black ${numColor} w-6 text-center italic">0${index + 1}</span>
                 <div class="w-12 h-16 rounded overflow-hidden flex-shrink-0 shadow-sm">
                     <img src="${item.img}" class="w-full h-full object-cover" alt="${item.title}">
@@ -361,6 +363,7 @@
                         <span class="text-[10px] text-gray-400"><i class="fas fa-eye"></i> ${item.view}</span>
                     </div>
                 </div>
+                </a>
             `;
             sidebarContainer.appendChild(row);
         });

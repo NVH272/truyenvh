@@ -74,7 +74,7 @@
                     <label class="block text-gray-700 text-sm font-bold mb-1 uppercase tracking-wide group-hover:text-orange-600 transition">
                         <span class="mr-2">></span>Họ và Tên
                     </label>
-                    <input type="text" name="name" value="{{ old('name') }}"
+                    <input type="text" name="name" value="{{ old('name') }}" autofocus
                         class="w-full p-2 sg-input text-gray-800 placeholder-gray-400"
                         placeholder="Hououin Kyouma" required>
                 </div>

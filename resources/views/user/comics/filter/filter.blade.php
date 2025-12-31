@@ -11,8 +11,8 @@
             extend: {
                 colors: {
                     brand: {
-                        blue: '#2563eb', // Royal Blue
-                        light: '#eff6ff', // Light Blue bg
+                        blue: '#2563eb',
+                        light: '#eff6ff',
                     }
                 },
                 boxShadow: {
@@ -156,7 +156,7 @@
 
         {{-- RIGHT COLUMN: SIDEBAR FILTER (STICKY) --}}
         <div class="w-full lg:w-1/4">
-            <div class="sticky top-24 space-y-6">
+            <div class="sticky top-[88px] space-y-6">
 
                 {{-- Filter Box --}}
                 <div class="bg-white/90 backdrop-blur-xl p-5 rounded-xl border border-slate-200 shadow-lg relative overflow-hidden">
@@ -170,9 +170,6 @@
                     {{-- Search Name --}}
                     <form method="GET" action="{{ route('user.comics.filter') }}">
                         <div class="group relative mb-4">
-                            <label class="text-[11px] font-bold text-slate-400 uppercase mb-1.5 block ml-1 tracking-wide">
-                                Tìm kiếm
-                            </label>
 
                             <div class="relative">
                                 <input
@@ -193,9 +190,6 @@
 
                     {{-- Sort Dropdown --}}
                     <div class="relative mb-4">
-                        <label class="text-[11px] font-bold text-slate-400 uppercase mb-1.5 block ml-1 tracking-wide">
-                            Sắp xếp
-                        </label>
                         <div class="relative group">
                             <select id="sort-select"
                                 class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 font-medium
@@ -203,6 +197,9 @@
                                 cursor-pointer transition-all hover:border-slate-300">
 
                                 {{-- Lượt xem --}}
+                                <option value="views_desc" {{ request('sort') == 'views_desc' ? 'selected' : '' }} hidden>
+                                    Sắp xếp
+                                </option>
                                 <option value="views_desc" {{ request('sort') == 'views_desc' ? 'selected' : '' }}>
                                     Lượt xem (Cao → Thấp)
                                 </option>
@@ -237,8 +234,20 @@
                     <div class="mb-5">
                         <div class="flex items-center justify-between mb-2 ml-1">
                             <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Thể loại</label>
-                            @if(request()->has('categories') && count(request('categories')) > 0)
-                            <a href="{{ request()->fullUrlWithQuery(['categories' => null]) }}" class="text-[10px] text-red-500 hover:text-red-600 hover:underline transition-colors font-medium cursor-pointer">
+                            @php
+                            $hasCategories = request()->has('categories');
+                            $categoriesCount = 0;
+                            if ($hasCategories) {
+                            $cats = request()->input('categories', []);
+                            $categoriesCount = is_array($cats) ? count($cats) : ($cats ? 1 : 0);
+                            }
+                            @endphp
+                            @if($hasCategories && $categoriesCount > 0)
+                            @php
+                            $queryParams = request()->except(['categories', 'page']);
+                            $clearUrl = route('user.comics.filter', $queryParams);
+                            @endphp
+                            <a href="{{ $clearUrl }}" class="text-[10px] text-red-500 hover:text-red-600 hover:underline transition-colors font-medium cursor-pointer">
                                 <i class="fas fa-times mr-0.5"></i> Xóa
                             </a>
                             @endif
@@ -248,13 +257,33 @@
                             @forelse($categories as $category)
                             @php
                             $selected = request()->input('categories', []);
+                            // Đảm bảo $selected là array
+                            if (!is_array($selected)) {
+                            $selected = $selected ? [$selected] : [];
+                            }
+                            $selected = array_values(array_filter($selected));
+
                             $active = in_array($category->slug, $selected);
 
                             $newSelected = $active
                             ? array_values(array_diff($selected, [$category->slug]))
                             : array_values(array_unique([...$selected, $category->slug]));
 
-                            $url = request()->fullUrlWithQuery(['categories' => $newSelected]);
+                            // Tạo URL với format đúng cho array
+                            $queryParams = request()->except(['categories', 'page']);
+                            $baseUrl = route('user.comics.filter');
+
+                            // Xây dựng query string thủ công để đảm bảo format đúng
+                            $queryString = http_build_query($queryParams);
+                            if (!empty($newSelected)) {
+                            $categoriesParam = '';
+                            foreach ($newSelected as $slug) {
+                            $categoriesParam .= ($categoriesParam ? '&' : '') . 'categories[]=' . urlencode($slug);
+                            }
+                            $queryString .= ($queryString ? '&' : '') . $categoriesParam;
+                            }
+
+                            $url = $baseUrl . ($queryString ? '?' . $queryString : '');
                             @endphp
 
                             <a href="{{ $url }}"

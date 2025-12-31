@@ -83,6 +83,7 @@
                     </label>
                     <input type="password"
                         name="password"
+                        autofocus
                         class="w-full p-2 sg-input text-gray-800 placeholder-gray-400"
                         placeholder="Nhập mật khẩu mới..." required autocomplete="new-password">
                 </div>

@@ -18,7 +18,7 @@
                                 alt="{{ $comic->title ?? 'Cover' }}"
                                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
                             {{-- Badge Hot/New nếu cần --}}
-                            <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">HOT</span>
+                            <!-- <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">HOT</span> -->
                         </div>
                     </div>
 
@@ -132,7 +132,7 @@
 
                         {{-- Action Buttons --}}
                         <div class="flex flex-wrap gap-3 justify-center md:justify-start">
-                            <a href="#" class="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg shadow-lg hover:bg-blue-700 hover:-translate-y-0.5 transition-all flex items-center gap-2">
+                            <a href="#" class="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg border border-gray-300 shadow-lg hover:bg-blue-700 hover:-translate-y-0.5 transition-all flex items-center gap-2">
                                 <i class="fas fa-book-open"></i> Đọc từ đầu
                             </a>
 
@@ -142,7 +142,7 @@
                             <form action="{{ route('comics.follow', $comic) }}" method="POST">
                                 @csrf
                                 <button type="submit"
-                                    class="px-6 py-2.5 {{ $isFollowing ? 'bg-gray-200 text-gray-800' : 'bg-red-500 text-white' }} font-bold rounded-lg shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 hover:bg-red-600">
+                                    class="px-6 py-2.5 {{ $isFollowing ? 'bg-gray-200 text-gray-800' : 'bg-red-500 text-white' }} font-bold rounded-lg border border-gray-300 shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 hover:bg-red-600">
                                     <i class="fas fa-heart {{ $isFollowing ? 'text-red-500' : '' }}"></i>
                                     {{ $isFollowing ? 'Đã theo dõi' : 'Theo dõi' }}
                                 </button>
@@ -160,9 +160,18 @@
                             </a>
                             @endauth
 
-                            <a href="#" class="px-6 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-lg border border-gray-300 hover:bg-gray-200 transition-all flex items-center gap-2">
-                                <i class="fas fa-list"></i> Đọc mới nhất
+                            <a href="#" class="px-6 py-2.5 bg-yellow-300 text-gray-700 font-bold rounded-lg border border-gray-300 shadow-lg hover:bg-yellow-400 hover:-translate-y-0.5 transition-all flex items-center gap-2">
+                                <i class="fas fa-book-open-reader"></i> Đọc mới nhất
                             </a>
+
+                            @php
+                            $isComicOwner = auth()->check() && ((int)$comic->created_by === (int)auth()->id());
+                            @endphp
+                            @if($isComicOwner)
+                            <a href="#" class="px-6 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-lg border border-gray-300 shadow-lg hover:bg-gray-200 hover:-translate-y-0.5 transition-all flex items-center gap-2">
+                                <i class="fas fa-list"></i> Thêm chapter mới
+                            </a>
+                            @endif
                         </div>
                     </div>
                 </div>

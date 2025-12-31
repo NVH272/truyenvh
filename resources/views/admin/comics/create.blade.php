@@ -62,7 +62,7 @@
                             </div>
 
                             <div class="space-y-1.5">
-                                <label class="block text-sm font-semibold text-slate-300">Tác giả</label>
+                                <label class="block text-sm font-semibold text-slate-300">Tác giả <span class="text-red-500">*</span></label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i class="fas fa-pen-nib text-slate-500"></i>
@@ -74,47 +74,63 @@
                             </div>
                         </div>
 
-                        {{-- Description --}}
-                        <div class="space-y-1.5">
-                            <label class="block text-sm font-semibold text-slate-300">Tóm tắt nội dung</label>
-                            <textarea name="description" id="input-description" rows="4"
-                                class="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-slate-100 text-sm placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors resize-y leading-relaxed custom-scrollbar"
-                                placeholder="Viết mô tả hấp dẫn cho truyện...">{{ old('description') }}</textarea>
-                        </div>
-
-                        <div class="border-t border-slate-700/50 my-4"></div>
-
                         {{-- Status, Chapter, Date --}}
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                            {{-- Trạng thái --}}
                             <div class="space-y-1.5">
                                 <label class="block text-sm font-semibold text-slate-300">
-                                    Trạng thái <span class="text-red-500">*</span>
+                                    Trạng thái
                                 </label>
                                 <div class="relative">
-                                    <select name="status" id="input-status" class="w-full pl-4 pr-10 py-3 bg-slate-900 border border-slate-600 rounded-lg text-slate-100 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors appearance-none cursor-pointer">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i id="status-icon" class="fas fa-sync text-slate-500 transition-all duration-300"></i>
+                                    </div>
+
+                                    <select name="status" id="input-status"
+                                        class="w-full pl-10 pr-10 py-3 bg-slate-900 border border-slate-600 rounded-lg text-slate-100 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors appearance-none cursor-pointer">
                                         <option value="ongoing" @selected(old('status')==='ongoing' )>Đang tiến hành</option>
                                         <option value="completed" @selected(old('status')==='completed' )>Đã hoàn thành</option>
                                         <option value="dropped" @selected(old('status')==='dropped' )>Tạm dừng</option>
                                     </select>
+
                                     <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-500">
                                         <i class="fas fa-chevron-down text-xs"></i>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="space-y-1.5">
+                            <!-- <div class="space-y-1.5">
                                 <label class="block text-sm font-semibold text-slate-300">Số chương</label>
                                 <input type="number" name="chapter_count" id="input-chapter" value="{{ old('chapter_count', 0) }}" min="0"
                                     class="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-slate-100 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
-                            </div>
+                            </div> -->
 
                             <div class="space-y-1.5">
                                 <label class="block text-sm font-semibold text-slate-300">Ngày phát hành</label>
-                                <input type="date" name="published_at" id="input-published-at"
-                                    value="{{ old('published_at', now()->format('Y-m-d')) }}"
-                                    class="date-light w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-slate-100 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="far fa-calendar-alt text-slate-500"></i>
+                                    </div>
+
+                                    <input type="date" name="published_at" id="input-published-at"
+                                        value="{{ old('published_at', now()->format('Y-m-d')) }}"
+                                        class="date-light w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-slate-100 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                                </div>
                             </div>
                         </div>
+
+                        <div class="border-t border-slate-700/50 my-4"></div>
+
+                        {{-- Description --}}
+                        <div class="space-y-1.5">
+                            <label class="block text-sm font-semibold text-slate-300">Tóm tắt nội dung</label>
+                            <textarea name="description" id="input-description" rows="4"
+                                class="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-slate-100 text-sm placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors resize-y leading-relaxed custom-scrollbar"
+                                placeholder="Viết mô tả hấp dẫn cho truyện...">{{ old('description') }}
+                            </textarea>
+                        </div>
+
                     </div>
                 </div>
             </div>

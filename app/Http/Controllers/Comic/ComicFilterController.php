@@ -135,7 +135,7 @@ class ComicFilterController extends Controller
                 break;
         }
 
-        $comics = $query->paginate(35)->withQueryString();
+        $comics = $query->paginate(50)->withQueryString();
 
         return view('user.search', compact('comics', 'q', 'selected', 'sort'));
     }

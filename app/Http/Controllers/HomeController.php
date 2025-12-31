@@ -74,7 +74,8 @@ class HomeController extends Controller
                 'desc'  => Str::limit($comic->description ?? '', 120),
                 'img'   => $comic->cover_url,
                 'badge' => 'Hot Nhất',
-                'url'   => '#', // sau này thay route đọc truyện
+                'url'   => route('user.comics.show', $comic->slug),
+                'slug'  => $comic->slug,
             ];
         })->values();
 
@@ -85,7 +86,8 @@ class HomeController extends Controller
                 'chap'  => $comic->chapter_count ?? 0,
                 'view'  => $comic->views ?? 0,
                 'img'   => $comic->cover_url,
-                'url'   => '#',
+                'url'   => route('user.comics.show', $comic->slug),
+                'slug'  => $comic->slug,
             ];
         })->values();
 
@@ -100,7 +102,8 @@ class HomeController extends Controller
                         'time' => optional($comic->updated_at)->diffForHumans() ?? 'Mới cập nhật',
                     ],
                 ],
-                'url'   => '#',
+                'url'   => route('user.comics.show', $comic->slug),
+                'slug'  => $comic->slug,
             ];
         })->values();
 
@@ -110,7 +113,8 @@ class HomeController extends Controller
                 'chap'  => $comic->chapter_count ?? 0,
                 'view'  => $comic->follows ?? 0,
                 'img'   => $comic->cover_url,
-                'url'   => '#',
+                'url'   => route('user.comics.show', $comic->slug),
+                'slug'  => $comic->slug,
             ];
         })->values();
 
