@@ -74,7 +74,7 @@ class Comic extends Model
     // Quan hệ 1-N với Chapter
     public function chapters()
     {
-        // return $this->hasMany(Chapter::class, 'comic_id');
+        return $this->hasMany(Chapter::class, 'comic_id');
     }
 
     // Quan hệ 1-N với ComicRating

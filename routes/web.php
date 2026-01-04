@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\ViolationController;
 
 use App\Http\Controllers\User\UserProfileController;
 use App\Http\Controllers\User\UserComicController;
+use App\Http\Controllers\User\ChapterController;
 use App\Http\Controllers\User\CommentReportController;
 
 
@@ -186,6 +187,17 @@ Route::prefix('my-comics')->name('user.my-comics.')->middleware(['auth', 'verifi
     Route::get('/{comic}/edit', [UserComicController::class, 'edit'])->name('edit');
     Route::put('/{comic}', [UserComicController::class, 'update'])->name('update');
     Route::delete('/{comic}', [UserComicController::class, 'destroy'])->name('destroy');
+});
+
+/*
+|--------------------------------------------------------------------------
+| CHAPTER ROUTES (Comic Owner Only)
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('comics/{comic}/chapters')->name('user.chapters.')->middleware(['auth', 'verified'])->group(function () {
+    Route::get('/create', [ChapterController::class, 'create'])->name('create');
+    Route::post('/', [ChapterController::class, 'store'])->name('store');
 });
 
 /*
