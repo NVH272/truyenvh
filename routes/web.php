@@ -155,7 +155,6 @@ Route::prefix('reset-password')->name('password.')->group(function () {
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    // Trang liệt kê truyện đang theo dõi
     Route::get('/followed', [ComicFollowController::class, 'index'])
         ->name('user.comics.followed');
 });

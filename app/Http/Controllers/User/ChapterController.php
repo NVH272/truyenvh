@@ -21,10 +21,16 @@ class ChapterController extends Controller
         // Kiểm tra quyền: chỉ người tạo truyện mới được upload chapter
         $this->authorizeComic($comic);
 
+        // Danh sách truyện của người đăng (để đổ vào dropdown)
+        $myComics = Comic::where('created_by', Auth::id())
+            ->orderByDesc('id')
+            ->get(['id', 'title', 'slug', 'author', 'cover_image']);
+        // cover_image nếu cover_url của bạn sinh từ cover_image
+
         // Lấy số chapter tiếp theo
         $nextChapterNumber = $comic->chapters()->max('chapter_number') + 1;
 
-        return view('user.comics.chapters.create', compact('comic', 'nextChapterNumber'));
+        return view('user.comics.chapters.create', compact('comic', 'myComics', 'nextChapterNumber'));
     }
 
     /**
@@ -63,11 +69,17 @@ class ChapterController extends Controller
         // Xử lý upload và extract ZIP
         try {
             $zipFile = $request->file('zip_file');
-            
-            // Tạo thư mục tạm để extract ZIP
-            $tempExtractPath = storage_path('app/temp/chapters/' . uniqid());
-            File::makeDirectory($tempExtractPath, 0755, true);
 
+            // Tạo thư mục tạm để extract ZIP
+            // $tempExtractPath = storage_path('app/temp/chapters/' . uniqid());
+            // File::makeDirectory($tempExtractPath, 0755, true);
+            $tempExtractPath = storage_path('app/temp/chapters/' . uniqid());
+
+            if (!File::exists($tempExtractPath)) {
+                File::makeDirectory($tempExtractPath, 0755, true);
+            }
+
+            //
             // Extract ZIP file
             $zip = new ZipArchive;
             if ($zip->open($zipFile->getRealPath()) === TRUE) {
@@ -79,7 +91,7 @@ class ChapterController extends Controller
 
             // Lấy danh sách file ảnh từ thư mục đã extract
             $imageFiles = $this->getImageFiles($tempExtractPath);
-            
+
             if (empty($imageFiles)) {
                 File::deleteDirectory($tempExtractPath);
                 return back()
@@ -93,7 +105,12 @@ class ChapterController extends Controller
             // Tạo thư mục lưu trữ chính thức cho chapter
             $chapterStoragePath = 'uploads/chapters/' . $comic->id . '/' . $data['chapter_number'];
             $fullStoragePath = storage_path('app/public/' . $chapterStoragePath);
-            File::makeDirectory($fullStoragePath, 0755, true);
+            // File::makeDirectory($fullStoragePath, 0755, true);
+
+            if (!File::exists($fullStoragePath)) {
+                File::makeDirectory($fullStoragePath, 0755, true);
+            }
+            //
 
             // Di chuyển và đổi tên file ảnh theo thứ tự 1, 2, 3, ...
             $pageCount = 0;
@@ -102,7 +119,7 @@ class ChapterController extends Controller
                 $extension = strtolower(pathinfo($imageFile, PATHINFO_EXTENSION));
                 $newFileName = ($index + 1) . '.' . $extension;
                 $destinationPath = $fullStoragePath . '/' . $newFileName;
-                
+
                 if (File::exists($sourcePath)) {
                     File::move($sourcePath, $destinationPath);
                     $pageCount++;
@@ -115,6 +132,7 @@ class ChapterController extends Controller
             // Tạo record chapter trong database
             $chapter = new Chapter();
             $chapter->comic_id = $comic->id;
+            $chapter->created_by = auth()->id();
             $chapter->chapter_number = $data['chapter_number'];
             $chapter->title = $data['title'] ?? 'Chapter ' . $data['chapter_number'];
             $chapter->images_path = $chapterStoragePath;
@@ -130,7 +148,6 @@ class ChapterController extends Controller
             return redirect()
                 ->route('user.comics.show', $comic)
                 ->with('success', 'Chapter đã được upload thành công!');
-                
         } catch (\Exception $e) {
             // Xóa thư mục tạm nếu có lỗi
             if (isset($tempExtractPath) && File::exists($tempExtractPath)) {
@@ -156,14 +173,14 @@ class ChapterController extends Controller
         }
 
         $items = scandir($directory);
-        
+
         foreach ($items as $item) {
             if ($item === '.' || $item === '..') {
                 continue;
             }
-            
+
             $itemPath = $directory . '/' . $item;
-            
+
             if (is_file($itemPath)) {
                 $extension = strtolower(pathinfo($item, PATHINFO_EXTENSION));
                 if (in_array($extension, $allowedExtensions)) {
