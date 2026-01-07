@@ -186,43 +186,7 @@
             <div class="lg:col-span-5 space-y-6">
 
                 {{-- 1. DANH SÁCH CHƯƠNG --}}
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                        <h2 class="text-lg font-bold text-blue-600 flex items-center gap-2">
-                            <i class="fas fa-list-ul"></i> Danh sách chương
-                        </h2>
-                        <span class="text-xs text-gray-500">Cập nhật lúc: 10 phút trước</span>
-                    </div>
-
-                    <div class="max-h-[500px] overflow-y-auto custom-scrollbar">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-gray-50 sticky top-0 z-10 text-xs text-gray-500 uppercase">
-                                <tr>
-                                    <th class="px-6 py-3 font-medium">Số chương</th>
-                                    <th class="px-4 py-3 font-medium text-center">Cập nhật</th>
-                                    <th class="px-4 py-3 font-medium text-right">Lượt xem</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-100 text-sm">
-                                @for($i = 200; $i >= 1; $i--)
-                                <tr class="hover:bg-gray-50 transition-colors group">
-                                    <td class="px-6 py-3">
-                                        <a href="#" class="font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
-                                            Chapter {{ $i }}
-                                        </a>
-                                    </td>
-                                    <td class="px-4 py-3 text-gray-500 text-center text-xs">
-                                        {{ now()->subDays(rand(0, 30))->format('d/m/Y') }}
-                                    </td>
-                                    <td class="px-4 py-3 text-gray-500 text-right text-xs">
-                                        {{ rand(1000, 50000) }}
-                                    </td>
-                                </tr>
-                                @endfor
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                @include('user.comics.partials.chapterlist', ['comic' => $comic])
 
                 {{-- 2. BÌNH LUẬN --}}
                 @include('user.comics.partials.comments', ['comic' => $comic])

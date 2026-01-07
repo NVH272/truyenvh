@@ -38,12 +38,19 @@ class HomeController extends Controller
             ->get();
 
         // 5. Các section theo thể loại (lọc qua bảng categories + category_comic)
-        // slug trong bảng categories: hanh-dong, ngon-tinh, co-trang, the-thao, ...
+        // Dùng đúng slug trong bảng `categories` (xem file dump db_truyenvh.sql)
+        // Ví dụ: action, adventure, comedy, drama, fantasy, romance, horror, sports, ...
         $genreSlugs = [
-            'hanh-dong' => 'Truyện hành động',
-            'ngon-tinh' => 'Truyện ngôn tình',
-            'co-trang'  => 'Truyện cổ trang',
-            'the-thao'  => 'Truyện thể thao',
+            'action'      => 'Truyện hành động',
+            'adventure'   => 'Truyện phiêu lưu',
+            'comedy'      => 'Truyện hài hước',
+            'drama'       => 'Truyện kịch tính',
+            'fantasy'     => 'Truyện giả tưởng',
+            'romance'     => 'Truyện tình cảm',
+            'horror'      => 'Truyện kinh dị',
+            'sports'      => 'Truyện thể thao',
+            'school-life' => 'Đời sống học đường',
+            'sci-fi'      => 'Khoa học viễn tưởng',
         ];
 
         $genreSections = [];

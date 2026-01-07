@@ -28,6 +28,10 @@ class ComicReadController extends Controller
                 ->exists();
         }
 
+        $comic->load(['chapters' => function ($q) {
+            $q->orderByDesc('chapter_number');
+        }]);
+
         $commentsQuery = Comment::where('comic_id', $comic->id)
             ->whereNull('parent_id')
             ->with([

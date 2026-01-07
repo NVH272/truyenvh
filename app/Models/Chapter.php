@@ -30,6 +30,11 @@ class Chapter extends Model
         return $this->belongsTo(Comic::class);
     }
 
+    public function pages()
+    {
+        return $this->hasMany(\App\Models\ChapterPage::class)->orderBy('page_index');
+    }
+
     // Lấy URL đầy đủ đến thư mục chứa ảnh
     public function getImagesUrlAttribute()
     {
@@ -46,12 +51,12 @@ class Chapter extends Model
 
         $files = [];
         $items = scandir($path);
-        
+
         foreach ($items as $item) {
             if ($item === '.' || $item === '..') {
                 continue;
             }
-            
+
             $filePath = $path . '/' . $item;
             if (is_file($filePath)) {
                 $extension = strtolower(pathinfo($item, PATHINFO_EXTENSION));
@@ -63,7 +68,7 @@ class Chapter extends Model
 
         // Sắp xếp theo số thứ tự trong tên file
         natsort($files);
-        
+
         return array_values($files);
     }
 }

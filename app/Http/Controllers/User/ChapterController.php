@@ -102,6 +102,8 @@ class ChapterController extends Controller
             // Sắp xếp file ảnh theo số thứ tự
             natsort($imageFiles);
 
+            $imageFiles = array_values($imageFiles);
+
             // Tạo thư mục lưu trữ chính thức cho chapter
             $chapterStoragePath = 'uploads/chapters/' . $comic->id . '/' . $data['chapter_number'];
             $fullStoragePath = storage_path('app/public/' . $chapterStoragePath);
@@ -114,16 +116,28 @@ class ChapterController extends Controller
 
             // Di chuyển và đổi tên file ảnh theo thứ tự 1, 2, 3, ...
             $pageCount = 0;
+            $pageRows = [];
+
             foreach ($imageFiles as $index => $imageFile) {
                 $sourcePath = $tempExtractPath . '/' . $imageFile;
+
+                if (!File::exists($sourcePath)) continue;
+
                 $extension = strtolower(pathinfo($imageFile, PATHINFO_EXTENSION));
-                $newFileName = ($index + 1) . '.' . $extension;
+                $pageIndex = $index + 1;
+
+                $newFileName = $pageIndex . '.' . $extension;
                 $destinationPath = $fullStoragePath . '/' . $newFileName;
 
-                if (File::exists($sourcePath)) {
-                    File::move($sourcePath, $destinationPath);
-                    $pageCount++;
-                }
+                File::move($sourcePath, $destinationPath);
+                $pageCount++;
+
+                $pageRows[] = [
+                    'page_index' => $pageIndex,
+                    'image_path' => $chapterStoragePath . '/' . $newFileName, // uploads/chapters/{comic}/{chapter}/{page}.jpg
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
             }
 
             // Xóa thư mục tạm
@@ -139,6 +153,11 @@ class ChapterController extends Controller
             $chapter->page_count = $pageCount;
             $chapter->views = 0;
             $chapter->save();
+
+            // Insert pages
+            $chapter->pages()->insert(
+                array_map(fn($row) => $row + ['chapter_id' => $chapter->id], $pageRows)
+            );
 
             // Cập nhật chapter_count và last_chapter_at của comic
             $comic->chapter_count = $comic->chapters()->count();

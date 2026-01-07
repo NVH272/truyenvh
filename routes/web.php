@@ -20,7 +20,7 @@ use App\Http\Controllers\User\UserProfileController;
 use App\Http\Controllers\User\UserComicController;
 use App\Http\Controllers\User\ChapterController;
 use App\Http\Controllers\User\CommentReportController;
-
+use App\Http\Controllers\User\ReadChapterController;
 
 use App\Http\Controllers\Comic\ComicReadController;
 use App\Http\Controllers\Comic\ComicInteractionController;
@@ -43,6 +43,11 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 // Trang chi tiết / đọc truyện theo slug
 Route::get('/truyen/{comic:slug}', [ComicReadController::class, 'show'])
     ->name('user.comics.show');
+
+// Trang đọc chapter
+Route::get('/comics/{comic}/chapter-{chapter_number}', [ReadChapterController::class, 'show'])
+    ->whereNumber('comic')
+    ->name('user.comics.chapters.read');
 
 // Các route tương tác truyện
 
