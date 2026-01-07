@@ -17,6 +17,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'isAdmin' => AdminMiddleware::class,
             'verified' => EnsureEmailIsVerified::class,
         ]);
+        
+        // Replace ValidatePostSize middleware với custom version để cho phép upload lớn hơn
+        // Lưu ý: Vẫn cần sửa php.ini để PHP thực sự chấp nhận upload lớn
+        $middleware->replace(
+            \Illuminate\Http\Middleware\ValidatePostSize::class,
+            \App\Http\Middleware\CustomValidatePostSize::class
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

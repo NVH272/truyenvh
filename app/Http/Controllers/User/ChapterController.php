@@ -114,7 +114,7 @@ class ChapterController extends Controller
             }
             //
 
-            // Di chuyển và đổi tên file ảnh theo thứ tự 1, 2, 3, ...
+            // Di chuyển, resize và đổi tên file ảnh theo thứ tự 1, 2, 3, ...
             $pageCount = 0;
             $pageRows = [];
 
@@ -126,10 +126,14 @@ class ChapterController extends Controller
                 $extension = strtolower(pathinfo($imageFile, PATHINFO_EXTENSION));
                 $pageIndex = $index + 1;
 
-                $newFileName = $pageIndex . '.' . $extension;
+                // Chuyển đổi sang jpg để giảm dung lượng (trừ khi là webp)
+                $finalExtension = ($extension === 'webp') ? 'webp' : 'jpg';
+                $newFileName = $pageIndex . '.' . $finalExtension;
                 $destinationPath = $fullStoragePath . '/' . $newFileName;
 
-                File::move($sourcePath, $destinationPath);
+                // Resize và tối ưu ảnh trước khi lưu
+                $this->resizeAndOptimizeImage($sourcePath, $destinationPath, $extension);
+
                 $pageCount++;
 
                 $pageRows[] = [
@@ -180,15 +184,20 @@ class ChapterController extends Controller
     }
 
     /**
-     * Lấy danh sách file ảnh từ thư mục
+     * Lấy danh sách file ảnh từ thư mục (trả về đường dẫn tương đối)
      */
-    private function getImageFiles($directory)
+    private function getImageFiles($directory, $basePath = null)
     {
         $imageFiles = [];
         $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
         if (!is_dir($directory)) {
             return $imageFiles;
+        }
+
+        // Lưu base path lần đầu tiên
+        if ($basePath === null) {
+            $basePath = $directory;
         }
 
         $items = scandir($directory);
@@ -203,16 +212,155 @@ class ChapterController extends Controller
             if (is_file($itemPath)) {
                 $extension = strtolower(pathinfo($item, PATHINFO_EXTENSION));
                 if (in_array($extension, $allowedExtensions)) {
-                    $imageFiles[] = $item;
+                    // Trả về đường dẫn tương đối từ basePath
+                    $relativePath = str_replace($basePath . '/', '', $itemPath);
+                    $imageFiles[] = $relativePath;
                 }
             } elseif (is_dir($itemPath)) {
                 // Đệ quy vào thư mục con
-                $subFiles = $this->getImageFiles($itemPath);
+                $subFiles = $this->getImageFiles($itemPath, $basePath);
                 $imageFiles = array_merge($imageFiles, $subFiles);
             }
         }
 
         return $imageFiles;
+    }
+
+    /**
+     * Resize và tối ưu ảnh: giảm xuống 1080p nếu lớn hơn, giữ nguyên nếu nhỏ hơn
+     * 
+     * @param string $sourcePath Đường dẫn file ảnh gốc
+     * @param string $destinationPath Đường dẫn file ảnh đích
+     * @param string $extension Định dạng file gốc
+     */
+    private function resizeAndOptimizeImage($sourcePath, $destinationPath, $extension)
+    {
+        // Kiểm tra GD extension
+        if (!extension_loaded('gd')) {
+            // Nếu không có GD, chỉ copy file
+            File::copy($sourcePath, $destinationPath);
+            return;
+        }
+
+        // Đọc ảnh gốc
+        $image = null;
+        switch (strtolower($extension)) {
+            case 'jpg':
+            case 'jpeg':
+                $image = imagecreatefromjpeg($sourcePath);
+                break;
+            case 'png':
+                $image = imagecreatefrompng($sourcePath);
+                break;
+            case 'gif':
+                $image = imagecreatefromgif($sourcePath);
+                break;
+            case 'webp':
+                if (function_exists('imagecreatefromwebp')) {
+                    $image = imagecreatefromwebp($sourcePath);
+                } else {
+                    File::copy($sourcePath, $destinationPath);
+                    return;
+                }
+                break;
+            default:
+                File::copy($sourcePath, $destinationPath);
+                return;
+        }
+
+        if (!$image) {
+            File::copy($sourcePath, $destinationPath);
+            return;
+        }
+
+        // Lấy kích thước gốc
+        $originalWidth = imagesx($image);
+        $originalHeight = imagesy($image);
+
+        // 1080p = 1920x1080 (Full HD)
+        $maxWidth = 1920;
+        $maxHeight = 1080;
+
+        // Tính toán kích thước mới (giữ tỷ lệ)
+        $newWidth = $originalWidth;
+        $newHeight = $originalHeight;
+
+        if ($originalWidth > $maxWidth || $originalHeight > $maxHeight) {
+            $ratio = min($maxWidth / $originalWidth, $maxHeight / $originalHeight);
+            $newWidth = (int)($originalWidth * $ratio);
+            $newHeight = (int)($originalHeight * $ratio);
+        }
+
+        // Xác định extension của file đích
+        $destExtension = strtolower(pathinfo($destinationPath, PATHINFO_EXTENSION));
+
+        // Nếu không cần resize, chỉ tối ưu chất lượng
+        if ($newWidth === $originalWidth && $newHeight === $originalHeight) {
+            // Giữ nguyên kích thước nhưng tối ưu chất lượng
+            $this->saveOptimizedImage($image, $destinationPath, $destExtension);
+            imagedestroy($image);
+            return;
+        }
+
+        // Tạo ảnh mới với kích thước đã resize
+        $newImage = imagecreatetruecolor($newWidth, $newHeight);
+
+        // Giữ độ trong suốt cho PNG/GIF (nếu file đích là PNG)
+        if ($destExtension === 'png') {
+            imagealphablending($newImage, false);
+            imagesavealpha($newImage, true);
+            $transparent = imagecolorallocatealpha($newImage, 255, 255, 255, 127);
+            imagefilledrectangle($newImage, 0, 0, $newWidth, $newHeight, $transparent);
+        }
+
+        // Resize ảnh với chất lượng tốt
+        imagecopyresampled(
+            $newImage,
+            $image,
+            0, 0, 0, 0,
+            $newWidth,
+            $newHeight,
+            $originalWidth,
+            $originalHeight
+        );
+
+        // Lưu ảnh đã tối ưu
+        $this->saveOptimizedImage($newImage, $destinationPath, $destExtension);
+
+        // Giải phóng bộ nhớ
+        imagedestroy($image);
+        imagedestroy($newImage);
+    }
+
+    /**
+     * Lưu ảnh với chất lượng tối ưu
+     */
+    private function saveOptimizedImage($image, $destinationPath, $originalExtension)
+    {
+        $extension = strtolower(pathinfo($destinationPath, PATHINFO_EXTENSION));
+
+        switch ($extension) {
+            case 'jpg':
+            case 'jpeg':
+                // JPEG quality: 85 (cân bằng giữa chất lượng và dung lượng)
+                imagejpeg($image, $destinationPath, 85);
+                break;
+            case 'png':
+                // PNG compression: 6 (0-9, 6 là cân bằng tốt)
+                imagepng($image, $destinationPath, 6);
+                break;
+            case 'webp':
+                if (function_exists('imagewebp')) {
+                    // WebP quality: 85
+                    imagewebp($image, $destinationPath, 85);
+                } else {
+                    // Fallback: chuyển sang JPEG
+                    imagejpeg($image, $destinationPath, 85);
+                }
+                break;
+            default:
+                imagejpeg($image, $destinationPath, 85);
+        }
     }
 
     /**

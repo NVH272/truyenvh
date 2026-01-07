@@ -423,13 +423,9 @@
                     <div class="nav-icon-wrapper"><i class="fas fa-users text-lg"></i></div>
                     <span class="sidebar-text">Thành viên</span>
                 </a>
-                <a href="#" class="nav-item text-slate-400 rounded-lg" title="Bình luận">
-                    <div class="nav-icon-wrapper"><i class="fas fa-comment-dots text-lg"></i></div>
-                    <span class="sidebar-text">Bình luận</span>
-                </a>
                 <a href="{{ route('admin.violation.index') }}" class="nav-item text-slate-400 rounded-lg" title="Xử lý vi phạm">
                     <div class="nav-icon-wrapper"><i class="fas fa-comment-dots text-lg"></i></div>
-                    <span class="sidebar-text">Xử lý vi phạm</span>
+                    <span class="sidebar-text">Quản lý bình luận</span>
                 </a>
                 <a href="#" class="nav-item text-slate-400 rounded-lg" title="Cài đặt hệ thống">
                     <div class="nav-icon-wrapper"><i class="fas fa-cog text-lg"></i></div>

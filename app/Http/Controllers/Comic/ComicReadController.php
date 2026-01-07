@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Comic;
 use App\Http\Controllers\Controller;
 use App\Models\Comic;
 use App\Models\Comment;
+use App\Models\Chapter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -129,6 +130,15 @@ class ComicReadController extends Controller
             ]);
         }
 
+        $firstChapter = Chapter::where('comic_id', $comic->id)
+            ->orderBy('chapter_number')
+            ->first();
+
+        $latestChapter = Chapter::where('comic_id', $comic->id)
+            ->orderByDesc('chapter_number')
+            ->first();
+
+
         return view('user.comics.show', [
             'comic'             => $comic,
             'userRating'        => $userRating,
@@ -137,6 +147,8 @@ class ComicReadController extends Controller
             'commentFilter'     => $filter,
             'relatedComics'     => $relatedComics,
             'totalCommentsCount' => $totalCommentsCount,
+            'firstChapter'      => $firstChapter,
+            'latestChapter'     => $latestChapter,
         ]);
     }
 }

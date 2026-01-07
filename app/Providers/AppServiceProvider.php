@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use App\Models\Category;
 use Illuminate\Support\Facades\View;
+use Carbon\Carbon;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,6 +23,7 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Carbon::setLocale(config('app.locale'));
         // ===== View Composer cho layouts.app =====
         View::composer('layouts.app', function ($view) {
             $topCategories = Category::withCount([

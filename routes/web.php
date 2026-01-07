@@ -203,6 +203,14 @@ Route::prefix('comics/{comic}/chapters')->name('user.chapters.')->middleware(['a
     Route::get('/create', [ChapterController::class, 'create'])->name('create');
     Route::post('/', [ChapterController::class, 'store'])->name('store');
 });
+Route::prefix('comics/{comic}/chapters')
+    ->middleware('auth')
+    ->name('user.comics.chapters.')
+    ->group(function () {
+        Route::get('{chapter}/edit', [ChapterController::class, 'edit'])->name('edit');
+        Route::put('{chapter}', [ChapterController::class, 'update'])->name('update');
+        Route::delete('{chapter}', [ChapterController::class, 'destroy'])->name('destroy');
+    });
 
 /*
 |--------------------------------------------------------------------------
