@@ -183,6 +183,130 @@ class ChapterController extends Controller
         }
     }
 
+    public function edit(Comic $comic, Chapter $chapter)
+    {
+        $this->authorizeComic($comic);
+
+        $myComics = Comic::where('created_by', Auth::id())
+            ->orderByDesc('id')
+            ->get(['id', 'title', 'slug', 'author', 'cover_image']);
+
+        $nextChapterNumber = $comic->chapters()->max('chapter_number') + 1;
+
+        if ($chapter->comic_id !== $comic->id) {
+            abort(404);
+        }
+
+        return view('user.comics.chapters.edit', compact('comic', 'myComics', 'nextChapterNumber', 'chapter'));
+    }
+
+    public function update(Request $request, Comic $comic, Chapter $chapter)
+    {
+        $this->authorizeComic($comic);
+
+        if ($chapter->comic_id !== $comic->id) {
+            abort(404);
+        }
+
+        $data = $request->validate([
+            'chapter_number' => ['required', 'integer', 'min:1'],
+            'title'          => ['nullable', 'string', 'max:255'],
+            'zip_file'       => ['nullable', 'file', 'mimes:zip', 'max:102400'],
+        ]);
+
+        // Nếu đổi số chapter → check trùng
+        if ($data['chapter_number'] != $chapter->chapter_number) {
+            $exists = Chapter::where('comic_id', $comic->id)
+                ->where('chapter_number', $data['chapter_number'])
+                ->exists();
+
+            if ($exists) {
+                return back()->withErrors([
+                    'chapter_number' => 'Chapter số này đã tồn tại.'
+                ]);
+            }
+        }
+
+        // Update thông tin cơ bản
+        $chapter->chapter_number = $data['chapter_number'];
+        $chapter->title = $data['title'] ?: 'Chapter ' . $data['chapter_number'];
+
+        /**
+         * ========== NẾU CÓ ZIP MỚI ==========
+         */
+        if ($request->hasFile('zip_file')) {
+            try {
+                // XÓA ảnh + pages cũ
+                File::deleteDirectory(
+                    storage_path('app/public/' . $chapter->images_path)
+                );
+                $chapter->pages()->delete();
+
+                // ==== XỬ LÝ ZIP Y HỆT STORE() ====
+                $zipFile = $request->file('zip_file');
+                $tempPath = storage_path('app/temp/chapters/' . uniqid());
+
+                File::makeDirectory($tempPath, 0755, true);
+
+                $zip = new \ZipArchive;
+                if ($zip->open($zipFile->getRealPath()) !== true) {
+                    throw new \Exception('Không thể giải nén ZIP.');
+                }
+
+                $zip->extractTo($tempPath);
+                $zip->close();
+
+                $imageFiles = $this->getImageFiles($tempPath);
+                natsort($imageFiles);
+                $imageFiles = array_values($imageFiles);
+
+                $chapterPath = 'uploads/chapters/' . $comic->id . '/' . $data['chapter_number'];
+                $fullPath = storage_path('app/public/' . $chapterPath);
+
+                File::makeDirectory($fullPath, 0755, true);
+
+                $pages = [];
+                foreach ($imageFiles as $i => $file) {
+                    $source = $tempPath . '/' . $file;
+                    $ext = pathinfo($file, PATHINFO_EXTENSION);
+                    $pageIndex = $i + 1;
+                    $fileName = $pageIndex . '.jpg';
+
+                    $this->resizeAndOptimizeImage(
+                        $source,
+                        $fullPath . '/' . $fileName,
+                        $ext
+                    );
+
+                    $pages[] = [
+                        'chapter_id' => $chapter->id,
+                        'page_index' => $pageIndex,
+                        'image_path' => $chapterPath . '/' . $fileName,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                }
+
+                File::deleteDirectory($tempPath);
+
+                $chapter->images_path = $chapterPath;
+                $chapter->page_count = count($pages);
+
+                $chapter->pages()->insert($pages);
+            } catch (\Exception $e) {
+                return back()->withErrors([
+                    'zip_file' => 'Lỗi xử lý ZIP: ' . $e->getMessage()
+                ]);
+            }
+        }
+
+        $chapter->save();
+
+        return redirect()
+            ->route('user.comics.show', $comic)
+            ->with('success', 'Chapter đã được cập nhật thành công!');
+    }
+
     /**
      * Lấy danh sách file ảnh từ thư mục (trả về đường dẫn tương đối)
      */
@@ -317,7 +441,10 @@ class ChapterController extends Controller
         imagecopyresampled(
             $newImage,
             $image,
-            0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
             $newWidth,
             $newHeight,
             $originalWidth,

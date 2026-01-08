@@ -55,7 +55,7 @@
                         <div class="flex items-center justify-center gap-2">
 
                             {{-- SỬA --}}
-                            <a href="{{ route('user.comics.chapters.edit', ['comic' => $comic->id, 'chapter' => $chapter->id]) }}"
+                            <a href="{{ route('user.chapters.edit', ['comic' => $comic->id, 'chapter' => $chapter->id]) }}"
                                 class="inline-flex items-center justify-center w-8 h-8
                                 rounded-lg border border-gray-300
                                 text-gray-600 hover:text-blue-600
@@ -67,7 +67,7 @@
 
                             {{-- XOÁ --}}
                             <form method="POST"
-                                action="{{ route('user.comics.chapters.destroy', [
+                                action="{{ route('user.chapters.destroy', [
                                         'comic' => $comic->id,
                                         'chapter' => $chapter->id
                                 ]) }}"

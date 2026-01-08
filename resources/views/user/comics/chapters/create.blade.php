@@ -236,7 +236,6 @@
     </div>
 </div>
 
-{{-- SCRIPT GIỮ NGUYÊN --}}
 <script>
     function previewZipFile(input) {
         const file = input.files && input.files[0];
