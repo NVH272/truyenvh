@@ -121,7 +121,7 @@ class ComicController extends Controller
             $query->where('status', $status);
         }
 
-        $comics = $query->orderByDesc('created_at')->paginate(12);
+        $comics = $query->orderByDesc('created_at')->paginate(10)->withQueryString();
 
         // Đếm số truyện chờ duyệt
         $pendingCount = Comic::where('approval_status', 'pending')->count();

@@ -44,7 +44,7 @@
 
         {{-- LEFT COLUMN: MAIN FORM --}}
         <div class="lg:col-span-2 space-y-6">
-            <form action="{{ route('user.chapters.store', $comic) }}" method="POST" enctype="multipart/form-data" id="chapter-upload-form">
+            <form action="{{ route('user.comics.chapters.store', $comic) }}" method="POST" enctype="multipart/form-data" id="chapter-upload-form">
                 @csrf
 
                 {{-- SECTION 1: COMIC SELECTION --}}
@@ -63,7 +63,7 @@
                             <select class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-700 font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all cursor-pointer hover:border-slate-400"
                                 onchange="if(this.value) window.location.href=this.value;">
                                 @foreach($myComics as $c)
-                                <option value="{{ route('user.chapters.create', ['comic' => $c->id]) }}" @selected((int)$c->id === (int)$comic->id)>
+                                <option value="{{ route('user.comics.chapters.create', ['comic' => $c->id]) }}" @selected((int)$c->id === (int)$comic->id)>
                                     {{ $c->title }}
                                 </option>
                                 @endforeach

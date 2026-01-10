@@ -24,27 +24,10 @@ class CategoryController extends Controller
                     ->orWhere('description', 'LIKE', '%' . $search . '%');
 
                 // --- CẤP ĐỘ 2: Tìm không dấu thông qua Slug ---
-                // Ví dụ: Khách gõ "hanh dong" -> Str::slug chuyển thành "hanh-dong"
-                // Giúp tìm được "Hành Động" dù người dùng không gõ dấu
                 $slugSearch = Str::slug($search);
                 if (!empty($slugSearch)) {
                     $q->orWhere('slug', 'LIKE', '%' . $slugSearch . '%');
                 }
-
-                // --- CẤP ĐỘ 3: Tìm kiếm linh hoạt (Gõ từ không cần đúng thứ tự) ---
-                // Ví dụ: "Tranh Hành" vẫn ra "Truyện Tranh Hành Động"
-                // Logic: Tách chuỗi thành mảng từ khóa ["Tranh", "Hành"]
-                // $keywords = explode(' ', $search);
-                // if (count($keywords) > 1) {
-                //     $q->orWhere(function ($subQ) use ($keywords) {
-                //         foreach ($keywords as $word) {
-                //             // Bỏ qua từ quá ngắn để tránh nhiễu
-                //             if (strlen($word) > 1) {
-                //                 $subQ->where('name', 'LIKE', '%' . $word . '%');
-                //             }
-                //         }
-                //     });
-                // }
             });
         }
 

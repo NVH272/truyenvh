@@ -22,6 +22,8 @@ use App\Http\Controllers\User\ChapterController;
 use App\Http\Controllers\User\CommentReportController;
 use App\Http\Controllers\User\ReadChapterController;
 
+use App\Http\Controllers\Poster\MyComicsController;
+
 use App\Http\Controllers\Comic\ComicReadController;
 use App\Http\Controllers\Comic\ComicInteractionController;
 use App\Http\Controllers\Comic\ComicFollowController;
@@ -199,16 +201,23 @@ Route::prefix('my-comics')->name('user.my-comics.')->middleware(['auth', 'verifi
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('comics/{comic}/chapters')->name('user.chapters.')->middleware(['auth', 'verified'])->group(function () {
-    Route::get('/create', [ChapterController::class, 'create'])->name('create');
-    Route::post('/', [ChapterController::class, 'store'])->name('store');
-    Route::get('/{chapter}/edit', [ChapterController::class, 'edit'])->name('edit');
-    Route::put('/{chapter}', [ChapterController::class, 'update'])->name('update');
-    Route::delete('{chapter}', [ChapterController::class, 'destroy'])->name('destroy');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::prefix('comics/{comic}/chapters')->name('user.comics.chapters.')->group(function () {
+        Route::get('/create', [ChapterController::class, 'create'])->name('create');
+        Route::post('/', [ChapterController::class, 'store'])->name('store');
+        Route::get('/{chapter}/edit', [ChapterController::class, 'edit'])->name('edit');
+        Route::put('/{chapter}', [ChapterController::class, 'update'])->name('update');
+        Route::delete('/{chapter}', [ChapterController::class, 'destroy'])->name('destroy');
+    });
 });
 
-
-
+Route::middleware(['auth', 'verified'])
+    ->prefix('poster')
+    ->name('poster.')
+    ->group(function () {
+        Route::get('/comics', [MyComicsController::class, 'index'])->name('index');
+        Route::get('/comics/{comic:slug}/chapters', [MyComicsController::class, 'chapters'])->name('chapters');
+    });
 
 /*
 |--------------------------------------------------------------------------

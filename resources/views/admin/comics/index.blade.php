@@ -85,7 +85,7 @@
                     class="block w-full pl-10 pr-8 py-2.5 bg-slate-900/70 border border-slate-700/80 rounded-xl text-slate-200
                            focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/70 transition-all text-sm font-medium
                            appearance-none cursor-pointer">
-                    <option value="">-- Tất cả trạng thái --</option>
+                    <option value="">Tất cả trạng thái</option>
                     <option value="ongoing" @selected($status==='ongoing' )>Đang tiến hành</option>
                     <option value="completed" @selected($status==='completed' )>Đã hoàn thành</option>
                     <option value="dropped" @selected($status==='dropped' )>Tạm dừng</option>

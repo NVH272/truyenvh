@@ -232,7 +232,7 @@
                         @if(Auth::user()->role === 'admin')
                         <a href="{{ url('/admin') }}"
                             class="block px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
-                            <i class="fas fa-cog mr-2"></i>Quản trị Dashboard
+                            <i class="fas fa-user-tie mr-2"></i>Quản trị Dashboard
                         </a>
                         <div class="border-t border-gray-200"></div>
                         @endif
@@ -243,7 +243,7 @@
                             class="block px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
                             <i class="fas fa-book mr-2"></i>Danh sách truyện của bạn
                         </a>
-                        <a href="#"
+                        <a href="{{ route('poster.index') }}"
                             class="block px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
                             <i class="fas fa-pen-to-square mr-2"></i>Chương truyện của bạn
                         </a>
@@ -254,6 +254,12 @@
                         <a href="{{ route('user.profile.index') }}"
                             class="block px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
                             <i class="fas fa-user mr-2"></i>Trang cá nhân
+                        </a>
+
+                        {{-- SETTING --}}
+                        <a href=""
+                            class="block px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
+                            <i class="fas fa-gear mr-2"></i>Cài đặt
                         </a>
 
                         {{-- LOGOUT --}}

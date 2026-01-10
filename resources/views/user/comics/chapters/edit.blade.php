@@ -1,15 +1,15 @@
 @extends('layouts.app')
 
-@section('title', 'Upload Chapter - ' . $comic->title)
-@section('header', 'Upload Chapter mới')
+@section('title', 'Chỉnh sửa Chapter - ' . $comic->title)
+@section('header', 'Chỉnh sửa Chapter')
 
 @section('content')
 <div class="py-10 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-8">
 
     {{-- HEADER --}}
     <div class="flex flex-col gap-1">
-        <h1 class="text-2xl font-black text-slate-800 tracking-tight">Upload Chapter Mới</h1>
-        <p class="text-sm text-slate-500">Thêm nội dung mới cho truyện <span class="font-bold text-blue-600">{{ $comic->title }}</span></p>
+        <h1 class="text-2xl font-black text-slate-800 tracking-tight">Chỉnh sửa Chapter</h1>
+        <p class="text-sm text-slate-500">Cập nhật thông tin chapter cho truyện <span class="font-bold text-blue-600">{{ $comic->title }}</span></p>
     </div>
 
     {{-- ERROR DISPLAY --}}
@@ -44,7 +44,7 @@
 
         {{-- LEFT COLUMN: MAIN FORM --}}
         <div class="lg:col-span-2 space-y-6">
-            <form action="{{ route('user.chapters.update', ['comic' => $comic->id, 'chapter' => $chapter->id]) }}" method="POST" enctype="multipart/form-data" id="chapter-upload-form">
+            <form action="{{ route('user.comics.chapters.update', ['comic' => $comic->id, 'chapter' => $chapter->id]) }}" method="POST" enctype="multipart/form-data" id="chapter-upload-form">
                 @csrf
                 @method('PUT')
 
@@ -57,14 +57,14 @@
                             </div>
                             <div>
                                 <h3 class="font-bold text-slate-800">Truyện đang chọn</h3>
-                                <p class="text-xs text-slate-500">Chọn truyện để upload</p>
+                                <p class="text-xs text-slate-500">Chọn truyện để chỉnh sửa</p>
                             </div>
                         </div>
                         <div class="w-full sm:max-w-xs">
                             <select class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-700 font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all cursor-pointer hover:border-slate-400"
                                 onchange="if(this.value) window.location.href=this.value;">
                                 @foreach($myComics as $c)
-                                <option value="{{ route('user.chapters.update', ['comic' => $comic->id, 'chapter' => $chapter->id]) }}" @selected((int)$c->id === (int)$comic->id)>
+                                <option value="{{ route('user.comics.chapters.edit', ['comic' => $c->id, 'chapter' => $chapter->id]) }}" @selected((int)$c->id === (int)$comic->id)>
                                     {{ $c->title }}
                                 </option>
                                 @endforeach
@@ -108,11 +108,11 @@
                                         <i class="fas fa-hashtag text-xs"></i>
                                     </div>
                                     <input type="number" name="chapter_number" id="chapter_number"
-                                        value="{{ old('chapter_number', $nextChapterNumber) }}"
+                                        value="{{ old('chapter_number', $chapter->chapter_number) }}"
                                         min="1" required
                                         class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all font-medium placeholder-slate-400">
                                 </div>
-                                <p class="text-xs text-blue-600 font-medium mt-1"><i class="fas fa-magic mr-1"></i>Gợi ý tiếp theo: {{ $nextChapterNumber }}</p>
+                                <p class="text-xs text-slate-500 font-medium mt-1"><i class="fas fa-info-circle mr-1"></i>Chapter hiện tại: {{ $chapter->chapter_number }}</p>
                             </div>
 
                             {{-- Chapter Title --}}
@@ -123,7 +123,7 @@
                                         <i class="fas fa-heading text-xs"></i>
                                     </div>
                                     <input type="text" name="title" id="chapter_title"
-                                        value="{{ old('title') }}"
+                                        value="{{ old('title', $chapter->title) }}"
                                         placeholder="VD: Trận chiến cuối cùng"
                                         class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all placeholder-slate-400">
                                 </div>
@@ -138,10 +138,16 @@
                         <div class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center">
                             <i class="fas fa-cloud-upload-alt text-sm"></i>
                         </div>
-                        <h3 class="font-bold text-slate-800">Tải lên nội dung</h3>
+                        <h3 class="font-bold text-slate-800">Cập nhật nội dung (Tùy chọn)</h3>
                     </div>
 
                     <div class="p-6">
+                        <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p class="text-sm text-blue-700">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                <strong>Lưu ý:</strong> Nếu không chọn file ZIP mới, thông tin chapter sẽ được cập nhật mà không thay đổi ảnh.
+                            </p>
+                        </div>
                         <div class="relative w-full group">
                             <div class="relative w-full min-h-[240px] bg-slate-50 rounded-xl border-2 border-dashed border-slate-300 hover:border-blue-500 hover:bg-blue-50/30 transition-all duration-300 flex flex-col items-center justify-center cursor-pointer">
 
@@ -151,7 +157,7 @@
                                         <i class="fas fa-file-archive text-3xl text-slate-400 group-hover:text-blue-500 transition-colors"></i>
                                     </div>
                                     <h4 class="text-base font-bold text-slate-700 mb-1 group-hover:text-blue-600">Kéo thả file ZIP vào đây</h4>
-                                    <p class="text-sm text-slate-500 mb-4">hoặc nhấn để chọn từ máy tính</p>
+                                    <p class="text-sm text-slate-500 mb-4">hoặc nhấn để chọn từ máy tính (Tùy chọn)</p>
                                     <div class="inline-flex items-center px-3 py-1 rounded-full bg-slate-200 text-slate-600 text-xs font-semibold">
                                         Max size: 100MB
                                     </div>
@@ -172,7 +178,7 @@
                                 {{-- Hidden Input --}}
                                 <input type="file" name="zip_file" id="zip_file"
                                     class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                    accept=".zip" required
+                                    accept=".zip"
                                     onchange="previewZipFile(this)">
                             </div>
                         </div>
@@ -189,9 +195,9 @@
                     </a>
 
                     {{-- Submit Button (Compact) --}}
-                    <button type="submit" id="submit-btn" disabled
+                    <button type="submit" id="submit-btn"
                         class="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-lg shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 text-sm disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none">
-                        <span>Đăng tải Chapter</span>
+                        <span>Cập nhật Chapter</span>
                     </button>
                 </div>
 
@@ -316,25 +322,12 @@
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
-    // Disable submit button initially & Handle Form Submit
+    // Handle Form Submit
     document.addEventListener('DOMContentLoaded', function() {
         const submitBtn = document.getElementById('submit-btn');
-        const zipFile = document.getElementById('zip_file');
-
-        // Initial check
-        if (!zipFile.files || zipFile.files.length === 0) {
-            submitBtn.disabled = true;
-        }
 
         // Form Submit Handler
         document.getElementById('chapter-upload-form').addEventListener('submit', function(e) {
-            const zipFile = document.getElementById('zip_file');
-            if (!zipFile.files || zipFile.files.length === 0) {
-                e.preventDefault();
-                alert('Vui lòng chọn file ZIP trước khi đăng!');
-                return false;
-            }
-
             // Show loading state
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin text-lg"></i><span class="ml-2">Đang xử lý...</span>';
