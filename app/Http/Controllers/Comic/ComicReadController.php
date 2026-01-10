@@ -138,6 +138,7 @@ class ComicReadController extends Controller
             ->orderByDesc('chapter_number')
             ->first();
 
+        $bannedWords = \App\Models\BannedWord::where('is_active', 1)->pluck('word')->toArray();
 
         return view('user.comics.show', [
             'comic'             => $comic,
@@ -149,6 +150,7 @@ class ComicReadController extends Controller
             'totalCommentsCount' => $totalCommentsCount,
             'firstChapter'      => $firstChapter,
             'latestChapter'     => $latestChapter,
+            'bannedWords' => $bannedWords,
         ]);
     }
 }

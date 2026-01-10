@@ -1,5 +1,10 @@
 {{-- 2. BÌNH LUẬN --}}
 <div id="comments-section" class="bg-white rounded-lg shadow-sm overflow-hidden">
+
+    <div id="banned-words-data"
+        data-banned='@json($bannedWords ?? [])'
+        class="hidden"></div>
+
     <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
         <h2 class="text-lg font-bold text-blue-600 flex items-center gap-2">
             <i class="fas fa-comments"></i>

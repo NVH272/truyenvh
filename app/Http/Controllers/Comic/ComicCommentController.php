@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\Comic;
 use App\Models\Comment;
 use Illuminate\Support\Facades\Auth;
+use App\Services\ProfanityFilter;
+use Illuminate\Validation\ValidationException;
 
 class ComicCommentController extends Controller
 {
@@ -26,6 +28,14 @@ class ComicCommentController extends Controller
             'content' => 'required|string|max:2000',
             'parent_id' => 'nullable|exists:comments,id',
         ]);
+
+        $hits = ProfanityFilter::findHits($content);
+
+        if (!empty($hits)) {
+            throw ValidationException::withMessages([
+                'content' => 'Bình luận chứa từ ngữ bị cấm: ' . implode(', ', $hits),
+            ]);
+        }
 
         $comment = Comment::create([
             'comic_id'  => $comic->id,

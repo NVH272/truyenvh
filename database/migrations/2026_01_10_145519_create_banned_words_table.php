@@ -11,15 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('chapter_pages', function (Blueprint $table) {
+        Schema::create('banned_words', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('chapter_id')->constrained('chapters')->onDelete('cascade');
-            $table->unsignedInteger('page_index');
-            $table->string('image_path');
+            $table->string('word')->unique();       // từ bị cấm
+            $table->boolean('is_active')->default(true);
+            $table->text('note')->nullable();       // ghi chú (tuỳ)
             $table->timestamps();
-
-            $table->unique(['chapter_id', 'page_index']);
-            $table->index(['chapter_id', 'page_index']);
+            $table->index(['is_active', 'word']);
         });
     }
 
@@ -28,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('chapter_pages');
+        Schema::dropIfExists('banned_words');
     }
 };

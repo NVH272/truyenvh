@@ -12,9 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('chapters', function (Blueprint $table) {
-            $table->string('images_path')->nullable()->after('title');
-            $table->unsignedInteger('page_count')->default(0)->after('images_path');
-            $table->unsignedBigInteger('views')->default(0)->after('page_count');
+            if (!Schema::hasColumn('chapters', 'images_path')) {
+                $table->string('images_path')->nullable()->after('title');
+            }
+            if (!Schema::hasColumn('chapters', 'page_count')) {
+                $table->unsignedInteger('page_count')->default(0)->after('images_path');
+            }
+            if (!Schema::hasColumn('chapters', 'views')) {
+                $table->unsignedBigInteger('views')->default(0)->after('page_count');
+            }
         });
     }
 
