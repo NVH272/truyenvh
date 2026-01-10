@@ -31,6 +31,8 @@
                 class="w-10 h-10 rounded-full object-cover flex-shrink-0"
                 alt="{{ auth()->user()->name }}">
 
+            <div class="js-comment-error hidden text-xs text-red-600 mt-1 ml-3 flex items-center gap-1.5 bg-red-50 border border-red-200 rounded-lg px-3 py-2 max-w-md relative"></div>
+
             <form method="POST"
                 action="{{ route('comments.store', $comic) }}"
                 class="flex-1 js-comment-form"
@@ -252,6 +254,8 @@
                                     </button>
                                 </div>
 
+                                <div class="js-comment-error hidden text-xs text-red-600 mt-1 ml-2 flex items-center gap-1.5 bg-red-50 border border-red-200 rounded-lg px-3 py-2 max-w-md relative"></div>
+
                             </form>
                             <button type="button"
                                 onclick="document.getElementById('reply-{{ $comment->id }}').classList.add('hidden')"
@@ -433,6 +437,51 @@
     </div>
 </div>
 
+@push('styles')
+<style>
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+    
+    .shake-animation {
+        animation: shake 0.5s ease-in-out;
+    }
+    
+    .js-comment-textarea.border-red-500 {
+        border: 2px solid #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+        background-color: #fef2f2 !important;
+    }
+    
+    /* Đảm bảo form có border khi shake */
+    .js-comment-form.shake-animation {
+        position: relative;
+    }
+    
+    .js-comment-form.shake-animation .js-comment-textarea {
+        border-color: #ef4444 !important;
+    }
+    
+    /* Style cho nút đóng thông báo */
+    .js-close-error-btn {
+        padding: 2px 4px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .js-close-error-btn:hover {
+        background-color: rgba(239, 68, 68, 0.1);
+    }
+    
+    .js-close-error-btn:focus {
+        outline: 2px solid rgba(239, 68, 68, 0.3);
+        outline-offset: 2px;
+    }
+</style>
+@endpush
+
 @push('scripts')
 <script>
     (function() {
@@ -603,18 +652,59 @@
         }
 
         async function submitCommentForm(form) {
-            if (!form) return;
+            if (!form) return false;
 
             var submitBtn = form.querySelector('button[type="submit"]');
+            var textarea = form.querySelector('.js-comment-textarea');
+            var content = textarea ? textarea.value.trim() : '';
+            
+            // Kiểm tra từ cấm trước khi submit
+            var hits = findBannedHits(content);
+            
+            // Debug log
+            if (hits.length > 0) {
+                console.log('Phát hiện từ cấm:', hits);
+            }
+
+            if (hits.length) {
+                // Hiển thị thông báo vi phạm rõ ràng
+                showFormError(form, 'Bình luận chứa từ ngữ bị cấm: ' + hits.join(', '));
+                
+                // Thêm hiệu ứng shake cho form
+                if (form) {
+                    form.classList.add('shake-animation');
+                    setTimeout(function() {
+                        form.classList.remove('shake-animation');
+                    }, 500);
+                }
+                
+                // Focus vào textarea để user có thể sửa
+                if (textarea) {
+                    textarea.focus();
+                    // Highlight textarea với border đỏ
+                    textarea.classList.add('border-red-500');
+                    setTimeout(function() {
+                        textarea.classList.remove('border-red-500');
+                    }, 2000);
+                }
+                
+                return false; // Chặn hoàn toàn việc submit
+            }
+
+            // Nếu không có từ cấm, tiếp tục submit
             if (submitBtn) {
                 submitBtn.disabled = true;
             }
-
-            var textarea = form.querySelector('.js-comment-textarea');
+            // Xóa error message nếu có (tìm cả trong và ngoài form)
             var errorEl = form.querySelector('.js-comment-error');
+            if (!errorEl) {
+                const parentContainer = form.closest('.flex.gap-3');
+                if (parentContainer) {
+                    errorEl = parentContainer.querySelector('.js-comment-error');
+                }
+            }
             if (errorEl) {
-                errorEl.textContent = '';
-                errorEl.classList.add('hidden');
+                hideFormError(errorEl);
             }
 
             try {
@@ -628,11 +718,57 @@
                     body: formData
                 });
 
+                if (!response.ok) {
+                    let err = null;
+                    try {
+                        err = await response.json();
+                    } catch (e) {}
+
+                    const msg =
+                        (err && err.errors && err.errors.content && err.errors.content[0]) ||
+                        (err && err.message) ||
+                        'Không thể gửi bình luận.';
+
+                    showFormError(form, msg);
+                    
+                    // Nếu là lỗi về từ cấm, thêm hiệu ứng tương tự
+                    if (msg.includes('từ ngữ bị cấm') || msg.includes('từ cấm')) {
+                        if (form) {
+                            form.classList.add('shake-animation');
+                            setTimeout(function() {
+                                form.classList.remove('shake-animation');
+                            }, 500);
+                        }
+                        if (textarea) {
+                            textarea.focus();
+                            textarea.classList.add('border-red-500');
+                            setTimeout(function() {
+                                textarea.classList.remove('border-red-500');
+                            }, 2000);
+                        }
+                    }
+                    
+                    return false;
+                }
+
                 var data = await response.json();
                 if (data && data.status === 'success') {
+                    // Xóa error message nếu có (tìm cả trong và ngoài form)
+                    var errorEl = form.querySelector('.js-comment-error');
+                    if (!errorEl) {
+                        const parentContainer = form.closest('.flex.gap-3');
+                        if (parentContainer) {
+                            errorEl = parentContainer.querySelector('.js-comment-error');
+                        }
+                    }
+                    if (errorEl) {
+                        hideFormError(errorEl);
+                    }
+                    
                     appendCommentToDom(data.comment, form);
                     if (textarea) {
                         textarea.value = '';
+                        textarea.style.height = 'auto';
                     }
 
                     // Nếu là reply form thì ẩn lại block reply
@@ -643,14 +779,19 @@
                             replyBlock.classList.add('hidden');
                         }
                     }
+                    
+                    return true;
                 }
             } catch (e) {
                 console.error('Error submitting comment form', e);
+                showFormError(form, 'Đã xảy ra lỗi khi gửi bình luận. Vui lòng thử lại.');
             } finally {
                 if (submitBtn) {
                     submitBtn.disabled = false;
                 }
             }
+            
+            return true;
         }
 
         function setupCommentForms() {
@@ -661,7 +802,11 @@
 
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
-                    submitCommentForm(form);
+                    var result = submitCommentForm(form);
+                    // Nếu có từ cấm, không submit
+                    if (result === false) {
+                        return false;
+                    }
                 });
 
                 var textarea = form.querySelector('.js-comment-textarea');
@@ -675,7 +820,11 @@
                             }
                             // Enter: submit form
                             e.preventDefault();
-                            submitCommentForm(form);
+                            var result = submitCommentForm(form);
+                            // Nếu có từ cấm, không submit
+                            if (result === false) {
+                                return false;
+                            }
                         }
                     });
                 }
@@ -798,5 +947,127 @@
         }
 
     });
+
+    function getBannedWords() {
+        const el = document.getElementById('banned-words-data');
+        if (!el) return [];
+        try {
+            return JSON.parse(el.dataset.banned || '[]');
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function normalizeText(s) {
+        return (s || '').toLowerCase().trim().replace(/\s+/g, ' ');
+    }
+
+    function findBannedHits(text) {
+        const banned = getBannedWords();
+        const t = normalizeText(text);
+
+        if (!t) return [];
+        
+        // Debug: kiểm tra banned words có được load không
+        if (banned.length === 0) {
+            console.warn('Không có từ cấm nào được load');
+        }
+
+        const hits = [];
+        for (const w0 of banned) {
+            const w = normalizeText(w0);
+            if (!w) continue;
+
+            // match theo "từ" để đỡ match nhầm
+            const re = new RegExp(`(^|[^a-z0-9])${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^a-z0-9]|$)`, 'u');
+            if (re.test(t)) hits.push(w0);
+        }
+        return [...new Set(hits)];
+    }
+
+    function showFormError(form, msg) {
+        if (!form) {
+            console.error('showFormError: form không tồn tại');
+            return;
+        }
+        
+        // Tìm error element: trong form trước (cho reply form)
+        let errorEl = form.querySelector('.js-comment-error');
+        
+        // Nếu không tìm thấy trong form, tìm trong parent container (cho form chính)
+        if (!errorEl) {
+            // Tìm trong parent container - form chính có error element trong cùng container
+            const parentContainer = form.closest('.flex.gap-3');
+            if (parentContainer) {
+                errorEl = parentContainer.querySelector('.js-comment-error');
+            }
+        }
+        
+        // Nếu vẫn không có, tìm trong parent của form
+        if (!errorEl && form.parentElement) {
+            errorEl = form.parentElement.querySelector('.js-comment-error');
+        }
+        
+        if (!errorEl) {
+            console.error('Không tìm thấy error element cho form');
+            console.log('Form:', form);
+            console.log('Form parent:', form.parentElement);
+            console.log('Parent container:', form.closest('.flex.gap-3'));
+            // Thử tìm tất cả error elements để debug
+            const allErrors = document.querySelectorAll('.js-comment-error');
+            console.log('Tất cả error elements:', allErrors);
+            return;
+        }
+        
+        console.log('Tìm thấy error element:', errorEl);
+        
+        // Tạo HTML với icon cảnh báo và nút đóng
+        errorEl.innerHTML = '<i class="fas fa-exclamation-triangle text-red-500 flex-shrink-0"></i><span class="flex-1">' + msg + '</span><button type="button" class="js-close-error-btn flex-shrink-0 ml-2 text-red-400 hover:text-red-600 transition-colors focus:outline-none" aria-label="Đóng thông báo"><i class="fas fa-times text-xs"></i></button>';
+        errorEl.classList.remove('hidden');
+        
+        // Thêm animation fade-in
+        errorEl.style.opacity = '0';
+        errorEl.style.transform = 'translateY(-5px)';
+        setTimeout(function() {
+            errorEl.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            errorEl.style.opacity = '1';
+            errorEl.style.transform = 'translateY(0)';
+        }, 10);
+        
+        // Thêm event listener cho nút đóng
+        const closeBtn = errorEl.querySelector('.js-close-error-btn');
+        if (closeBtn) {
+            // Xóa các event listener cũ nếu có
+            const newCloseBtn = closeBtn.cloneNode(true);
+            closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+            
+            newCloseBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                hideFormError(errorEl);
+            });
+        }
+        
+        // Scroll đến error nếu cần
+        errorEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    
+    function hideFormError(errorEl) {
+        if (!errorEl) return;
+        
+        // Animation fade-out
+        errorEl.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        errorEl.style.opacity = '0';
+        errorEl.style.transform = 'translateY(-5px)';
+        
+        setTimeout(function() {
+            errorEl.classList.add('hidden');
+            errorEl.innerHTML = '';
+            errorEl.textContent = '';
+            // Reset style
+            errorEl.style.opacity = '';
+            errorEl.style.transform = '';
+        }, 300);
+    }
 </script>
 @endpush
