@@ -50,7 +50,7 @@
                     </td>
                     <td class="px-4 py-3 text-right">
                         {{-- SỬA --}}
-                        <a href="{{ route('user.comics.chapters.edit', ['comic' => $comic->id, 'chapter' => $chapter->id]) }}"
+                        <a href="{{ route('user.comics.chapters.edit', ['comic' => $comic->id, 'chapter' => $chapter->id, 'redirect_to' => url()->full()]) }}"
                             class="inline-flex items-center justify-center w-8 h-8
                   rounded-lg border border-gray-300
                   text-gray-700 hover:text-blue-600
@@ -66,6 +66,7 @@
                             onsubmit="return confirm('Xóa chapter này?')">
                             @csrf
                             @method('DELETE')
+                            <input type="hidden" name="redirect_to" value="{{ url()->full() }}">
                             <button type="submit"
                                 class="inline-flex items-center justify-center w-8 h-8
                        rounded-lg border border-gray-300

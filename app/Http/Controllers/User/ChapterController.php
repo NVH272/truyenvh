@@ -302,17 +302,19 @@ class ChapterController extends Controller
             }
         }
 
+        $redirectTo = $request->input('redirect_to');
+
         $chapter->save();
 
         return redirect()
-            ->route('user.comics.show', $comic)
+            ->to($redirectTo ?: route('user.comics.show', $comic))
             ->with('success', 'Chapter đã được cập nhật thành công!');
     }
 
     /**
      * Xóa chapter
      */
-    public function destroy(Comic $comic, Chapter $chapter)
+    public function destroy(Request $request, Comic $comic, Chapter $chapter)
     {
         $this->authorizeComic($comic);
 
@@ -320,23 +322,20 @@ class ChapterController extends Controller
             abort(404);
         }
 
-        // Xóa thư mục ảnh
         if ($chapter->images_path) {
-            File::deleteDirectory(
-                storage_path('app/public/' . $chapter->images_path)
-            );
+            File::deleteDirectory(storage_path('app/public/' . $chapter->images_path));
         }
 
-        // Xóa chapter (pages sẽ tự động xóa do foreign key cascade)
         $chapter->delete();
 
-        // Cập nhật chapter_count của comic
         $comic->chapter_count = $comic->chapters()->count();
         $comic->last_chapter_at = $comic->chapters()->latest('created_at')->value('created_at');
         $comic->save();
 
+        $redirectTo = $request->input('redirect_to');
+
         return redirect()
-            ->route('user.comics.show', $comic)
+            ->to($redirectTo ?: route('user.comics.show', $comic))
             ->with('success', 'Chapter đã được xóa thành công!');
     }
 

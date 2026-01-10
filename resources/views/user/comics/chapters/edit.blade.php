@@ -48,6 +48,8 @@
                 @csrf
                 @method('PUT')
 
+                <input type="hidden" name="redirect_to" value="{{ request('redirect_to', url()->previous()) }}">
+
                 {{-- SECTION 1: COMIC SELECTION --}}
                 <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mb-6 group">
                     <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
