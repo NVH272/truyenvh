@@ -102,7 +102,7 @@
     </style>
 </head>
 
-<body class="text-slate-800 relative">
+<body class="text-slate-800 relative min-h-screen flex flex-col">
 
     <!-- === LỚP BACKGROUND STEINS;GATE === -->
     <div class="sg-background-wrapper">
@@ -112,7 +112,7 @@
     </div>
 
     <!-- HEADER -->
-    <header class="bg-white/90 shadow-sm sticky top-0 z-50 backdrop-blur-sm border-b border-gray-200">
+    <header class="bg-white/90 shadow-sm sticky top-0 z-50 backdrop-blur-sm border-b border-gray-200 shrink-0">
         <div class="container mx-auto px-4 h-16 flex items-center justify-between">
             <!-- Left: Logo & Nav -->
             <div class="flex items-center gap-8">
@@ -280,7 +280,7 @@
     </header>
 
     <!-- MAIN CONTENT -->
-    <main class="container mx-auto px-4 py-6 space-y-10 min-h-screen flex flex-col">
+    <main class="flex-1 container mx-auto px-4 py-6 space-y-10 flex flex-col">
 
         {{-- Các trang AUTH và PROFILE không bị bọc khung trắng --}}
         @if (request()->routeIs([
@@ -303,7 +303,7 @@
     </main>
 
     <!-- FOOTER -->
-    <footer class="bg-slate-900 text-slate-400 pt-12 pb-6 mt-0 border-t-4 border-gray-800 relative z-10">
+    <footer class="bg-slate-900 text-slate-400 pt-12 pb-6 mt-0 border-t-4 border-gray-800 relative z-10 shrink-0">
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 border-b border-slate-800 pb-8">
                 <div class="col-span-1 md:col-span-2">

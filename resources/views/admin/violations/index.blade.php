@@ -7,7 +7,7 @@
 <div class="max-w-6xl mx-auto space-y-8 pb-12">
 
     <!-- Stats Summary -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
         <!-- Total Reports -->
         <div class="bg-slate-800 rounded-2xl p-5 border border-slate-700/50 shadow-lg relative overflow-hidden group">
             <div class="absolute right-0 top-0 w-24 h-24 bg-blue-500/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
@@ -49,6 +49,24 @@
                 </div>
             </div>
         </div>
+
+        <!-- Banned Words (Placeholder logic) -->
+        <a href="{{ route('admin.banned_words.index') }}" class="block">
+            <div class="bg-slate-800 rounded-2xl p-5 border border-slate-700/50 shadow-lg relative overflow-hidden group">
+                <div class="absolute right-0 top-0 w-24 h-24 bg-red-500/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+
+                <div class="relative z-10 flex justify-between items-start">
+                    <div>
+                        <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Danh sách từ cấm</p>
+                        {{-- Thay thế '--' bằng biến số lượng từ cấm thực tế nếu có, ví dụ: $bannedWords->count() --}}
+                        <h3 class="text-3xl font-black text-white brand-font tracking-wide">{{ $bannedWordsCount }}</h3>
+                    </div>
+                    <div class="p-3 bg-slate-700/50 rounded-xl text-red-400">
+                        <i class="fas fa-ban text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </a>
     </div>
 
     <!-- Reports List -->

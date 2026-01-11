@@ -407,7 +407,7 @@
                     <div class="nav-icon-wrapper"><i class="fas fa-book text-lg"></i></div>
                     <span class="sidebar-text">Danh sách Truyện</span>
                 </a>
-                <a href="#" class="nav-item text-slate-400 rounded-lg" title="Quản lý Chapter">
+                <a href="{{ route('admin.chapters.index') }}" class="nav-item text-slate-400 rounded-lg" title="Quản lý Chapter">
                     <div class="nav-icon-wrapper"><i class="fas fa-list text-lg"></i></div>
                     <span class="sidebar-text">Quản lý Chapter</span>
                 </a>

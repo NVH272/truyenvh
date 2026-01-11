@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\CommentReport;
+use Illuminate\Http\Request;
+use App\Models\BannedWord;
 
 class ViolationController extends Controller
 {
@@ -20,6 +22,8 @@ class ViolationController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return view('admin.violations.index', compact('reports'));
+        $bannedWordsCount = BannedWord::count();
+
+        return view('admin.violations.index', compact('reports', 'bannedWordsCount'));
     }
 }

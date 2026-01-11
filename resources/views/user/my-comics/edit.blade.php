@@ -26,6 +26,8 @@
         @csrf
         @method('PUT')
 
+        <input type="hidden" name="redirect_to" value="{{ request('redirect_to', url()->previous()) }}">
+
         {{-- === ROW 1: THÔNG TIN TRUYỆN (Cùng chiều rộng với 2 card bên dưới) === --}}
         <div class="flex justify-center">
             <div class="w-full max-w-4xl">

@@ -134,7 +134,8 @@
                 </thead>
                 <tbody class="divide-y divide-slate-700/50 text-sm">
                     @forelse($comics as $comic)
-                    <tr class="group hover:bg-slate-700/30 transition-colors duration-200">
+                    <tr class="group hover:bg-slate-700/30 transition-colors duration-200"
+                        onclick="window.location='{{ route('admin.chapters.by-comic', $comic) }}';">
                         {{-- ID --}}
                         <td class="px-6 py-4 text-center text-slate-500 font-mono">
                             #{{ $comic->id }}
@@ -256,51 +257,46 @@
             </table>
         </div>
 
-        {{-- Pagination --}}
-        <div class="px-6 py-4 border-t border-slate-700/50 bg-slate-900/30 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div class="text-xs text-slate-400 font-medium">
+        <!-- Pagination -->
+        <div class="px-6 py-4 border-t border-slate-700 bg-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-slate-400">
+
+            {{-- Hiển thị thông tin --}}
+            <span class="order-2 sm:order-1">
                 Hiển thị
-                <span class="text-slate-200">{{ $comics->firstItem() ?? 0 }}</span>
-                -
-                <span class="text-slate-200">{{ $comics->lastItem() ?? 0 }}</span>
-                của
-                <span class="text-slate-200">{{ $comics->total() }}</span>
-                truyện
-            </div>
+                <strong>{{ $comics->firstItem() }}</strong> -
+                <strong>{{ $comics->lastItem() }}</strong>
+                trong tổng số
+                <strong>{{ $comics->total() }}</strong> kết quả
+            </span>
 
-            <div class="flex items-center gap-1">
-                @if ($comics->onFirstPage())
-                <span class="px-3 py-1 rounded-md bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700">
-                    <i class="fas fa-chevron-left text-xs"></i>
-                </span>
-                @else
+            {{-- Nút chuyển trang --}}
+            <div class="flex gap-1 order-1 sm:order-2">
+
+                {{-- Previous --}}
                 <a href="{{ $comics->previousPageUrl() }}"
-                    class="px-3 py-1 rounded-md bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 transition">
-                    <i class="fas fa-chevron-left text-xs"></i>
+                    class="px-3 py-1.5 rounded-md border border-slate-600 hover:bg-slate-700 hover:text-white transition 
+            {{ $comics->onFirstPage() ? 'opacity-50 pointer-events-none' : '' }}">
+                    <i class="fas fa-chevron-left"></i>
                 </a>
-                @endif
 
-                @foreach ($comics->getUrlRange(max(1, $comics->currentPage() - 1), min($comics->lastPage(), $comics->currentPage() + 1)) as $page => $url)
+                {{-- Numbered Pages --}}
+                @foreach ($comics->getUrlRange(1, $comics->lastPage()) as $page => $url)
                 <a href="{{ $url }}"
-                    class="px-3 py-1 text-sm font-bold rounded-md border transition
-                          {{ $page == $comics->currentPage()
-                                ? 'bg-orange-600 border-orange-600 text-white shadow-lg shadow-orange-600/20'
-                                : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700' }}">
+                    class="px-3 py-1.5 rounded-md border border-slate-600 hover:bg-slate-700 hover:text-white transition
+                {{ $page == $comics->currentPage() ? 'bg-orange-600 text-white font-bold border-none' : '' }}">
                     {{ $page }}
                 </a>
                 @endforeach
 
-                @if ($comics->hasMorePages())
+                {{-- Next --}}
                 <a href="{{ $comics->nextPageUrl() }}"
-                    class="px-3 py-1 rounded-md bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 transition">
-                    <i class="fas fa-chevron-right text-xs"></i>
+                    class="px-3 py-1.5 rounded-md border border-slate-600 hover:bg-slate-700 hover:text-white transition
+            {{ !$comics->hasMorePages() ? 'opacity-50 pointer-events-none' : '' }}">
+                    <i class="fas fa-chevron-right"></i>
                 </a>
-                @else
-                <span class="px-3 py-1 rounded-md bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700">
-                    <i class="fas fa-chevron-right text-xs"></i>
-                </span>
-                @endif
+
             </div>
+
         </div>
     </div>
 </div>

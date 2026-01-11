@@ -102,24 +102,35 @@ $isReaderPage = request()->routeIs('user.comics.chapters.read') || request()->ro
             const progressBar = document.getElementById('progress-bar');
 
             // Biến trạng thái
-            let isPinned = false; // False: Tự động ẩn, True: Dính cứng (Hiện)
+            let isPinned = false; // False: Tự động ẩn, True: Dính cứng (Do người dùng bấm)
 
             // Hàm cập nhật giao diện (Vị trí nút & Icon)
-            function updateInterface(show) {
+            function updateInterface(show, atTop = false) {
                 if (show) {
                     // Hiện header
                     header.classList.remove('-translate-y-full');
-                    // Nút chạy xuống dưới header
-                    toggleBtn.style.top = "80px";
-                    // Icon chuyển thành mũi tên lên (để bấm vào thì ẩn)
-                    toggleIcon.classList.remove('fa-chevron-down');
-                    toggleIcon.classList.add('fa-chevron-up');
+
+                    if (atTop) {
+                        // Nếu đang ở đầu trang -> Ẩn nút Toggle
+                        toggleBtn.classList.add('hidden');
+                    } else {
+                        // Nếu không ở đầu trang -> Hiện nút Toggle
+                        toggleBtn.classList.remove('hidden');
+                        // Nút chạy xuống dưới header
+                        toggleBtn.style.top = "80px";
+                        // Icon chuyển thành mũi tên lên
+                        toggleIcon.classList.remove('fa-chevron-down');
+                        toggleIcon.classList.add('fa-chevron-up');
+                    }
                 } else {
                     // Ẩn header
                     header.classList.add('-translate-y-full');
+
+                    // Hiện nút Toggle
+                    toggleBtn.classList.remove('hidden');
                     // Nút chạy lên sát mép trên
                     toggleBtn.style.top = "20px";
-                    // Icon chuyển thành mũi tên xuống (để bấm vào thì hiện)
+                    // Icon chuyển thành mũi tên xuống
                     toggleIcon.classList.remove('fa-chevron-up');
                     toggleIcon.classList.add('fa-chevron-down');
                 }
@@ -129,14 +140,12 @@ $isReaderPage = request()->routeIs('user.comics.chapters.read') || request()->ro
             if (toggleBtn) {
                 toggleBtn.addEventListener('click', function(e) {
                     e.stopPropagation();
-
-                    // Kiểm tra xem header đang ẩn hay hiện
                     const isHidden = header.classList.contains('-translate-y-full');
 
                     if (isHidden) {
                         // Đang ẩn -> Bấm để HIỆN và GHIM LẠI
                         isPinned = true;
-                        updateInterface(true);
+                        updateInterface(true, false); // false vì chắc chắn không phải do scroll lên top
                     } else {
                         // Đang hiện -> Bấm để ẨN và BỎ GHIM
                         isPinned = false;
@@ -158,21 +167,31 @@ $isReaderPage = request()->routeIs('user.comics.chapters.read') || request()->ro
 
                 // --- LOGIC ẨN/HIỆN HEADER ---
 
-                // Nếu đang GHIM (isPinned = true) -> Không làm gì cả (Header luôn hiện)
-                if (isPinned) return;
-
-                // Nếu KHÔNG GHIM:
                 if (scrollTop <= 10) {
-                    // Kéo lên sát đầu trang (Top <= 10px) -> Hiện Header
-                    updateInterface(true);
+                    // Kéo lên sát đầu trang -> Hiện Header, Dính cứng, Ẩn nút Toggle
+                    updateInterface(true, true); // true = atTop
+                    // Khi ở đầu trang, ta cũng có thể coi như đang "Ghim tạm thời" để tránh logic xung đột
+                    // Nhưng isPinned giữ nguyên để khi cuộn xuống nó hoạt động theo trạng thái cũ
                 } else {
-                    // Cuộn xuống bất kỳ đâu khác đầu trang -> Ẩn Header
-                    updateInterface(false);
+                    // Cuộn xuống khỏi đầu trang
+
+                    if (isPinned) {
+                        // Nếu người dùng đã bấm GHIM -> Vẫn hiện Header, Hiện nút Toggle (để tắt ghim)
+                        updateInterface(true, false);
+                    } else {
+                        // Nếu không ghim -> Ẩn Header, Hiện nút Toggle (để bật ghim)
+                        updateInterface(false);
+                    }
                 }
 
             }, {
                 passive: true
             });
+
+            // Khởi tạo trạng thái ban đầu (nếu load trang ở top)
+            if (window.pageYOffset <= 10) {
+                updateInterface(true, true);
+            }
         });
     </script>
     @endif

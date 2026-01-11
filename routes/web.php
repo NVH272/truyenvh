@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\ComicController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ViolationController;
 use App\Http\Controllers\Admin\BannedWordController;
+use App\Http\Controllers\Admin\AdminChapterController;
 
 use App\Http\Controllers\User\UserProfileController;
 use App\Http\Controllers\User\UserComicController;
@@ -251,6 +252,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'isAdmin', 'verified
     Route::post('/banned-words', [BannedWordController::class, 'store'])->name('banned_words.store');
     Route::put('/banned-words/{bannedWord}', [BannedWordController::class, 'update'])->name('banned_words.update');
     Route::delete('/banned-words/{bannedWord}', [BannedWordController::class, 'destroy'])->name('banned_words.destroy');
+
+    Route::get('/chapters', [AdminChapterController::class, 'index'])->name('chapters.index');
+    Route::get('chapters/{comic}', [AdminChapterController::class, 'index'])->name('chapters.by-comic');
+    Route::delete('/comics/{comic}/chapters/{chapter}', [AdminChapterController::class, 'destroy'])->name('chapters.destroy');
 });
 // Route::middleware(['auth'])->prefix('admin')->group(function () {
 //     Route::get('/violation', [ViolationController::class, 'index'])->name('admin.violation.index');

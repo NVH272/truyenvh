@@ -22,7 +22,7 @@ class MyComicsController extends Controller
 
         $comics = $q->withCount('chapters')
             ->orderByDesc('updated_at')
-            ->paginate(15)
+            ->paginate(10)
             ->withQueryString();
 
         return view('poster.index', compact('comics'));

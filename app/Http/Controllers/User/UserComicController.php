@@ -74,8 +74,10 @@ class UserComicController extends Controller
 
         $comic->categories()->sync($data['category_ids']);
 
+        $redirectTo = $request->input('redirect_to');
+
         return redirect()
-            ->route('user.my-comics.index')
+            ->to($redirectTo ?: route('user.my-comics.index'))
             ->with('success', $user->role === 'poster'
                 ? 'Truyện đã được gửi, vui lòng chờ admin xét duyệt.'
                 : 'Truyện của bạn đã được tạo thành công.');
@@ -115,13 +117,15 @@ class UserComicController extends Controller
         $comic->save();
         $comic->categories()->sync($data['category_ids']);
 
+        $redirectTo = $request->input('redirect_to');
+
         return redirect()
-            ->route('user.my-comics.index')
+            ->to($redirectTo ?: route('user.my-comics.index'))
             ->with('success', 'Truyện của bạn đã được cập nhật.');
     }
 
     // Xoá truyện
-    public function destroy(Comic $comic)
+    public function destroy(Request $request, Comic $comic)
     {
         $this->authorizeComic($comic);
 
@@ -135,8 +139,10 @@ class UserComicController extends Controller
 
         $comic->delete();
 
+        $redirectTo = $request->input('redirect_to');
+
         return redirect()
-            ->route('user.my-comics.index')
+            ->to($redirectTo ?: route('user.my-comics.index'))
             ->with('success', 'Truyện của bạn đã được xoá.');
     }
 
