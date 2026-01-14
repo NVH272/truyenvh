@@ -115,14 +115,11 @@
                         @php
                         $avgRating = (float)($comic->rating_avg ?? $comic->rating ?? 0);
                         $ratingCount = (int)($comic->reviews_count ?? $comic->rating_count ?? 0);
-                        $rounded = round($avgRating);
                         @endphp
 
-                        <div class="flex items-center gap-0.5 text-yellow-500 text-[10px]">
-                            @for($i = 1; $i <= 5; $i++)
-                                <i class="fas fa-star {{ $i <= $rounded ? '' : 'text-slate-300' }}"></i>
-                                @endfor
-                                <span class="text-slate-500 ml-1">({{ number_format($avgRating, 1) }} • {{ $ratingCount }})</span>
+                        <div class="flex items-center gap-0.5 text-[10px]">
+                            <x-rating-stars :rating="$avgRating" />
+                            <span class="text-slate-500 ml-1">({{ number_format($avgRating, 1) }} • {{ $ratingCount }})</span>
                         </div>
 
                         {{-- Author --}}

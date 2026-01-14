@@ -140,15 +140,9 @@
                     </div>
 
                     {{-- Rating Stars --}}
-                    <div class="flex items-center gap-0.5 text-yellow-500 text-[10px]">
-                        @for($i = 1; $i <= 5; $i++)
-                            @if($i <=round($comic->rating ?? 0))
-                            <i class="fas fa-star"></i>
-                            @else
-                            <i class="far fa-star text-slate-400"></i>
-                            @endif
-                            @endfor
-                            <span class="text-slate-500 ml-1">({{ number_format($comic->rating ?? 0, 1) }})</span>
+                    <div class="flex items-center gap-0.5 text-[10px]">
+                        <x-rating-stars :rating="$comic->rating ?? 0" />
+                        <span class="text-slate-500 ml-1">({{ number_format($comic->rating ?? 0, 1) }})</span>
                     </div>
 
                     {{-- Author --}}

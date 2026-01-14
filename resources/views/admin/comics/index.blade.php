@@ -158,7 +158,7 @@
                                             {{ $comic->chapter_count ?? 0 }} chương
                                         </span>
                                         <div class="flex items-center gap-1">
-                                            <i class="fas fa-star text-yellow-500 text-[10px]"></i>
+                                            <x-rating-stars :rating="$comic->rating ?? 0" sizeClass="text-[10px]" />
                                             <span>{{ number_format($comic->rating, 1) }}</span>
                                         </div>
                                     </div>

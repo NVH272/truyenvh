@@ -82,9 +82,7 @@
 
                                     {{-- Rating --}}
                                     <div class="flex items-center gap-1 text-slate-400 text-xs">
-                                        <div class="flex text-yellow-400 text-[10px]">
-                                            <i class="fas fa-star"></i>
-                                        </div>
+                                        <x-rating-stars :rating="$comic->rating_avg ?? 0" sizeClass="text-[10px]" />
                                         <span class="font-semibold text-slate-600">{{ number_format($comic->rating_avg ?? 0, 1) }}</span>
                                         <span class="text-slate-400">|</span>
                                         <i class="fas fa-heart text-xs text-rose-400"></i>

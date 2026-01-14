@@ -52,11 +52,7 @@
                     </form>
                     @else
                     <div class="flex items-center gap-2 text-sm text-gray-500">
-                        <div class="flex text-yellow-400 text-sm">
-                            @for($i = 1; $i <= 5; $i++)
-                                <i class="fas fa-star {{ $i <= round($avgRating) ? '' : 'text-gray-300' }}"></i>
-                                @endfor
-                        </div>
+                        <x-rating-stars :rating="$avgRating" sizeClass="text-sm" />
                         <span>( {{ number_format($avgRating, 1) }}/5 - {{ $ratingCount }} đánh giá )</span>
                         <a href="{{ route('verification.notice') }}" class="text-blue-600 text-xs underline ml-1">
                             Xác thực email để đánh giá
@@ -65,11 +61,7 @@
                     @endif
                     @else
                     <div class="flex items-center gap-2 text-sm text-gray-500">
-                        <div class="flex text-yellow-400 text-sm">
-                            @for($i = 1; $i <= 5; $i++)
-                                <i class="fas fa-star {{ $i <= round($avgRating) ? '' : 'text-gray-300' }}"></i>
-                                @endfor
-                        </div>
+                        <x-rating-stars :rating="$avgRating" sizeClass="text-sm" />
                         <span>( {{ number_format($avgRating, 1) }}/5 - {{ $ratingCount }} đánh giá )</span>
                         <a href="{{ route('login.form') }}" class="text-blue-600 text-xs underline ml-1">
                             Đăng nhập để đánh giá

@@ -20,9 +20,9 @@
                     </h4>
 
                     @php $avg = (float)($related->ratings_avg_rating ?? 0); @endphp
-                    <div class="flex items-center text-xs text-yellow-500 my-1">
-                        <i class="fas fa-star"></i>
-                        <span class="text-gray-400 ml-1">
+                    <div class="flex items-center text-xs my-1 gap-1">
+                        <x-rating-stars :rating="$avg" sizeClass="text-[12px]" class="shrink-0" />
+                        <span class="text-gray-400">
                             {{ number_format($avg, 1) }}
                             @if(!empty($related->ratings_count))
                             ({{ $related->ratings_count }})

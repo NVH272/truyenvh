@@ -34,6 +34,20 @@
         .reader-mode::-webkit-scrollbar-thumb:hover {
             background: #555;
         }
+
+        .tooltip {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            transition-delay: 0.3s;
+        }
+
+        .group:hover .tooltip {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .group:not(:hover) .tooltip {
+            transition-delay: 0s;
+        }
     </style>
 </head>
 
@@ -50,7 +64,6 @@ $isReaderPage = request()->routeIs('user.comics.chapters.read') || request()->ro
     @if($isReaderPage)
     {{-- 1. HEADER CHÍNH --}}
     <div id="reader-header"
-
         class="fixed top-0 left-0 right-0 z-[100] bg-[#1a1a1a]/95 backdrop-blur-md border-b border-gray-800 shadow-xl transition-transform duration-300 ease-in-out transform translate-y-0">
 
         {{-- Nội dung header --}}
@@ -64,7 +77,7 @@ $isReaderPage = request()->routeIs('user.comics.chapters.read') || request()->ro
         </div>
     </div>
 
-    {{-- 2. NÚT TOGGLE (MŨI TÊN) --}}
+    {{-- 2. NÚT TOGGLE HEADER (MŨI TÊN TRÊN) --}}
     <button id="toggle-header"
         class="fixed right-4 z-[99] w-10 h-10
         bg-white/80 hover:bg-gray-200
@@ -78,6 +91,36 @@ $isReaderPage = request()->routeIs('user.comics.chapters.read') || request()->ro
         <i id="toggle-icon" class="fas fa-chevron-up text-sm transition-transform duration-300"></i>
     </button>
     @endif
+
+    {{-- ========================================== --}}
+    {{-- NÚT SCROLL TO TOP (MỚI THÊM)               --}}
+    {{-- ========================================== --}}
+    {{-- Nút này nằm ngoài @if($isReaderPage) để có thể dùng chung cho cả trang thường nếu muốn --}}
+    <button id="scroll-to-top"
+        onclick="window.scrollTo({top: 0, behavior: 'smooth'})"
+        class="group fixed bottom-4 right-4 z-[99] w-10 h-10
+        bg-white/90 hover:bg-white
+        backdrop-blur-md rounded-full
+        flex items-center justify-center
+        text-slate-600 hover:text-slate-900 hover:shadow-lg hover:-translate-y-1
+        border border-slate-200
+        shadow-md transition-all duration-300 ease-out transform
+        translate-y-20 opacity-0 pointer-events-none">
+
+        <i class="fas fa-arrow-up text-xs"></i>
+
+        {{-- TOOLTIP MINIMALIST --}}
+        {{-- Vị trí: Bên trái nút --}}
+        <span class="tooltip absolute right-full mr-1 top-1/2 -translate-y-1/2 w-max
+                 bg-slate-800/90 backdrop-blur-sm text-white text-[10px] font-medium tracking-wide
+                 px-2.5 py-1 rounded-lg shadow-sm
+                 opacity-0 translate-x-2 invisible
+                 group-hover:opacity-100 group-hover:translate-x-0 group-hover:visible
+                 transition-all duration-300 ease-out pointer-events-none">
+            Lên đầu trang
+        </span>
+
+    </button>
 
 
     {{-- ========================================== --}}
@@ -93,108 +136,109 @@ $isReaderPage = request()->routeIs('user.comics.chapters.read') || request()->ro
     {{-- ========================================== --}}
     @stack('scripts')
 
-    @if($isReaderPage)
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // --- CÁC BIẾN CHO HEADER (READER MODE) ---
             const header = document.getElementById('reader-header');
             const toggleBtn = document.getElementById('toggle-header');
             const toggleIcon = document.getElementById('toggle-icon');
             const progressBar = document.getElementById('progress-bar');
 
-            // Biến trạng thái
-            let isPinned = false; // False: Tự động ẩn, True: Dính cứng (Do người dùng bấm)
+            // --- CÁC BIẾN CHO SCROLL TO TOP ---
+            const scrollToTopBtn = document.getElementById('scroll-to-top');
+            let lastScrollTop = 0; // Biến lưu vị trí cuộn trước đó để xác định hướng
 
-            // Hàm cập nhật giao diện (Vị trí nút & Icon)
-            function updateInterface(show, atTop = false) {
+            // Biến trạng thái Header
+            let isPinned = false;
+
+            // Hàm cập nhật giao diện Header
+            function updateHeaderInterface(show, atTop = false) {
+                if (!header) return; // Nếu không phải trang reader thì bỏ qua
+
                 if (show) {
-                    // Hiện header
                     header.classList.remove('-translate-y-full');
-
                     if (atTop) {
-                        // Nếu đang ở đầu trang -> Ẩn nút Toggle
                         toggleBtn.classList.add('hidden');
                     } else {
-                        // Nếu không ở đầu trang -> Hiện nút Toggle
                         toggleBtn.classList.remove('hidden');
-                        // Nút chạy xuống dưới header
                         toggleBtn.style.top = "80px";
-                        // Icon chuyển thành mũi tên lên
                         toggleIcon.classList.remove('fa-chevron-down');
                         toggleIcon.classList.add('fa-chevron-up');
                     }
                 } else {
-                    // Ẩn header
                     header.classList.add('-translate-y-full');
-
-                    // Hiện nút Toggle
                     toggleBtn.classList.remove('hidden');
-                    // Nút chạy lên sát mép trên
                     toggleBtn.style.top = "20px";
-                    // Icon chuyển thành mũi tên xuống
                     toggleIcon.classList.remove('fa-chevron-up');
                     toggleIcon.classList.add('fa-chevron-down');
                 }
             }
 
-            // 1. Xử lý sự kiện Click nút Toggle
+            // 1. Sự kiện Click nút Toggle Header
             if (toggleBtn) {
                 toggleBtn.addEventListener('click', function(e) {
                     e.stopPropagation();
                     const isHidden = header.classList.contains('-translate-y-full');
-
                     if (isHidden) {
-                        // Đang ẩn -> Bấm để HIỆN và GHIM LẠI
                         isPinned = true;
-                        updateInterface(true, false); // false vì chắc chắn không phải do scroll lên top
+                        updateHeaderInterface(true, false);
                     } else {
-                        // Đang hiện -> Bấm để ẨN và BỎ GHIM
                         isPinned = false;
-                        updateInterface(false);
+                        updateHeaderInterface(false);
                     }
                 });
             }
 
-            // 2. Xử lý sự kiện Scroll
+            // 2. Sự kiện Scroll (Xử lý chung cho cả Header và ScrollToTop)
             window.addEventListener('scroll', function() {
                 const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
-                // --- LOGIC TIẾN TRÌNH ĐỌC (Giữ nguyên) ---
+                // --- A. LOGIC THANH TIẾN TRÌNH ---
                 if (progressBar) {
                     const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
                     const scrolled = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
                     progressBar.style.width = scrolled + '%';
                 }
 
-                // --- LOGIC ẨN/HIỆN HEADER ---
-
-                if (scrollTop <= 10) {
-                    // Kéo lên sát đầu trang -> Hiện Header, Dính cứng, Ẩn nút Toggle
-                    updateInterface(true, true); // true = atTop
-                    // Khi ở đầu trang, ta cũng có thể coi như đang "Ghim tạm thời" để tránh logic xung đột
-                    // Nhưng isPinned giữ nguyên để khi cuộn xuống nó hoạt động theo trạng thái cũ
-                } else {
-                    // Cuộn xuống khỏi đầu trang
-
-                    if (isPinned) {
-                        // Nếu người dùng đã bấm GHIM -> Vẫn hiện Header, Hiện nút Toggle (để tắt ghim)
-                        updateInterface(true, false);
+                // --- B. LOGIC ẨN/HIỆN HEADER ---
+                if (header) {
+                    if (scrollTop <= 10) {
+                        updateHeaderInterface(true, true);
                     } else {
-                        // Nếu không ghim -> Ẩn Header, Hiện nút Toggle (để bật ghim)
-                        updateInterface(false);
+                        if (isPinned) {
+                            updateHeaderInterface(true, false);
+                        } else {
+                            updateHeaderInterface(false);
+                        }
                     }
                 }
 
+                // --- C. LOGIC NÚT SCROLL TO TOP (MỚI) ---
+                if (scrollToTopBtn) {
+                    // Logic: Hiện khi cuộn xuống quá 300px VÀ đang thực hiện thao tác cuộn xuống
+                    // Ẩn khi cuộn lên HOẶC đang ở đầu trang (< 300px)
+
+                    if (scrollTop > 1000 && scrollTop > lastScrollTop) {
+                        // Đang cuộn xuống và đã qua 300px -> HIỆN
+                        scrollToTopBtn.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+                    } else {
+                        // Đang cuộn lên hoặc ở gần đầu trang -> ẨN
+                        scrollToTopBtn.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+                    }
+                }
+
+                // Cập nhật vị trí cuộn để dùng cho lần sau
+                lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
             }, {
                 passive: true
             });
 
-            // Khởi tạo trạng thái ban đầu (nếu load trang ở top)
-            if (window.pageYOffset <= 10) {
-                updateInterface(true, true);
+            // Khởi tạo trạng thái ban đầu
+            if (window.pageYOffset <= 10 && header) {
+                updateHeaderInterface(true, true);
             }
         });
     </script>
-    @endif
 
 </body>
 
