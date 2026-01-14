@@ -113,7 +113,7 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="text-gray-500 w-24 flex-shrink-0"><i class="fas fa-eye mr-1.5"></i> Lượt xem:</span>
-                        <span class="font-medium text-gray-800">12,345,678</span>
+                        <span class="font-medium text-gray-800">{{ number_format($comic->views ?? 0) }}</span>
                     </div>
                 </div>
 

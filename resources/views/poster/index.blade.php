@@ -45,6 +45,7 @@
                         <th class="px-6 py-4">Thông tin truyện</th>
                         <th class="px-6 py-4 text-center">Trạng thái</th>
                         <th class="px-6 py-4 text-center">Tiến độ</th>
+                        <th class="px-6 py-4 text-center">Lượt xem</th>
                         <th class="px-6 py-4 text-right">Thao tác</th>
                     </tr>
                 </thead>
@@ -122,7 +123,15 @@
                             </div>
                         </td>
 
-                        {{-- 4. THAO TÁC --}}
+                        {{-- 4. LƯỢT XEM --}}
+                        <td class="px-6 py-4 text-center align-middle">
+                            <div class="inline-flex flex-col items-center justify-center">
+                                <span class="text-lg font-bold text-slate-700 leading-none">{{ number_format($comic->views ?? 0) }}</span>
+                                <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wide">Lượt xem</span>
+                            </div>
+                        </td>
+
+                        {{-- 5. THAO TÁC --}}
                         <td class="px-6 py-4 text-right align-middle" onclick="event.stopPropagation()">
                             <div class="flex items-center justify-end gap-2">
 

@@ -140,6 +140,8 @@ class ComicReadController extends Controller
 
         $bannedWords = \App\Models\BannedWord::where('is_active', 1)->pluck('word')->toArray();
 
+        $this->countComicView($comic);
+
         return view('user.comics.show', [
             'comic'             => $comic,
             'userRating'        => $userRating,
@@ -152,5 +154,15 @@ class ComicReadController extends Controller
             'latestChapter'     => $latestChapter,
             'bannedWords' => $bannedWords,
         ]);
+    }
+
+    private function countComicView($comic)
+    {
+        $sessionKey = 'viewed_comic_' . $comic->id;
+
+        if (!session()->has($sessionKey)) {
+            $comic->increment('views');
+            session()->put($sessionKey, true);
+        }
     }
 }

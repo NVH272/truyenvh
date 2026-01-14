@@ -43,6 +43,18 @@ class ReadChapterController extends Controller
             ->orderByDesc('chapter_number')
             ->first();
 
+        $this->countChapterView($chapter);
+
         return view('user.comics.chapters.read', compact('comic', 'chapter', 'prevChapter', 'nextChapter', 'firstChapter', 'latestChapter'));
+    }
+
+    private function countChapterView($chapter)
+    {
+        $sessionKey = 'viewed_chapter_' . $chapter->id;
+
+        if (!session()->has($sessionKey)) {
+            $chapter->increment('views');
+            session()->put($sessionKey, true);
+        }
     }
 }
