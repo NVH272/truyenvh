@@ -32,6 +32,7 @@ use App\Http\Controllers\Comic\ComicFollowController;
 use App\Http\Controllers\Comic\ComicSearchController;
 use App\Http\Controllers\Comic\ComicCommentController;
 use App\Http\Controllers\Comic\ComicFilterController;
+use App\Http\Controllers\Comic\AuthorController;
 
 
 
@@ -53,7 +54,23 @@ Route::get('/comics/{comic}/chapter-{chapter_number}', [ReadChapterController::c
     ->whereNumber('comic')
     ->name('user.comics.chapters.read');
 
-// Các route tương tác truyện
+// Trang tìm kiếm truyện
+Route::get('/search', [ComicSearchController::class, 'index'])
+    ->name('user.comics.search');
+
+// Trang lọc truyện
+Route::get('/comics/filter', [ComicFilterController::class, 'index'])
+    ->name('user.comics.filter');
+
+// Trang tác giả
+Route::get('/author/{author}', [\App\Http\Controllers\Comic\ComicAuthorController::class, 'show'])->name('user.comics.author.show');
+
+/*
+|--------------------------------------------------------------------------
+| LOGIN ROUTES
+|--------------------------------------------------------------------------
+*/
+
 
 // Theo dõi & đánh giá: yêu cầu user đã xác thực email
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -78,13 +95,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/comments/{comment}/report', [CommentReportController::class, 'store'])
         ->name('comments.report');
 });
-
-// Trang tìm kiếm truyện
-Route::get('/search', [ComicSearchController::class, 'index'])
-    ->name('user.comics.search');
-// Trang lọc truyện
-Route::get('/comics/filter', [ComicFilterController::class, 'index'])
-    ->name('user.comics.filter');
 
 /*
 |--------------------------------------------------------------------------

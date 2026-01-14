@@ -62,7 +62,7 @@
 
                     {{-- Cover Image Wrapper (GIỮ KÍCH THƯỚC: aspect-[2/3]) --}}
                     <div class="relative aspect-[2/3] rounded-lg overflow-hidden shadow-sm border border-slate-200
-                group-hover:shadow-md group-hover:border-brand-blue/50 transition-all duration-300">
+                    group-hover:shadow-md group-hover:border-brand-blue/50 transition-all duration-300">
                         <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}"
                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
 
@@ -106,7 +106,7 @@
                     {{-- Content Below Image --}}
                     <div class="mt-2 space-y-1 relative z-20 pointer-events-none px-0.5">
                         <h3 class="text-[13px] font-bold text-slate-700 line-clamp-2 leading-snug
-                   group-hover:text-brand-blue transition-colors min-h-[2.6em]"
+                        group-hover:text-brand-blue transition-colors min-h-[2.6em]"
                             title="{{ $comic->title }}">
                             {{ $comic->title }}
                         </h3>

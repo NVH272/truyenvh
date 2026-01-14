@@ -303,26 +303,61 @@
     </main>
 
     <!-- FOOTER -->
-    <footer class="bg-slate-900 text-slate-400 pt-12 pb-6 mt-0 border-t-4 border-gray-800 relative z-10 shrink-0">
-        <div class="container mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 border-b border-slate-800 pb-8">
-                <div class="col-span-1 md:col-span-2">
-                    <span class="text-2xl font-extrabold text-white font-sg tracking-widest">TruyenVH</span>
-                    <p class="mt-4 text-sm leading-relaxed">Website đọc truyện tranh online miễn phí chất lượng cao.</p>
-                </div>
-                <div>
-                    <h4 class="text-white font-bold mb-4">Liên hệ</h4>
-                    <div class="flex gap-4 text-xl">
-                        <a href="https://www.facebook.com/viethoang272/" class="hover:text-blue-500 transition"><i class="fab fa-facebook"></i></a>
-                        <a href="https://www.instagram.com/viethoang272/" class="hover:text-pink-500 transition"><i class="fab fa-instagram"></i></a>
-                        <a href="https://www.discordapp.com/users/842034711269212200" class="hover:text-[#4752C4] transition"><i class="fab fa-discord"></i></a>
+    <footer class="bg-[#1a1a1a] text-gray-400 py-12 relative overflow-hidden border-t border-gray-800 font-sans">
+
+        <div class="container mx-auto px-4 relative z-10">
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
+
+                <div class="lg:col-span-5 flex flex-col items-start">
+                    <div class="flex items-center gap-3 mb-4">
+                        <a href="{{ route('home') }}" class="flex items-center gap-2">
+                            <img src="{{ asset('storage/logo/logoDark.png') }}" alt="TruyenVH Logo" class="h-8">
+                        </a>
                     </div>
+
+                    <p class="text-sm leading-relaxed text-gray-400 max-w-sm">
+                        TruyenVH là website đọc truyện tranh online uy tín hàng đầu Việt Nam. Tất cả các truyện trên website đăng tải được TruyenVH biên dịch và tổng hợp từ nhiều nguồn trên Internet.
+                    </p>
+                </div>
+
+                <div class="lg:col-span-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <ul class="space-y-3">
+                        <li><a href="#" class="hover:text-white transition-colors">Về chúng tôi</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Điều khoản dịch vụ</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Chính sách bảo mật</a></li>
+                    </ul>
+
+                    <ul class="space-y-3">
+                        <li><a href="#" class="hover:text-white transition-colors">Phương thức liên hệ</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Tuyên bố miễn trừ trách nhiệm</a></li>
+                    </ul>
+                </div>
+
+                <div class="lg:col-span-2 flex flex-col lg:items-end items-start gap-4">
+                    <a href="https://www.facebook.com/viethoang272/" target="_blank" class="group w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:bg-gray-200 transition-all duration-300">
+                        <i class="fab fa-facebook-f text-xl group-hover:text-blue-600"></i>
+                    </a>
+
+                    <a href="https://www.instagram.com/viethoang272/" target="_blank" class="group w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:bg-gray-200 transition-all duration-300">
+                        <i class="fab fa-instagram text-xl group-hover:text-pink-600"></i>
+                    </a>
+
+                    <a href="https://www.discordapp.com/users/842034711269212200" target="_blank" class="group w-10 h-10 rounded-full bg-white text-black flex items-center justify-center hover:bg-gray-200 transition-all duration-300">
+                        <i class="fab fa-discord text-xl group-hover:text-[#5865F2]"></i>
+                    </a>
                 </div>
             </div>
-            <div class="text-center text-xs mt-6 font-sg opacity-70">
-                Copyright © 2025 TruyenVH.
+
+            <div class="text-center pt-8 mt-4 border-t border-gray-800/50">
+                <p class="text-sm text-gray-500">Copyright © 2025 TruyenVH. All rights reserved.</p>
             </div>
         </div>
+
+        <img
+            src="{{ asset('storage/backgrounds/nrt.png') }}"
+            alt="Footer Art"
+            class="absolute bottom-0 right-8 md:right-20 lg:right-30 z-20 pointer-events-none w-auto h-48 md:h-64 lg:h-[330px]">
     </footer>
 
     {{-- Scripts được push từ các view con (ví dụ: comments.blade.php) --}}

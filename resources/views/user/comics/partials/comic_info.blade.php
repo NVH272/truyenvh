@@ -85,9 +85,16 @@
                         <span class="font-medium text-gray-800">{{ $comic->author ?? 'Đang cập nhật' }}</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="text-gray-500 w-24 flex-shrink-0"><i class="fas fa-rss mr-1.5"></i> Tình trạng:</span>
-                        <span class="font-medium text-blue-600">{{ $comic->status_text ?? 'Đang tiến hành' }}</span>
+                        <span class="text-gray-500 w-24 flex-shrink-0">
+                            <i class="fas fa-user mr-1.5"></i> Tác giả:
+                        </span>
+
+                        <a href="{{ route('user.comics.author.show', $comic->author) }}"
+                            class="font-medium text-blue-600 hover:underline hover:text-blue-400 transition">
+                            {{ $comic->author }}
+                        </a>
                     </div>
+
                     <div class="flex items-center gap-2">
                         <span class="text-gray-500 w-24 flex-shrink-0"><i class="fas fa-tags mr-1.5"></i> Thể loại:</span>
                         <div class="flex flex-wrap gap-1">
