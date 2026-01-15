@@ -190,10 +190,10 @@
     function getCurrentProgress() {
         const images = document.querySelectorAll('.chapter-image');
         if (images.length === 0) return 0;
-        
+
         const viewportBottom = window.innerHeight + window.pageYOffset;
         let viewedCount = 0;
-        
+
         images.forEach(function(img) {
             const imgTop = img.getBoundingClientRect().top + window.pageYOffset;
             // Nếu ảnh đã scroll qua (top của ảnh < bottom của viewport)
@@ -201,7 +201,7 @@
                 viewedCount++;
             }
         });
-        
+
         return Math.min(100, Math.round((viewedCount / images.length) * 100));
     }
 
@@ -218,11 +218,11 @@
     // Function để tính progress và lưu lịch sử (lưu progress hiện tại, có thể tăng hoặc giảm)
     function saveReadingHistory() {
         if (isNavigating) return;
-        
+
         const currentProgress = getCurrentProgress();
         // Cập nhật maxProgress cho thanh tiến trình (chỉ tăng)
         updateMaxProgress(currentProgress);
-        
+
         // Lưu progress hiện tại vào database (có thể tăng hoặc giảm)
         fetch("{{ route('reading-history.store') }}", {
             method: "POST",
@@ -240,11 +240,13 @@
     // Lưu lịch sử khi scroll (có delay)
     let lastSavedProgress = @if(isset($currentProgress)) {{ $currentProgress }} @else 0 @endif;
     let sessionMaxProgress = @if(isset($currentProgress)) {{ $currentProgress }} @else 0 @endif; // Progress cao nhất trong session hiện tại
-    
+    let lastScrollPosition = 0; // Vị trí scroll trước đó để phát hiện scroll lên/xuống
+    let scrollDirection = 'down'; // Hướng scroll hiện tại
+
     // Function để lưu progress vào database
     function saveProgressToDatabase(progress) {
         if (isNavigating) return;
-        
+
         clearTimeout(saveTimeout);
         saveTimeout = setTimeout(() => {
             if (!isNavigating) {
@@ -264,47 +266,64 @@
             }
         }, 1000);
     }
-    
+
     window.addEventListener('scroll', function() {
         const currentProgress = getCurrentProgress();
+        const currentScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
         
+        // Phát hiện hướng scroll
+        if (currentScrollPosition > lastScrollPosition) {
+            scrollDirection = 'down'; // Đang scroll xuống
+        } else if (currentScrollPosition < lastScrollPosition) {
+            scrollDirection = 'up'; // Đang scroll lên
+        }
+        lastScrollPosition = currentScrollPosition;
+
         // Cập nhật maxProgress cho thanh tiến trình trong reader.blade.php (chỉ tăng)
         updateMaxProgress(currentProgress);
-        
+
         // Cập nhật sessionMaxProgress (progress cao nhất trong session này)
         if (currentProgress > sessionMaxProgress) {
             sessionMaxProgress = currentProgress;
         }
-        
+
         // Logic lưu vào database:
         // 1. Lưu khi progress tăng so với lần lưu trước (đọc tiếp)
-        // 2. Lưu khi progress hiện tại < progress đã lưu (đọc lại và đọc chưa đến mức cũ)
-        // 3. KHÔNG lưu khi scroll lên trong cùng session (progress giảm nhưng vẫn >= progress đã lưu)
-        const shouldSave = 
+        // 2. Lưu khi progress hiện tại < progress đã lưu VÀ đang scroll xuống (đọc lại từ đầu)
+        // 3. KHÔNG lưu khi scroll lên (chỉ xem lại, không phải đọc mới)
+        const shouldSave =
             (currentProgress > lastSavedProgress && Math.abs(currentProgress - lastSavedProgress) >= 3) || // Tăng đáng kể
-            (currentProgress < lastSavedProgress && currentProgress < sessionMaxProgress) || // Đọc lại và đọc chưa đến mức cũ
+            (currentProgress < lastSavedProgress && scrollDirection === 'down') || // Đọc lại từ đầu (scroll xuống và progress < progress đã lưu)
             (currentProgress === 100); // Đọc hết
-        
+
         if (shouldSave) {
             saveProgressToDatabase(currentProgress);
         }
     });
-    
+
     // Lắng nghe event từ reader.blade.php khi thanh tiến trình thay đổi
     window.addEventListener('progressUpdated', function(event) {
         const currentProgress = getCurrentProgress();
+        const currentScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
         
+        // Phát hiện hướng scroll
+        if (currentScrollPosition > lastScrollPosition) {
+            scrollDirection = 'down';
+        } else if (currentScrollPosition < lastScrollPosition) {
+            scrollDirection = 'up';
+        }
+
         // Cập nhật sessionMaxProgress
         if (currentProgress > sessionMaxProgress) {
             sessionMaxProgress = currentProgress;
         }
-        
-        // Chỉ lưu khi progress tăng hoặc đọc lại và đọc chưa đến mức cũ
-        const shouldSave = 
+
+        // Logic tương tự: chỉ lưu khi scroll xuống và progress < progress đã lưu
+        const shouldSave =
             (currentProgress > lastSavedProgress && Math.abs(currentProgress - lastSavedProgress) >= 3) ||
-            (currentProgress < lastSavedProgress && currentProgress < sessionMaxProgress) ||
+            (currentProgress < lastSavedProgress && scrollDirection === 'down') ||
             (currentProgress === 100);
-        
+
         if (shouldSave) {
             saveProgressToDatabase(currentProgress);
         }
@@ -314,20 +333,20 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Tìm tất cả các link chuyển chapter
         const chapterLinks = document.querySelectorAll('a[href*="/comics/{{ $comic->id }}/chapter-"]');
-        
+
         chapterLinks.forEach(function(link) {
             link.addEventListener('click', function(e) {
                 // Chỉ xử lý nếu không phải chapter hiện tại và không phải Ctrl/Cmd click (mở tab mới)
                 const isCurrentChapter = link.href.includes('/chapter-{{ $chapter->chapter_number }}');
                 const isNewTab = e.ctrlKey || e.metaKey || e.shiftKey || (e.button && e.button === 1);
-                
+
                 if (!isCurrentChapter && !isNewTab) {
                     e.preventDefault();
                     isNavigating = true;
-                    
+
                     // Lưu lịch sử trước khi chuyển trang
                     saveReadingHistory();
-                    
+
                     // Đợi một chút để đảm bảo request được gửi đi
                     setTimeout(function() {
                         window.location.href = link.href;
@@ -357,12 +376,12 @@
             // Lưu sessionMaxProgress (progress cao nhất trong session này) thay vì progress hiện tại
             // Để đảm bảo không bị giảm khi scroll lên
             const progressToSave = sessionMaxProgress > lastSavedProgress ? sessionMaxProgress : lastSavedProgress;
-            
+
             const formData = new FormData();
             formData.append('chapter_id', currentChapterId);
             formData.append('progress', progressToSave);
             formData.append('_token', csrfToken);
-            
+
             // Gửi bằng fetch với keepalive thay vì sendBeacon để có thể dùng headers
             fetch("{{ route('reading-history.store') }}", {
                 method: "POST",
