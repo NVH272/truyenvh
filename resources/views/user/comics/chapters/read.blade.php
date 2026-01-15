@@ -176,4 +176,40 @@
     </div>
 
 </div>
+@push('scripts')
+<script>
+    let saveTimeout = null;
+
+    window.addEventListener('scroll', function() {
+        @if(!auth()->check())
+        return;
+        @endif
+
+        const docHeight =
+            document.documentElement.scrollHeight - window.innerHeight;
+        if (docHeight <= 0) return;
+
+        const progress = Math.min(
+            100,
+            Math.round((window.scrollY / docHeight) * 100)
+        );
+
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+            fetch("{{ route('reading-history.store') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    chapter_id: {{ $chapter->id }},
+                    progress: progress
+                })
+            });
+        }, 1500);
+    });
+</script>
+@endpush
+
 @endsection

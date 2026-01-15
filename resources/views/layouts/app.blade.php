@@ -10,7 +10,7 @@
 
     <!-- Tailwind Config (must be before Tailwind script) -->
     @stack('head-scripts')
-    
+
     <!-- Tailwind & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -126,7 +126,7 @@
                 </a>
 
                 <nav class="hidden lg:flex items-center gap-6 font-bold text-sm text-gray-600 uppercase">
-                    <a href="#" class="hover:text-blue-600 transition">Lịch sử</a>
+                    <a href="{{ route('user.reading-history.index') }}" class="hover:text-blue-600 transition">Lịch sử</a>
                     <a href="{{ route('user.comics.followed') }}" class="hover:text-blue-600 transition">Theo dõi</a>
                     <div class="group relative cursor-pointer py-4">
                         <span class="hover:text-blue-600 flex items-center gap-1">Thể loại <i class="fas fa-caret-down"></i></span>

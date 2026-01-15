@@ -23,6 +23,7 @@ use App\Http\Controllers\User\UserComicController;
 use App\Http\Controllers\User\ChapterController;
 use App\Http\Controllers\User\CommentReportController;
 use App\Http\Controllers\User\ReadChapterController;
+use App\Http\Controllers\User\ReadingHistoryController;
 
 use App\Http\Controllers\Poster\MyComicsController;
 
@@ -70,7 +71,6 @@ Route::get('/author/{author}', [\App\Http\Controllers\Comic\ComicAuthorControlle
 | LOGIN ROUTES
 |--------------------------------------------------------------------------
 */
-
 
 // Theo dõi & đánh giá: yêu cầu user đã xác thực email
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -267,6 +267,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'isAdmin', 'verified
     Route::get('chapters/{comic}', [AdminChapterController::class, 'index'])->name('chapters.by-comic');
     Route::delete('/comics/{comic}/chapters/{chapter}', [AdminChapterController::class, 'destroy'])->name('chapters.destroy');
 });
-// Route::middleware(['auth'])->prefix('admin')->group(function () {
-//     Route::get('/violation', [ViolationController::class, 'index'])->name('admin.violation.index');
-// });
+
+/*
+|--------------------------------------------------------------------------
+| VERIFIED ROUTES
+|--------------------------------------------------------------------------
+*/
+
+Route::post('/reading-history', [ReadingHistoryController::class, 'store'])
+    ->middleware('auth')
+    ->name('reading-history.store');
+Route::get('/reading-history', [ReadingHistoryController::class, 'index'])
+    ->middleware('auth')
+    ->name('user.reading-history.index');

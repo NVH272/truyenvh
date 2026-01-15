@@ -7,11 +7,14 @@ use App\Http\Controllers\Comic\ComicCommentController;
 use Illuminate\Http\Request;
 use App\Models\Comic;
 use App\Models\Chapter;
+use App\Models\ReadingHistory;
 
 class ReadChapterController extends Controller
 {
     public function show($comic, $chapter_number)
     {
+
+
         $comic = Comic::findOrFail($comic);
 
         $chapterNumber = (int) $chapter_number;
@@ -56,5 +59,24 @@ class ReadChapterController extends Controller
             $chapter->increment('views');
             session()->put($sessionKey, true);
         }
+    }
+
+    protected function saveReadingHistory($chapter, int $progress)
+    {
+        if (!auth()->check()) {
+            return;
+        }
+
+        ReadingHistory::updateOrCreate(
+            [
+                'user_id' => auth()->id(),
+                'chapter_id' => $chapter->id,
+            ],
+            [
+                'comic_id' => $chapter->comic_id,
+                'progress' => $progress,
+                'last_read_at' => now(),
+            ]
+        );
     }
 }
