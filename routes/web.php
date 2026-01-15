@@ -36,7 +36,6 @@ use App\Http\Controllers\Comic\ComicFilterController;
 use App\Http\Controllers\Comic\AuthorController;
 
 
-
 /*
 |--------------------------------------------------------------------------
 | PUBLIC ROUTES
@@ -68,7 +67,7 @@ Route::get('/author/{author}', [\App\Http\Controllers\Comic\ComicAuthorControlle
 
 /*
 |--------------------------------------------------------------------------
-| LOGIN ROUTES
+| LOGGED ROUTES
 |--------------------------------------------------------------------------
 */
 
@@ -79,6 +78,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/comics/{comic}/rate', [ComicInteractionController::class, 'rate'])
         ->name('comics.rate');
+
+    Route::post('/reading-history', [ReadingHistoryController::class, 'store'])
+        ->middleware('auth')
+        ->name('reading-history.store');
+    Route::get('/reading-history', [ReadingHistoryController::class, 'index'])
+        ->middleware('auth')
+        ->name('user.reading-history.index');
 });
 
 // Bình luận & reaction: chỉ cần đăng nhập
@@ -268,15 +274,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'isAdmin', 'verified
     Route::delete('/comics/{comic}/chapters/{chapter}', [AdminChapterController::class, 'destroy'])->name('chapters.destroy');
 });
 
-/*
-|--------------------------------------------------------------------------
-| VERIFIED ROUTES
-|--------------------------------------------------------------------------
-*/
-
-Route::post('/reading-history', [ReadingHistoryController::class, 'store'])
-    ->middleware('auth')
-    ->name('reading-history.store');
-Route::get('/reading-history', [ReadingHistoryController::class, 'index'])
-    ->middleware('auth')
-    ->name('user.reading-history.index');
+// Route::post('/reading-history', [ReadingHistoryController::class, 'store'])
+//     ->middleware('auth')
+//     ->name('reading-history.store');
+// Route::get('/reading-history', [ReadingHistoryController::class, 'index'])
+//     ->middleware('auth')
+//     ->name('user.reading-history.index');

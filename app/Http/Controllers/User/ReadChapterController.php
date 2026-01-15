@@ -13,8 +13,6 @@ class ReadChapterController extends Controller
 {
     public function show($comic, $chapter_number)
     {
-
-
         $comic = Comic::findOrFail($comic);
 
         $chapterNumber = (int) $chapter_number;

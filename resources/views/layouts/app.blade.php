@@ -126,8 +126,8 @@
                 </a>
 
                 <nav class="hidden lg:flex items-center gap-6 font-bold text-sm text-gray-600 uppercase">
-                    <a href="{{ route('user.reading-history.index') }}" class="hover:text-blue-600 transition">Lịch sử</a>
                     <a href="{{ route('user.comics.followed') }}" class="hover:text-blue-600 transition">Theo dõi</a>
+                    <a href="{{ route('user.reading-history.index') }}" class="hover:text-blue-600 transition">Lịch sử đọc</a>
                     <div class="group relative cursor-pointer py-4">
                         <span class="hover:text-blue-600 flex items-center gap-1">Thể loại <i class="fas fa-caret-down"></i></span>
                         <div class="absolute top-full left-0 w-56 bg-white shadow-xl rounded-lg hidden group-hover:grid grid-cols-2 gap-2 p-3 border border-gray-100 z-50">

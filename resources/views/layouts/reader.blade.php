@@ -223,6 +223,10 @@ $isReaderPage = request()->routeIs('user.comics.chapters.read') || request()->ro
                     // Chỉ cập nhật nếu progress hiện tại lớn hơn progress cao nhất
                     if (currentProgress > maxProgress) {
                         maxProgress = currentProgress;
+                        // Dispatch event để thông báo progress đã thay đổi (cho read.blade.php)
+                        window.dispatchEvent(new CustomEvent('progressUpdated', {
+                            detail: { progress: maxProgress, currentProgress: currentProgress }
+                        }));
                     }
                     // Luôn hiển thị progress cao nhất đã đạt được
                     progressBar.style.width = maxProgress + '%';

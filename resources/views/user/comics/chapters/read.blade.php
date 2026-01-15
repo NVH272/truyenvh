@@ -238,32 +238,75 @@
     }
 
     // Lưu lịch sử khi scroll (có delay)
-    let lastSavedProgress = 0;
+    let lastSavedProgress = @if(isset($currentProgress)) {{ $currentProgress }} @else 0 @endif;
+    let sessionMaxProgress = @if(isset($currentProgress)) {{ $currentProgress }} @else 0 @endif; // Progress cao nhất trong session hiện tại
+    
+    // Function để lưu progress vào database
+    function saveProgressToDatabase(progress) {
+        if (isNavigating) return;
+        
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+            if (!isNavigating) {
+                fetch("{{ route('reading-history.store') }}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": csrfToken
+                    },
+                    body: JSON.stringify({
+                        chapter_id: currentChapterId,
+                        progress: progress
+                    })
+                }).then(() => {
+                    lastSavedProgress = progress;
+                }).catch(err => console.error('Error saving reading history:', err));
+            }
+        }, 1000);
+    }
+    
     window.addEventListener('scroll', function() {
         const currentProgress = getCurrentProgress();
         
-        // Cập nhật maxProgress cho thanh tiến trình (chỉ tăng)
+        // Cập nhật maxProgress cho thanh tiến trình trong reader.blade.php (chỉ tăng)
         updateMaxProgress(currentProgress);
         
-        // Chỉ lưu vào database nếu progress thay đổi đáng kể (ít nhất 5% hoặc khác với lần lưu trước)
-        if (Math.abs(currentProgress - lastSavedProgress) >= 5 || currentProgress === 100) {
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => {
-                if (!isNavigating) {
-                    fetch("{{ route('reading-history.store') }}", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRF-TOKEN": csrfToken
-                        },
-                        body: JSON.stringify({
-                            chapter_id: currentChapterId,
-                            progress: currentProgress // Lưu progress hiện tại
-                        })
-                    });
-                    lastSavedProgress = currentProgress;
-                }
-            }, 1500);
+        // Cập nhật sessionMaxProgress (progress cao nhất trong session này)
+        if (currentProgress > sessionMaxProgress) {
+            sessionMaxProgress = currentProgress;
+        }
+        
+        // Logic lưu vào database:
+        // 1. Lưu khi progress tăng so với lần lưu trước (đọc tiếp)
+        // 2. Lưu khi progress hiện tại < progress đã lưu (đọc lại và đọc chưa đến mức cũ)
+        // 3. KHÔNG lưu khi scroll lên trong cùng session (progress giảm nhưng vẫn >= progress đã lưu)
+        const shouldSave = 
+            (currentProgress > lastSavedProgress && Math.abs(currentProgress - lastSavedProgress) >= 3) || // Tăng đáng kể
+            (currentProgress < lastSavedProgress && currentProgress < sessionMaxProgress) || // Đọc lại và đọc chưa đến mức cũ
+            (currentProgress === 100); // Đọc hết
+        
+        if (shouldSave) {
+            saveProgressToDatabase(currentProgress);
+        }
+    });
+    
+    // Lắng nghe event từ reader.blade.php khi thanh tiến trình thay đổi
+    window.addEventListener('progressUpdated', function(event) {
+        const currentProgress = getCurrentProgress();
+        
+        // Cập nhật sessionMaxProgress
+        if (currentProgress > sessionMaxProgress) {
+            sessionMaxProgress = currentProgress;
+        }
+        
+        // Chỉ lưu khi progress tăng hoặc đọc lại và đọc chưa đến mức cũ
+        const shouldSave = 
+            (currentProgress > lastSavedProgress && Math.abs(currentProgress - lastSavedProgress) >= 3) ||
+            (currentProgress < lastSavedProgress && currentProgress < sessionMaxProgress) ||
+            (currentProgress === 100);
+        
+        if (shouldSave) {
+            saveProgressToDatabase(currentProgress);
         }
     });
 
@@ -311,24 +354,24 @@
     // Lưu lịch sử khi rời trang (beforeunload) - backup cho trường hợp đóng tab
     window.addEventListener('beforeunload', function() {
         if (!isNavigating) {
-            const currentProgress = getCurrentProgress();
-            if (currentProgress > 0) {
-                // Lưu progress hiện tại (có thể tăng hoặc giảm)
-                const formData = new FormData();
-                formData.append('chapter_id', currentChapterId);
-                formData.append('progress', currentProgress);
-                formData.append('_token', csrfToken);
-                
-                // Gửi bằng fetch với keepalive thay vì sendBeacon để có thể dùng headers
-                fetch("{{ route('reading-history.store') }}", {
-                    method: "POST",
-                    headers: {
-                        "X-CSRF-TOKEN": csrfToken
-                    },
-                    body: formData,
-                    keepalive: true // Đảm bảo request được gửi ngay cả khi trang đang đóng
-                });
-            }
+            // Lưu sessionMaxProgress (progress cao nhất trong session này) thay vì progress hiện tại
+            // Để đảm bảo không bị giảm khi scroll lên
+            const progressToSave = sessionMaxProgress > lastSavedProgress ? sessionMaxProgress : lastSavedProgress;
+            
+            const formData = new FormData();
+            formData.append('chapter_id', currentChapterId);
+            formData.append('progress', progressToSave);
+            formData.append('_token', csrfToken);
+            
+            // Gửi bằng fetch với keepalive thay vì sendBeacon để có thể dùng headers
+            fetch("{{ route('reading-history.store') }}", {
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": csrfToken
+                },
+                body: formData,
+                keepalive: true // Đảm bảo request được gửi ngay cả khi trang đang đóng
+            });
         }
     });
     @endif

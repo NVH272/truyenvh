@@ -3,15 +3,54 @@
 @section('title', 'Lịch sử đọc truyện')
 
 @section('content')
-<div class="mb-8">
-    <h1 class="text-2xl font-bold text-slate-800 mb-2">Lịch sử đọc truyện</h1>
-    <p class="text-sm text-slate-500">Theo dõi tiến trình đọc truyện của bạn</p>
+{{-- HEADER: COMPACT & CLEAN --}}
+<div class="flex items-end justify-between mb-6 pb-2 border-b border-slate-100">
+    <div>
+        <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+            <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-rose-100 text-rose-600">
+                <i class="fas fa-history text-sm"></i>
+            </span>
+            Lịch sử đọc
+        </h2>
+        <p class="text-xs text-slate-500 font-medium mt-1 ml-1">
+            Theo dõi tiến trình đọc truyện của bạn
+        </p>
+    </div>
 </div>
 
 @if($histories->isEmpty())
-<div class="text-center py-12">
-    <i class="fas fa-book-open text-4xl text-slate-300 mb-4"></i>
-    <p class="text-slate-500">Bạn chưa có lịch sử đọc truyện nào</p>
+{{-- EMPTY STATE: SLIM, COMPACT & POLISHED --}}
+<div class="group relative flex flex-col items-center justify-center py-10 px-6 rounded-[2rem] border-2 border-dashed border-slate-200 hover:border-rose-300/50 bg-gradient-to-b from-white to-slate-50/80 transition-all duration-300 overflow-hidden">
+
+    {{-- Hiệu ứng ánh sáng nền nhẹ khi hover (Tạo cảm giác cao cấp) --}}
+    <div class="absolute inset-0 bg-gradient-to-tr from-rose-50/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+
+    {{-- Icon nhỏ gọn được làm đẹp --}}
+    <div class="relative z-10 mb-4">
+        {{-- Lớp nền tỏa sáng nhẹ phía sau icon --}}
+        <div class="absolute inset-0 bg-rose-100 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition-opacity"></div>
+        {{-- Container chứa icon chính --}}
+        <div class="relative w-14 h-14 bg-gradient-to-tr from-white to-rose-50 rounded-2xl shadow-[0_4px_15px_-3px_rgba(244,63,94,0.2)] border border-white flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+            {{-- Dùng icon có màu sắc --}}
+            <i class="fas fa-book-open text-xl text-rose-500/90"></i>
+        </div>
+    </div>
+
+    {{-- Text chính có thêm dòng phụ nhỏ --}}
+    <div class="relative z-10 text-center mb-6">
+        <p class="text-slate-700 font-semibold mb-1">
+            Bạn chưa đọc bộ truyện nào gần đây
+        </p>
+        <p class="text-xs text-slate-400 font-medium">
+            Hãy bắt đầu một hành trình mới ngay hôm nay!
+        </p>
+    </div>
+
+    {{-- Nút bấm nhỏ dạng Soft Button (Nền mềm) --}}
+    <a href="{{ url('/') }}" class="relative z-10 inline-flex items-center gap-2 px-5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 text-xs font-bold rounded-full shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+        <i class="far fa-compass"></i>
+        <span>Khám phá thư viện</span>
+    </a>
 </div>
 @else
 <div class="relative border-l-2 border-slate-300 ml-6">
