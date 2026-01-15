@@ -169,9 +169,18 @@
                     </div>
 
                     {{-- Search Name --}}
-                    <form method="GET" action="{{ route('user.comics.filter') }}">
+                    <form method="GET" action="{{ route('user.comics.filter') }}" id="filter-search-form">
+                        {{-- Preserve existing query parameters --}}
+                        @if(request('categories'))
+                            @foreach((array)request('categories') as $category)
+                                <input type="hidden" name="categories[]" value="{{ $category }}">
+                            @endforeach
+                        @endif
+                        @if(request('sort'))
+                            <input type="hidden" name="sort" value="{{ request('sort') }}">
+                        @endif
+                        
                         <div class="group relative mb-4">
-
                             <div class="relative">
                                 <input
                                     type="text"
@@ -179,12 +188,17 @@
                                     value="{{ request('q') }}"
                                     placeholder="Nhập tên truyện..."
                                     class="w-full bg-slate-50 border border-slate-200 rounded-lg
-                                    px-3 py-2 pl-9 text-xs text-slate-700 font-medium
+                                    px-3 py-2 pl-9 pr-9 text-xs text-slate-700 font-medium
                                     focus:bg-white focus:border-brand-blue focus:ring-1 focus:ring-brand-blue
                                     outline-none transition-all placeholder-slate-400">
 
                                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2
-                                text-slate-400 text-xs group-focus-within:text-brand-blue transition-colors"></i>
+                                text-slate-400 text-xs group-focus-within:text-brand-blue transition-colors pointer-events-none"></i>
+                                
+                                <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2
+                                text-slate-400 hover:text-brand-blue transition-colors focus:outline-none">
+                                    <i class="fas fa-arrow-right text-xs"></i>
+                                </button>
                             </div>
                         </div>
                     </form>

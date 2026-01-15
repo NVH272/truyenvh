@@ -28,7 +28,17 @@ class ComicFilterController extends Controller
         $comicsQuery->withAvg('ratings', 'rating')
             ->withCount('ratings');
 
+        // 4) Xử lý tìm kiếm theo query parameter 'q'
+        $q = trim((string) $request->query('q', ''));
+        if ($q !== '') {
+            $comicsQuery->where(function ($query) use ($q) {
+                $query->where('title', 'like', "%{$q}%")
+                    ->orWhere('slug', 'like', "%{$q}%")
+                    ->orWhere('author', 'like', "%{$q}%");
+            });
+        }
 
+        // 5) Filter theo categories
         if (!empty($selected)) {
             $comicsQuery->whereHas('categories', function ($q) use ($selected) {
                 $q->whereIn('categories.slug', $selected);
@@ -75,7 +85,8 @@ class ComicFilterController extends Controller
             'categories',
             'comics',
             'selected',
-            'sort'
+            'sort',
+            'q'
         ));
     }
 

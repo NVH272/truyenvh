@@ -148,7 +148,7 @@
             <div class="flex items-center gap-3">
 
                 <!-- SEARCH BAR -->
-                <form action="{{ route('user.comics.filter') }}" method="GET" class="relative hidden md:block group">
+                <form action="{{ route('user.comics.filter') }}" method="GET" class="relative hidden md:block group" id="header-search-form">
                     <input
                         type="text"
                         name="q"
@@ -161,7 +161,7 @@
 
                     <button type="submit"
                         class="absolute right-3 top-1/2 -translate-y-1/2
-                        text-gray-400 group-hover:text-blue-600 transition">
+                        text-gray-400 group-hover:text-blue-600 transition focus:outline-none">
                         <i class="fas fa-search"></i>
                     </button>
                 </form>
