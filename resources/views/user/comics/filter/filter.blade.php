@@ -2,9 +2,7 @@
 
 @section('title', 'Kết quả tìm kiếm')
 
-@section('content')
-
-{{-- Config & Custom CSS --}}
+@push('head-scripts')
 <script>
     tailwind.config = {
         theme: {
@@ -23,6 +21,9 @@
         }
     }
 </script>
+@endpush
+
+@push('styles')
 <style>
     .line-clamp-2 {
         display: -webkit-box;
@@ -31,6 +32,9 @@
         overflow: hidden;
     }
 </style>
+@endpush
+
+@section('content')
 
 {{-- CONTENT BODY --}}
 <div class="container mx-auto px-4 py-8">
@@ -308,6 +312,7 @@
 </div>
 @endsection
 
+@push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const sortSelect = document.getElementById('sort-select');
@@ -325,3 +330,4 @@
         });
     });
 </script>
+@endpush

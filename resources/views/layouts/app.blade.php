@@ -8,12 +8,17 @@
     <title>@yield('title', 'TruyenVH - Đọc Truyện Tranh Online')</title>
     <link rel="icon" type="image/png" href="{{ asset('storage/logo/logoMini.png') }}">
 
+    <!-- Tailwind Config (must be before Tailwind script) -->
+    @stack('head-scripts')
+    
     <!-- Tailwind & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+    @stack('styles')
 
     <style>
         /* --- BASE STYLES --- */
@@ -112,7 +117,7 @@
     </div>
 
     <!-- HEADER -->
-    <header class="bg-white/90 shadow-sm sticky top-0 z-50 backdrop-blur-sm border-b border-gray-200 shrink-0">
+    <header class="bg-white/90 shadow-sm sticky top-0 z-50 backdrop-blur-sm border-b border-gray-200 shrink-0" style="will-change: transform; transform: translateZ(0);">
         <div class="container mx-auto px-4 h-16 flex items-center justify-between">
             <!-- Left: Logo & Nav -->
             <div class="flex items-center gap-8">
