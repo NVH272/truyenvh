@@ -3,138 +3,151 @@
 @section('title', 'Tủ truyện yêu thích')
 
 @section('content')
-<div class="bg-gray-50 min-h-screen pb-12">
-    {{-- HEADER SECTION WITH GRADIENT BACKGROUND --}}
-    <div class="bg-white border-b border-gray-200 mb-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {{-- Title & Stats --}}
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
-                        <span class="bg-red-100 text-red-600 p-2 rounded-lg">
-                            <i class="fas fa-heart"></i>
-                        </span>
-                        Truyện Đang Theo Dõi
+{{-- Sử dụng max-w-[1920px] để mở rộng không gian cho 7 cột --}}
+<div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6 min-h-screen">
+
+    {{-- HEADER: CLEAN GLASSY (Đồng bộ với Empty State) --}}
+    <div class="relative mb-8 p-[2px] rounded-[2rem] bg-gradient-to-br from-rose-100 via-white to-pink-50 shadow-sm">
+
+        {{-- Lớp kính mờ bên trong --}}
+        <div class="relative bg-white/60 backdrop-blur-xl rounded-[calc(2rem-2px)] p-6 md:p-8 flex flex-col md:flex-row items-center md:items-start gap-6">
+
+            {{-- Icon đại diện (Gọn, nổi bật trên nền trắng) --}}
+            <div class="shrink-0">
+                <div class="w-16 h-16 md:w-20 md:h-20 bg-white rounded-2xl shadow-[0_8px_20px_-6px_rgba(244,63,94,0.2)] border border-rose-50 flex items-center justify-center group">
+                    <i class="fas fa-heart text-3xl md:text-4xl bg-gradient-to-br from-rose-500 to-pink-600 bg-clip-text text-transparent group-hover:scale-110 transition-transform duration-300"></i>
+                </div>
+            </div>
+
+            {{-- Nội dung text --}}
+            <div class="flex-1 text-center md:text-left">
+                <div class="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 mb-2">
+                    <h1 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">
+                        Truyện đang theo dõi
                     </h1>
+
+                    {{-- Badge thống kê nhỏ gọn --}}
+                    @if($comics->total() > 0)
+                    <span class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-rose-50 border border-rose-100 text-rose-600 text-xs font-bold uppercase tracking-wide mx-auto md:mx-0">
+                        {{ $comics->total() }} bộ truyện
+                    </span>
+                    @endif
                 </div>
 
-                <div class="flex items-center gap-2 bg-indigo-50 px-4 py-2 rounded-full border border-indigo-100">
-                    <span class="text-indigo-600 font-bold text-lg">{{ $comics->total() }}</span>
-                    <span class="text-indigo-900 text-sm font-medium">truyện trong tủ</span>
-                </div>
+                <p class="text-slate-500 font-medium text-sm md:text-base leading-relaxed max-w-2xl">
+                    Danh sách những bộ truyện bạn đang theo dõi. Mọi cập nhật chương mới sẽ hiển thị tại đây.
+                </p>
             </div>
         </div>
     </div>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        @if($comics->isEmpty())
-        {{-- EMPTY STATE MODERN --}}
-        <div class="flex flex-col items-center justify-center bg-white rounded-2xl shadow-sm border border-gray-100 p-16 text-center max-w-2xl mx-auto">
-            <div class="relative mb-6">
-                <div class="absolute inset-0 bg-red-100 rounded-full animate-ping opacity-75"></div>
-                <div class="relative bg-red-50 text-red-500 w-24 h-24 rounded-full flex items-center justify-center text-4xl shadow-inner">
-                    <i class="fas fa-heart-broken"></i>
-                </div>
+    @if($comics->isEmpty())
+    {{-- EMPTY STATE: Glassy --}}
+    <div class="relative p-[2px] rounded-[2.5rem] bg-gradient-to-br from-slate-100 via-white to-slate-50 shadow-lg mt-8 max-w-2xl mx-auto">
+        <div class="bg-white/80 backdrop-blur-xl rounded-[2.4rem] p-10 text-center relative overflow-hidden">
+            {{-- Icon và nội dung --}}
+            <div class="w-20 h-20 bg-slate-50 rounded-2xl mx-auto flex items-center justify-center text-3xl text-slate-300 mb-5 shadow-sm border border-slate-100">
+                <i class="far fa-folder-open"></i>
             </div>
-            <h2 class="text-2xl font-bold text-gray-800 mb-3">Tủ truyện của bạn đang trống</h2>
-            <p class="text-gray-500 mb-8 max-w-md mx-auto">
-                Có vẻ như bạn chưa lưu bộ truyện nào. Hãy khám phá thư viện và nhấn nút <span class="font-bold text-red-500"><i class="fas fa-heart"></i> Theo dõi</span> để nhận thông báo khi có chap mới nhé!
-            </p>
-            <a href="{{ url('/') }}"
-                class="inline-flex items-center px-8 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-base font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200">
-                <i class="fas fa-compass mr-2"></i> Khám phá ngay
+            <h3 class="text-xl font-bold text-slate-900 mb-3">Tủ truyện đang trống</h3>
+            <a href="{{ url('/') }}" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold text-white bg-rose-600 rounded-xl hover:bg-rose-700 transition-colors shadow-lg shadow-rose-600/20">
+                Tìm truyện để theo dõi &rarr;
             </a>
         </div>
-        @else
-        {{-- COMIC GRID --}}
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-6 gap-y-10">
-            @foreach($comics as $comic)
-            <a href="{{ route('user.comics.show', $comic) }}"
-                class="group relative flex flex-col bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 border border-transparent hover:border-gray-100 pb-3">
-
-                {{-- Card Image Wrapper --}}
-                <div class="relative w-full aspect-[2/3] rounded-t-xl overflow-hidden mb-3">
-
-                    {{-- Image --}}
-                    <img src="{{ $comic->cover_url }}"
-                        alt="{{ $comic->title }}"
-                        class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500 ease-in-out">
-
-                    {{-- Bỏ overlay gradient tối, chỉ giữ ảnh --}}
-
-                    {{-- Badge: Chapter (Top Left) --}}
-                    <div class="absolute top-2 left-2 pointer-events-none z-20">
-                        <span class="px-2 py-1 text-[10px] font-bold bg-black/70 text-white rounded-md backdrop-blur-sm shadow-sm">
-                            {{ $comic->chapter_count ?? 0 }} chương
-                        </span>
-                    </div>
-
-                    {{-- Badge: Status (Top Right - dạng chữ như mẫu) --}}
-                    <div class="absolute top-2 right-2 pointer-events-none z-20">
-                        @if($comic->status === 'ongoing')
-                        <span class="px-2 py-1 text-[10px] font-bold bg-blue-600/90 text-white rounded-md shadow-sm">
-                            Đang tiến hành
-                        </span>
-                        @elseif($comic->status === 'completed')
-                        <span class="px-2 py-1 text-[10px] font-bold bg-green-600/90 text-white rounded-md shadow-sm">
-                            Hoàn thành
-                        </span>
-                        @else
-                        <span class="px-2 py-1 text-[10px] font-bold bg-yellow-600/90 text-white rounded-md shadow-sm">
-                            Tạm dừng
-                        </span>
-                        @endif
-                    </div>
-
-                    {{-- Overlay Stats (Bottom - vệt đen mỏng đủ đọc chữ) --}}
-                    <div class="absolute inset-x-0 bottom-0 pt-4 pb-2 px-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex justify-between items-end text-[11px] text-white/90 pointer-events-none z-20">
-                        <span class="flex items-center gap-1">
-                            <i class="fas fa-eye text-[10px]"></i>
-                            {{ number_format($comic->views ?? 0) }}
-                        </span>
-                        <span class="flex items-center gap-1">
-                            <i class="fas fa-heart text-red-400 text-[10px]"></i>
-                            {{ number_format($comic->follows ?? 0) }}
-                        </span>
-                    </div>
-                </div>
-
-                {{-- Card Body --}}
-                <div class="px-3 flex flex-col gap-1.5">
-                    {{-- Title --}}
-                    <h3 class="font-bold text-gray-800 text-sm leading-tight line-clamp-2 min-h-[2.5em] group-hover:text-indigo-600 transition-colors"
-                        title="{{ $comic->title }}">
-                        {{ $comic->title }}
-                    </h3>
-
-                    {{-- Rating (sao + (avg • count)) --}}
-                    @php
-                    $avgRating = (float)($comic->rating_avg ?? $comic->rating ?? 0);
-                    $ratingCount = (int)($comic->reviews_count ?? $comic->rating_count ?? 0);
-                    $rounded = round($avgRating);
-                    @endphp
-                    <div class="flex items-center gap-0.5 text-[11px]">
-                        <x-rating-stars :rating="$avgRating" />
-                        <span class="text-gray-500 ml-1">({{ number_format($avgRating, 1) }} • {{ $ratingCount }})</span>
-                    </div>
-
-                    {{-- Author --}}
-                    <div class="flex items-center text-xs text-gray-500">
-                        <i class="fas fa-user-edit text-[10px] mr-1.5 w-3 text-center"></i>
-                        <span class="truncate">{{ $comic->author ?? 'Đang cập nhật' }}</span>
-                    </div>
-                </div>
-            </a>
-            @endforeach
-        </div>
-
-        {{-- PAGINATION --}}
-        <!-- <div class="mt-12 mb-8 flex justify-center">
-            <div class="bg-white px-4 py-3 rounded-xl shadow-sm border border-gray-100">
-                {{ $comics->links() }}
-            </div>
-        </div> -->
-        @endif
     </div>
+    @else
+    {{-- COMIC GRID: 7 CỘT --}}
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-[repeat(7,minmax(0,1fr))] gap-3 gap-y-6">
+        @foreach($comics as $comic)
+        {{-- CARD START: Code y hệt trang tác giả --}}
+        <div class="group relative flex flex-col transition-all duration-300 hover:-translate-y-1">
+
+            {{-- Stretched link --}}
+            <a href="{{ route('user.comics.show', $comic->slug) }}"
+                class="absolute inset-0 z-30"
+                aria-label="{{ $comic->title }}"></a>
+
+            {{-- Cover Image Wrapper --}}
+            <div class="relative aspect-[2/3] rounded-lg overflow-hidden shadow-sm border border-slate-200 bg-slate-100
+                            group-hover:shadow-md group-hover:border-rose-500/50 transition-all duration-300">
+
+                <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}"
+                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    loading="lazy">
+
+                {{-- Badge: Chapter --}}
+                <div class="absolute top-1.5 left-1.5 pointer-events-none z-20">
+                    <span class="px-1.5 py-0.5 text-[9px] font-bold bg-black/70 text-white rounded backdrop-blur-sm shadow-sm">
+                        {{ $comic->chapter_count ?? 0 }} chương
+                    </span>
+                </div>
+
+                {{-- Badge: Status --}}
+                <div class="absolute top-1.5 right-1.5 pointer-events-none z-20">
+                    @if($comic->status === 'ongoing')
+                    <span class="px-1.5 py-0.5 text-[9px] font-bold bg-blue-600/90 text-white rounded shadow-sm backdrop-blur-sm">
+                        Đang tiến hành
+                    </span>
+                    @elseif($comic->status === 'completed')
+                    <span class="px-1.5 py-0.5 text-[9px] font-bold bg-green-600/90 text-white rounded shadow-sm backdrop-blur-sm">
+                        Hoàn thành
+                    </span>
+                    @else
+                    <span class="px-1.5 py-0.5 text-[9px] font-bold bg-yellow-600/90 text-white rounded shadow-sm backdrop-blur-sm">
+                        Tạm dừng
+                    </span>
+                    @endif
+                </div>
+
+                {{-- Overlay Stats --}}
+                <div class="absolute inset-x-0 bottom-0 pt-6 pb-1.5 px-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex justify-between items-end text-[10px] text-white/90 pointer-events-none z-20">
+                    <span class="flex items-center gap-1">
+                        <i class="fas fa-eye text-[9px]"></i>
+                        {{ number_format($comic->views ?? 0) }}
+                    </span>
+                    <span class="flex items-center gap-1">
+                        <i class="fas fa-heart text-rose-400 text-[9px]"></i>
+                        {{ number_format($comic->follows ?? 0) }}
+                    </span>
+                </div>
+            </div>
+
+            {{-- Content Below Image --}}
+            <div class="mt-2 space-y-1 relative z-20 pointer-events-none px-0.5">
+                <h3 class="text-[13px] font-bold text-slate-700 line-clamp-2 leading-snug
+                                group-hover:text-rose-600 transition-colors min-h-[2.6em]"
+                    title="{{ $comic->title }}">
+                    {{ $comic->title }}
+                </h3>
+
+                {{-- Rating (sao + (avg • count)) --}}
+                @php
+                $avgRating = (float)($comic->rating_avg ?? $comic->rating ?? 0);
+                $ratingCount = (int)($comic->reviews_count ?? $comic->rating_count ?? 0);
+                $rounded = round($avgRating);
+                @endphp
+                <div class="flex items-center gap-0.5 text-[11px]">
+                    <x-rating-stars :rating="$avgRating" />
+                    <span class="text-gray-500 ml-1">({{ number_format($avgRating, 1) }} • {{ $ratingCount }})</span>
+                </div>
+
+                {{-- Author --}}
+                <div class="text-[11px] text-slate-500 truncate pt-1" title="Tác giả">
+                    <i class="fas fa-user-edit text-[9px] mr-1 text-slate-400"></i>
+                    {{ $comic->author ?? 'Đang cập nhật' }}
+                </div>
+            </div>
+        </div>
+        {{-- CARD END --}}
+        @endforeach
+    </div>
+
+    {{-- PAGINATION --}}
+    @if($comics->hasPages())
+    <div class="mt-12 flex justify-center">
+        {{ $comics->links() }}
+    </div>
+    @endif
+    @endif
 </div>
 @endsection

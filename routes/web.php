@@ -251,7 +251,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'isAdmin', 'verified
     // Resource route cho comics (phải đặt sau các route đặc biệt để tránh conflict)
     Route::resource('comics', ComicController::class)->except(['show']);
 
-    // Lịch sử duyệt truyện (đã duyệt + đã từ chối)
+    // Lịch sử duyệt truyện
     Route::get('/comics/review-history', [ComicController::class, 'reviewHistory'])
         ->name('comics.review_history');
 

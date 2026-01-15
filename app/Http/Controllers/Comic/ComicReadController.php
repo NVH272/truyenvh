@@ -138,6 +138,13 @@ class ComicReadController extends Controller
             ->orderByDesc('chapter_number')
             ->first();
 
+        $topViewedComics = Comic::query()
+            ->withMax('chapters', 'chapter_number') // lấy chapter mới nhất
+            ->orderByDesc('views')
+            ->limit(5)
+            ->get();
+
+
         $bannedWords = \App\Models\BannedWord::where('is_active', 1)->pluck('word')->toArray();
 
         $this->countComicView($comic);
@@ -153,6 +160,7 @@ class ComicReadController extends Controller
             'firstChapter'      => $firstChapter,
             'latestChapter'     => $latestChapter,
             'bannedWords' => $bannedWords,
+            'topViewedComics'   => $topViewedComics,
         ]);
     }
 
