@@ -114,13 +114,14 @@
     {{-- 2. KHUNG HIỂN THỊ ẢNH --}}
     {{-- Không cần padding-top lớn vì header sẽ tự ẩn khi đọc --}}
     <div class="pt-0 w-full mx-auto bg-black">
-        <div class="flex flex-col items-center w-full gap-3">
+        <div class="flex flex-col items-center w-full gap-3" id="chapter-images-container">
             @foreach($chapter->pages as $p)
             {{-- Ảnh full width nhưng max-width hợp lý trên màn to --}}
             <img src="{{ $p->image_url }}"
                 alt="Trang {{ $p->page_index }}"
-                class="w-full max-w-4xl h-auto block mx-auto select-none"
-                loading="lazy">
+                class="chapter-image w-full max-w-4xl h-auto block mx-auto select-none"
+                loading="lazy"
+                data-page-index="{{ $p->page_index }}">
             @endforeach
         </div>
     </div>
@@ -178,37 +179,159 @@
 </div>
 @push('scripts')
 <script>
+    @if(auth()->check())
+    const currentChapterId = {{ $chapter->id }};
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
     let saveTimeout = null;
+    let isNavigating = false;
+    let maxProgress = 0; // Lưu progress cao nhất đã đạt được
 
+    // Function để tính progress hiện tại dựa trên số ảnh đã xem
+    function getCurrentProgress() {
+        const images = document.querySelectorAll('.chapter-image');
+        if (images.length === 0) return 0;
+        
+        const viewportBottom = window.innerHeight + window.pageYOffset;
+        let viewedCount = 0;
+        
+        images.forEach(function(img) {
+            const imgTop = img.getBoundingClientRect().top + window.pageYOffset;
+            // Nếu ảnh đã scroll qua (top của ảnh < bottom của viewport)
+            if (imgTop < viewportBottom) {
+                viewedCount++;
+            }
+        });
+        
+        return Math.min(100, Math.round((viewedCount / images.length) * 100));
+    }
+
+    // Function để cập nhật maxProgress cho thanh tiến trình (chỉ tăng, không giảm)
+    function updateMaxProgress(newProgress) {
+        // Chỉ cập nhật nếu progress mới lớn hơn progress cao nhất
+        if (newProgress > maxProgress) {
+            maxProgress = newProgress;
+            return true; // Có thay đổi
+        }
+        return false; // Không thay đổi
+    }
+
+    // Function để tính progress và lưu lịch sử (lưu progress hiện tại, có thể tăng hoặc giảm)
+    function saveReadingHistory() {
+        if (isNavigating) return;
+        
+        const currentProgress = getCurrentProgress();
+        // Cập nhật maxProgress cho thanh tiến trình (chỉ tăng)
+        updateMaxProgress(currentProgress);
+        
+        // Lưu progress hiện tại vào database (có thể tăng hoặc giảm)
+        fetch("{{ route('reading-history.store') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": csrfToken
+            },
+            body: JSON.stringify({
+                chapter_id: currentChapterId,
+                progress: currentProgress // Lưu progress hiện tại, không phải maxProgress
+            })
+        }).catch(err => console.error('Error saving reading history:', err));
+    }
+
+    // Lưu lịch sử khi scroll (có delay)
+    let lastSavedProgress = 0;
     window.addEventListener('scroll', function() {
-        @if(!auth()->check())
-        return;
-        @endif
-
-        const docHeight =
-            document.documentElement.scrollHeight - window.innerHeight;
-        if (docHeight <= 0) return;
-
-        const progress = Math.min(
-            100,
-            Math.round((window.scrollY / docHeight) * 100)
-        );
-
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(() => {
-            fetch("{{ route('reading-history.store') }}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({
-                    chapter_id: {{ $chapter->id }},
-                    progress: progress
-                })
-            });
-        }, 1500);
+        const currentProgress = getCurrentProgress();
+        
+        // Cập nhật maxProgress cho thanh tiến trình (chỉ tăng)
+        updateMaxProgress(currentProgress);
+        
+        // Chỉ lưu vào database nếu progress thay đổi đáng kể (ít nhất 5% hoặc khác với lần lưu trước)
+        if (Math.abs(currentProgress - lastSavedProgress) >= 5 || currentProgress === 100) {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                if (!isNavigating) {
+                    fetch("{{ route('reading-history.store') }}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": csrfToken
+                        },
+                        body: JSON.stringify({
+                            chapter_id: currentChapterId,
+                            progress: currentProgress // Lưu progress hiện tại
+                        })
+                    });
+                    lastSavedProgress = currentProgress;
+                }
+            }, 1500);
+        }
     });
+
+    // Lưu lịch sử khi click vào các nút chuyển chapter
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tìm tất cả các link chuyển chapter
+        const chapterLinks = document.querySelectorAll('a[href*="/comics/{{ $comic->id }}/chapter-"]');
+        
+        chapterLinks.forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                // Chỉ xử lý nếu không phải chapter hiện tại và không phải Ctrl/Cmd click (mở tab mới)
+                const isCurrentChapter = link.href.includes('/chapter-{{ $chapter->chapter_number }}');
+                const isNewTab = e.ctrlKey || e.metaKey || e.shiftKey || (e.button && e.button === 1);
+                
+                if (!isCurrentChapter && !isNewTab) {
+                    e.preventDefault();
+                    isNavigating = true;
+                    
+                    // Lưu lịch sử trước khi chuyển trang
+                    saveReadingHistory();
+                    
+                    // Đợi một chút để đảm bảo request được gửi đi
+                    setTimeout(function() {
+                        window.location.href = link.href;
+                    }, 150);
+                } else if (!isCurrentChapter && isNewTab) {
+                    // Nếu mở tab mới, vẫn lưu lịch sử nhưng không prevent default
+                    saveReadingHistory();
+                }
+            });
+        });
+    });
+
+    // Lấy progress hiện tại từ server khi load trang (nếu có)
+    @if(isset($currentProgress))
+    maxProgress = {{ $currentProgress }};
+    @else
+    // Nếu chưa có progress, khởi tạo từ progress hiện tại
+    document.addEventListener('DOMContentLoaded', function() {
+        const initialProgress = getCurrentProgress();
+        maxProgress = initialProgress;
+    });
+    @endif
+
+    // Lưu lịch sử khi rời trang (beforeunload) - backup cho trường hợp đóng tab
+    window.addEventListener('beforeunload', function() {
+        if (!isNavigating) {
+            const currentProgress = getCurrentProgress();
+            if (currentProgress > 0) {
+                // Lưu progress hiện tại (có thể tăng hoặc giảm)
+                const formData = new FormData();
+                formData.append('chapter_id', currentChapterId);
+                formData.append('progress', currentProgress);
+                formData.append('_token', csrfToken);
+                
+                // Gửi bằng fetch với keepalive thay vì sendBeacon để có thể dùng headers
+                fetch("{{ route('reading-history.store') }}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": csrfToken
+                    },
+                    body: formData,
+                    keepalive: true // Đảm bảo request được gửi ngay cả khi trang đang đóng
+                });
+            }
+        }
+    });
+    @endif
 </script>
 @endpush
 

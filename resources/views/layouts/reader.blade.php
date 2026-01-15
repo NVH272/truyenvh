@@ -151,6 +151,30 @@ $isReaderPage = request()->routeIs('user.comics.chapters.read') || request()->ro
             // Biến trạng thái Header
             let isPinned = false;
 
+            // Biến lưu progress cao nhất đã đạt được (cho thanh tiến trình)
+            let maxProgress = 0;
+            
+            // Function tính progress dựa trên số ảnh đã xem
+            function calculateImageBasedProgress() {
+                const images = document.querySelectorAll('.chapter-image');
+                if (images.length === 0) return 0;
+                
+                const viewportBottom = window.innerHeight + window.pageYOffset;
+                let viewedCount = 0;
+                
+                images.forEach(function(img) {
+                    const imgTop = img.getBoundingClientRect().top + window.pageYOffset;
+                    const imgBottom = imgTop + img.offsetHeight;
+                    
+                    // Nếu ảnh đã scroll qua (top của ảnh < bottom của viewport)
+                    if (imgTop < viewportBottom) {
+                        viewedCount++;
+                    }
+                });
+                
+                return Math.min(100, Math.round((viewedCount / images.length) * 100));
+            }
+
             // Hàm cập nhật giao diện Header
             function updateHeaderInterface(show, atTop = false) {
                 if (!header) return; // Nếu không phải trang reader thì bỏ qua
@@ -193,11 +217,15 @@ $isReaderPage = request()->routeIs('user.comics.chapters.read') || request()->ro
             window.addEventListener('scroll', function() {
                 const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
-                // --- A. LOGIC THANH TIẾN TRÌNH ---
+                // --- A. LOGIC THANH TIẾN TRÌNH (dựa trên số ảnh đã xem, chỉ tăng không giảm) ---
                 if (progressBar) {
-                    const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-                    const scrolled = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-                    progressBar.style.width = scrolled + '%';
+                    const currentProgress = calculateImageBasedProgress();
+                    // Chỉ cập nhật nếu progress hiện tại lớn hơn progress cao nhất
+                    if (currentProgress > maxProgress) {
+                        maxProgress = currentProgress;
+                    }
+                    // Luôn hiển thị progress cao nhất đã đạt được
+                    progressBar.style.width = maxProgress + '%';
                 }
 
                 // --- B. LOGIC ẨN/HIỆN HEADER ---

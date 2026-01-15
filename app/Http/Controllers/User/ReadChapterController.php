@@ -48,7 +48,18 @@ class ReadChapterController extends Controller
 
         $this->countChapterView($chapter);
 
-        return view('user.comics.chapters.read', compact('comic', 'chapter', 'prevChapter', 'nextChapter', 'firstChapter', 'latestChapter'));
+        // Lấy progress hiện tại của chapter này (nếu có)
+        $currentProgress = 0;
+        if (auth()->check()) {
+            $history = ReadingHistory::where('user_id', auth()->id())
+                ->where('chapter_id', $chapter->id)
+                ->first();
+            if ($history) {
+                $currentProgress = $history->progress;
+            }
+        }
+
+        return view('user.comics.chapters.read', compact('comic', 'chapter', 'prevChapter', 'nextChapter', 'firstChapter', 'latestChapter', 'currentProgress'));
     }
 
     private function countChapterView($chapter)
