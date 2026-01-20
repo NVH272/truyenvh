@@ -45,31 +45,61 @@ class CategoryController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'name'        => 'required|string|max:255',
-            'slug'        => 'nullable|string|max:255|unique:categories,slug',
-            'description' => 'nullable|string',
-            'status'      => 'required|in:0,1', // radio trong form của bạn
-        ]);
+        // Kiểm tra tên đã tồn tại trước
+        $name = trim($request->input('name'));
+        if (Category::where('name', $name)->exists()) {
+            return back()
+                ->withInput()
+                ->withErrors(['name' => 'Tên thể loại "' . $name . '" đã tồn tại. Vui lòng chọn tên khác.']);
+        }
+
+        $data = $request->validate(
+            [
+                'name'        => 'required|string|max:255|unique:categories,name',
+                'slug'        => 'nullable|string|max:255|unique:categories,slug',
+                'description' => 'nullable|string',
+                'status'      => 'required|in:0,1',
+            ],
+            [
+                'name.required' => 'Tên thể loại là bắt buộc.',
+                'name.unique' => 'Tên thể loại đã tồn tại. Vui lòng chọn tên khác.',
+                'slug.unique' => 'Slug đã tồn tại. Vui lòng nhập slug khác.',
+                'status.required' => 'Trạng thái là bắt buộc.',
+                'status.in' => 'Trạng thái không hợp lệ.',
+            ]
+        );
 
         // Nếu slug trống → tự generate từ name
         $slug = $data['slug'] ?? '';
         if (trim($slug) === '') {
             $slug = Str::slug($data['name']);
+            
+            // Kiểm tra slug tự generate có bị trùng không
+            if (Category::where('slug', $slug)->exists()) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['name' => 'Thể loại với tên này đã tồn tại (slug tự động tạo bị trùng). Vui lòng nhập slug thủ công.']);
+            }
         } else {
-            // Người dùng có nhập, mình cũng normalize lại cho đẹp
+            // Người dùng có nhập, normalize lại cho đẹp
             $slug = Str::slug($slug);
         }
 
-        Category::create([
-            'name'        => $data['name'],
-            'slug'        => $slug,
-            'description' => $data['description'] ?? null,
-            'is_active'   => $data['status'], // map radio status → cột is_active
-        ]);
+        try {
+            Category::create([
+                'name'        => $data['name'],
+                'slug'        => $slug,
+                'description' => $data['description'] ?? null,
+                'is_active'   => $data['status'],
+            ]);
 
-        return redirect()->route('admin.categories.index')
-            ->with('success', 'Category created successfully.');
+            return redirect()->route('admin.categories.index')
+                ->with('success', 'Thể loại đã được tạo thành công.');
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->withErrors(['error' => 'Có lỗi xảy ra khi tạo thể loại: ' . $e->getMessage()]);
+        }
     }
 
 
@@ -85,29 +115,81 @@ class CategoryController extends Controller
 
     public function update(Request $request, Category $category)
     {
-        $data = $request->validate([
+        $name = trim($request->input('name'));
+        
+        // Kiểm tra nếu tên không thay đổi thì không cần validate unique
+        $nameChanged = $name !== $category->name;
+        
+        // Nếu tên đã thay đổi, kiểm tra xem tên mới có bị trùng không
+        if ($nameChanged) {
+            if (Category::where('name', $name)->where('id', '!=', $category->id)->exists()) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['name' => 'Tên thể loại "' . $name . '" đã tồn tại. Vui lòng chọn tên khác.']);
+            }
+        }
+
+        // Validation rules: chỉ validate unique nếu tên thay đổi
+        $validationRules = [
             'name'        => 'required|string|max:255',
-            'slug'        => 'nullable|string|max:255|unique:categories,slug,' . $category->id,
+            'slug'        => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'status'      => 'required|in:0,1',
-        ]);
+        ];
 
-        $slug = $data['slug'] ?? '';
+        // Chỉ thêm unique rule nếu tên thay đổi
+        if ($nameChanged) {
+            $validationRules['name'] .= '|unique:categories,name,' . $category->id;
+        }
+
+        // Kiểm tra slug unique (bỏ qua chính nó)
+        $slug = trim($request->input('slug', ''));
+        if (!empty($slug)) {
+            $validationRules['slug'] .= '|unique:categories,slug,' . $category->id;
+        }
+
+        $data = $request->validate(
+            $validationRules,
+            [
+                'name.required' => 'Tên thể loại là bắt buộc.',
+                'name.unique' => 'Tên thể loại đã tồn tại. Vui lòng chọn tên khác.',
+                'slug.unique' => 'Slug đã tồn tại. Vui lòng nhập slug khác.',
+                'status.required' => 'Trạng thái là bắt buộc.',
+                'status.in' => 'Trạng thái không hợp lệ.',
+            ]
+        );
+
+        // Nếu slug trống → tự generate từ name
         if (trim($slug) === '') {
             $slug = Str::slug($data['name']);
+            
+            // Kiểm tra slug tự generate có bị trùng không (bỏ qua chính nó)
+            $existingCategory = Category::where('slug', $slug)->where('id', '!=', $category->id)->first();
+            if ($existingCategory) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['name' => 'Thể loại với tên này đã tồn tại (slug tự động tạo bị trùng). Vui lòng nhập slug thủ công.']);
+            }
         } else {
+            // Người dùng có nhập, normalize lại cho đẹp
             $slug = Str::slug($slug);
         }
 
-        $category->update([
-            'name'        => $data['name'],
-            'slug'        => $slug,
-            'description' => $data['description'] ?? null,
-            'is_active'   => $data['status'],
-        ]);
+        try {
+            $category->update([
+                'name'        => $data['name'],
+                'slug'        => $slug,
+                'description' => $data['description'] ?? null,
+                'is_active'   => $data['status'],
+            ]);
 
-        return redirect()->route('admin.categories.index')
-            ->with('success', 'Category updated successfully.');
+            return redirect()->route('admin.categories.index')
+                ->with('success', 'Thể loại đã được cập nhật thành công.');
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->withErrors(['error' => 'Có lỗi xảy ra khi cập nhật thể loại: ' . $e->getMessage()]);
+        }
     }
 
 

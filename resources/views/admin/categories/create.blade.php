@@ -10,6 +10,30 @@
         <i class="fas fa-arrow-left mr-2 group-hover:-translate-x-1 transition-transform"></i> Quay lại danh sách
     </a>
 
+    <!-- Error Messages -->
+    @if ($errors->any())
+    <div class="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm" role="alert">
+        <div class="flex items-center gap-2 font-bold mb-2">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Vui lòng kiểm tra các lỗi sau:</span>
+        </div>
+        <ul class="list-disc list-inside space-y-1 opacity-90 pl-1">
+            @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
+
+    @if (session('error'))
+    <div class="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm" role="alert">
+        <div class="flex items-center gap-2 font-bold">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>{{ session('error') }}</span>
+        </div>
+    </div>
+    @endif
+
     <!-- Main Form Card -->
     <div class="bg-slate-800 border border-slate-700 rounded-xl shadow-xl overflow-hidden">
         <div class="border-b border-slate-700 px-6 py-4 bg-slate-900/30">
@@ -25,14 +49,26 @@
                 <!-- Name Input -->
                 <div class="space-y-2">
                     <label class="text-xs font-bold text-slate-300 uppercase tracking-wider">Tên Thể loại <span class="text-red-500">*</span></label>
-                    <input type="text" name="name" class="admin-input w-full px-4 py-2.5 rounded-lg text-sm bg-slate-900/50 border-slate-600 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-white placeholder-slate-600 transition" placeholder="Ví dụ: Isekai, Học đường..." required>
+                    <input type="text" name="name" value="{{ old('name') }}" class="admin-input w-full px-4 py-2.5 rounded-lg text-sm bg-slate-900/50 border-slate-600 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-white placeholder-slate-600 transition {{ $errors->has('name') ? 'border-red-500' : '' }}" placeholder="Ví dụ: Isekai, Học đường..." required>
+                    @error('name')
+                    <p class="text-xs text-red-400 mt-1 flex items-center gap-1">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ $message }}
+                    </p>
+                    @enderror
                 </div>
 
                 <!-- Slug Input -->
                 <div class="space-y-2">
                     <label class="text-xs font-bold text-slate-300 uppercase tracking-wider">Slug (URL)</label>
-                    <input type="text" name="slug" class="admin-input w-full px-4 py-2.5 rounded-lg text-sm font-mono-tech bg-slate-900/50 border-slate-600 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-orange-400 placeholder-slate-600 transition" placeholder="vi-du-isekai-hoc-duong">
+                    <input type="text" name="slug" value="{{ old('slug') }}" class="admin-input w-full px-4 py-2.5 rounded-lg text-sm font-mono-tech bg-slate-900/50 border-slate-600 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-orange-400 placeholder-slate-600 transition {{ $errors->has('slug') ? 'border-red-500' : '' }}" placeholder="vi-du-isekai-hoc-duong">
                     <p class="text-[10px] text-slate-500 italic">Để trống sẽ tự động tạo từ tên.</p>
+                    @error('slug')
+                    <p class="text-xs text-red-400 mt-1 flex items-center gap-1">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ $message }}
+                    </p>
+                    @enderror
                 </div>
             </div>
 

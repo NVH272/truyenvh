@@ -27,7 +27,7 @@
     <div class="bg-slate-800 border border-slate-700/60 rounded-2xl shadow-xl overflow-hidden">
         <div class="bg-slate-700/30 px-6 py-4 border-b border-slate-700/60 flex items-center gap-2">
             <i class="fas fa-plus-circle text-blue-500"></i>
-            <h3 class="font-semibold text-slate-200 text-sm uppercase tracking-wide">Thêm từ mới</h3>
+            <h3 class="font-semibold text-slate-200 text-sm uppercase tracking-wide">Thêm từ mới - Cập nhật</h3>
         </div>
         <div class="p-6">
             <form method="POST" action="{{ route('admin.banned_words.store') }}" class="flex flex-col md:flex-row gap-4 items-start md:items-end">

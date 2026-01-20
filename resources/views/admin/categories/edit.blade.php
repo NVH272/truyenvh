@@ -21,6 +21,30 @@
         </form>
     </div>
 
+    <!-- Error Messages -->
+    @if ($errors->any())
+    <div class="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm" role="alert">
+        <div class="flex items-center gap-2 font-bold mb-2">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Vui lòng kiểm tra các lỗi sau:</span>
+        </div>
+        <ul class="list-disc list-inside space-y-1 opacity-90 pl-1">
+            @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
+
+    @if (session('error'))
+    <div class="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm" role="alert">
+        <div class="flex items-center gap-2 font-bold">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>{{ session('error') }}</span>
+        </div>
+    </div>
+    @endif
+
     <!-- Main Form Card -->
     <div class="bg-slate-800 border border-slate-700 rounded-xl shadow-xl overflow-hidden relative">
         <!-- Orange Stripe Indicator -->
@@ -42,13 +66,25 @@
                 <!-- Name Input -->
                 <div class="space-y-2">
                     <label class="text-xs font-bold text-slate-300 uppercase tracking-wider">Tên Thể loại</label>
-                    <input type="text" name="name" value="{{ old('name', $category->name) }}" class="admin-input w-full px-4 py-2.5 rounded-lg text-sm bg-slate-900/50 border-slate-600 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-white transition" required>
+                    <input type="text" name="name" value="{{ old('name', $category->name) }}" class="admin-input w-full px-4 py-2.5 rounded-lg text-sm bg-slate-900/50 border-slate-600 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-white transition {{ $errors->has('name') ? 'border-red-500' : '' }}" required>
+                    @error('name')
+                    <p class="text-xs text-red-400 mt-1 flex items-center gap-1">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ $message }}
+                    </p>
+                    @enderror
                 </div>
 
                 <!-- Slug Input -->
                 <div class="space-y-2">
                     <label class="text-xs font-bold text-slate-300 uppercase tracking-wider">Slug (URL)</label>
-                    <input type="text" name="slug" value="{{ old('slug', $category->slug) }}" class="admin-input w-full px-4 py-2.5 rounded-lg text-sm font-mono-tech bg-slate-900/50 border-slate-600 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-orange-400 transition" required>
+                    <input type="text" name="slug" value="{{ old('slug', $category->slug) }}" class="admin-input w-full px-4 py-2.5 rounded-lg text-sm font-mono-tech bg-slate-900/50 border-slate-600 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-orange-400 transition {{ $errors->has('slug') ? 'border-red-500' : '' }}" required>
+                    @error('slug')
+                    <p class="text-xs text-red-400 mt-1 flex items-center gap-1">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ $message }}
+                    </p>
+                    @enderror
                 </div>
             </div>
 
