@@ -64,15 +64,8 @@
                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
                     </div>
 
-                    {{-- Badge: Chapter (Top Left) --}}
-                    <div class="absolute top-1.5 left-1.5 pointer-events-none z-20"> {{-- z-20 để nổi lên trên link phủ --}}
-                        <span class="px-1.5 py-0.5 text-[9px] font-bold bg-black/70 text-white rounded backdrop-blur-sm shadow-sm">
-                            {{ $comic->chapter_count ?? 0 }} chương
-                        </span>
-                    </div>
-
-                    {{-- Badge: Status (Top Right) --}}
-                    <div class="absolute top-1.5 right-1.5 pointer-events-none z-20">
+                {{-- Badge: Status (Top Left) --}}
+                <div class="absolute top-1.5 left-1.5 pointer-events-none z-20">
                         @if($comic->status === 'ongoing')
                         <span class="px-1.5 py-0.5 text-[9px] font-bold bg-blue-600/90 text-white rounded shadow-sm">Đang tiến hành</span>
                         @elseif($comic->status === 'completed')
@@ -112,7 +105,7 @@
                 </div>
 
                 {{-- Content Below Image --}}
-                <div class="mt-2 space-y-1 relative z-20"> {{-- z-20 để text nổi lên trên (nếu cần select text) --}}
+                <div class="mt-2 space-y-0.5 relative z-20"> {{-- z-20 để text nổi lên trên (nếu cần select text) --}}
                     {{-- Title --}}
                     <h3 class="text-[13px] font-bold text-slate-800 dark:text-slate-200 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors" title="{{ $comic->title }}">
                         {{-- Link ở đây không cần thiết nữa vì đã có stretched link phủ toàn bộ thẻ, nhưng giữ lại để chuẩn semantic --}}
@@ -120,6 +113,11 @@
                             {{ $comic->title }}
                         </span>
                     </h3>
+
+                    {{-- Chapter count (dưới tên truyện) --}}
+                    <div class="text-[11px] text-slate-500 -mt-0.5">
+                        {{ $comic->chapter_count ?? 0 }} chương
+                    </div>
 
                     {{-- Pending status --}}
                     <div class="flex items-center gap-1 text-[10px] mt-0.5">

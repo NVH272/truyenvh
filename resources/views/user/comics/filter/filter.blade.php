@@ -70,15 +70,8 @@
                         <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}"
                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
 
-                        {{-- Badge: Chapter (Top Left) --}}
+                        {{-- Badge: Status (Top Left) --}}
                         <div class="absolute top-1.5 left-1.5 pointer-events-none z-20">
-                            <span class="px-1.5 py-0.5 text-[9px] font-bold bg-black/70 text-white rounded backdrop-blur-sm shadow-sm">
-                                {{ $comic->chapter_count ?? 0 }} chương
-                            </span>
-                        </div>
-
-                        {{-- Badge: Status (Top Right) (dạng chữ như mẫu) --}}
-                        <div class="absolute top-1.5 right-1.5 pointer-events-none z-20">
                             @if($comic->status === 'ongoing')
                             <span class="px-1.5 py-0.5 text-[9px] font-bold bg-blue-600/90 text-white rounded shadow-sm">
                                 Đang tiến hành
@@ -108,12 +101,17 @@
                     </div>
 
                     {{-- Content Below Image --}}
-                    <div class="mt-2 space-y-1 relative z-20 pointer-events-none px-0.5">
+                    <div class="mt-2 space-y-0.5 relative z-20 pointer-events-none px-0.5">
                         <h3 class="text-[13px] font-bold text-slate-700 line-clamp-2 leading-snug
-                        group-hover:text-brand-blue transition-colors min-h-[2.6em]"
+                        group-hover:text-brand-blue transition-colors"
                             title="{{ $comic->title }}">
                             {{ $comic->title }}
                         </h3>
+
+                        {{-- Chapter count (dưới tên truyện) --}}
+                        <div class="text-[11px] text-slate-500 -mt-0.5">
+                            {{ $comic->chapter_count ?? 0 }} chương
+                        </div>
 
                         {{-- Rating (read-only) --}}
                         @php

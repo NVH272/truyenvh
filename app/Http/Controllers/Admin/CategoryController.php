@@ -86,14 +86,14 @@ class CategoryController extends Controller
         }
 
         try {
-            Category::create([
-                'name'        => $data['name'],
-                'slug'        => $slug,
-                'description' => $data['description'] ?? null,
+        Category::create([
+            'name'        => $data['name'],
+            'slug'        => $slug,
+            'description' => $data['description'] ?? null,
                 'is_active'   => $data['status'],
-            ]);
+        ]);
 
-            return redirect()->route('admin.categories.index')
+        return redirect()->route('admin.categories.index')
                 ->with('success', 'Thể loại đã được tạo thành công.');
         } catch (\Exception $e) {
             return back()
@@ -176,14 +176,14 @@ class CategoryController extends Controller
         }
 
         try {
-            $category->update([
-                'name'        => $data['name'],
-                'slug'        => $slug,
-                'description' => $data['description'] ?? null,
-                'is_active'   => $data['status'],
-            ]);
+        $category->update([
+            'name'        => $data['name'],
+            'slug'        => $slug,
+            'description' => $data['description'] ?? null,
+            'is_active'   => $data['status'],
+        ]);
 
-            return redirect()->route('admin.categories.index')
+        return redirect()->route('admin.categories.index')
                 ->with('success', 'Thể loại đã được cập nhật thành công.');
         } catch (\Exception $e) {
             return back()
