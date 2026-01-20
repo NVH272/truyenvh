@@ -427,6 +427,10 @@
                     <div class="nav-icon-wrapper"><i class="fas fa-comment-dots text-lg"></i></div>
                     <span class="sidebar-text">Bình luận vi phạm</span>
                 </a>
+                <a href="{{ route('admin.reports.index') }}" class="nav-item text-slate-400 rounded-lg" title="Xử lý vi phạm">
+                    <div class="nav-icon-wrapper"><i class="fas fa-chart-column text-lg"></i></div>
+                    <span class="sidebar-text">Báo cáo thống kê</span>
+                </a>
                 <a href="#" class="nav-item text-slate-400 rounded-lg" title="Cài đặt hệ thống">
                     <div class="nav-icon-wrapper"><i class="fas fa-cog text-lg"></i></div>
                     <span class="sidebar-text">Cài đặt hệ thống</span>

@@ -89,4 +89,10 @@ class Comic extends Model
         return $this->belongsToMany(User::class, 'comic_follows')
             ->withTimestamps();
     }
+
+    public function readingHistories()
+    {
+        // Giả sử khóa ngoại trong bảng reading_histories là 'comic_id'
+        return $this->hasMany(ReadingHistory::class, 'comic_id', 'id');
+    }
 }

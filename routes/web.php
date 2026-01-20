@@ -9,6 +9,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NewPasswordController;
 use App\Http\Controllers\PasswordResetLinkController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PolicyController;
 
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\CategoryController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ViolationController;
 use App\Http\Controllers\Admin\BannedWordController;
 use App\Http\Controllers\Admin\AdminChapterController;
+use App\Http\Controllers\Admin\ReportController;
 
 use App\Http\Controllers\User\UserProfileController;
 use App\Http\Controllers\User\UserComicController;
@@ -33,7 +35,7 @@ use App\Http\Controllers\Comic\ComicFollowController;
 use App\Http\Controllers\Comic\ComicSearchController;
 use App\Http\Controllers\Comic\ComicCommentController;
 use App\Http\Controllers\Comic\ComicFilterController;
-use App\Http\Controllers\Comic\AuthorController;
+use App\Http\Controllers\Comic\ComicAuthorController;
 
 
 /*
@@ -63,7 +65,17 @@ Route::get('/comics/filter', [ComicFilterController::class, 'index'])
     ->name('user.comics.filter');
 
 // Trang tác giả
-Route::get('/author/{author}', [\App\Http\Controllers\Comic\ComicAuthorController::class, 'show'])->name('user.comics.author.show');
+Route::get('/author/{author}', [ComicAuthorController::class, 'show'])
+    ->name('user.comics.author.show');
+
+// Nhóm các trang thông tin (Policies & Info)
+Route::controller(PolicyController::class)->group(function () {
+    Route::get('/lien-he', 'contact')->name('contact');
+    Route::get('/ve-chung-toi', 'about')->name('about');
+    Route::get('/dieu-khoan-dich-vu', 'terms')->name('terms');
+    Route::get('/chinh-sach-bao-mat', 'privacy')->name('privacy');
+    Route::get('/mien-tru-trach-nhiem', 'disclaimer')->name('disclaimer');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -272,6 +284,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'isAdmin', 'verified
     Route::get('/chapters', [AdminChapterController::class, 'index'])->name('chapters.index');
     Route::get('chapters/{comic}', [AdminChapterController::class, 'index'])->name('chapters.by-comic');
     Route::delete('/comics/{comic}/chapters/{chapter}', [AdminChapterController::class, 'destroy'])->name('chapters.destroy');
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
 });
 
 // Route::post('/reading-history', [ReadingHistoryController::class, 'store'])

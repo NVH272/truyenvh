@@ -328,14 +328,14 @@
 
                 <div class="lg:col-span-5 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <ul class="space-y-3">
-                        <li><a href="#" class="hover:text-white transition-colors">Về chúng tôi</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Điều khoản dịch vụ</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Chính sách bảo mật</a></li>
+                        <li><a href="{{ route('about') }}" class="hover:text-white transition-colors">Về chúng tôi</a></li>
+                        <li><a href="{{ route('terms') }}" class="hover:text-white transition-colors">Điều khoản dịch vụ</a></li>
+                        <li><a href="{{ route('privacy') }}" class="hover:text-white transition-colors">Chính sách bảo mật</a></li>
                     </ul>
 
                     <ul class="space-y-3">
-                        <li><a href="#" class="hover:text-white transition-colors">Phương thức liên hệ</a></li>
-                        <li><a href="#" class="hover:text-white transition-colors">Tuyên bố miễn trừ trách nhiệm</a></li>
+                        <li><a href="{{ route('contact') }}" class="hover:text-white transition-colors">Phương thức liên hệ</a></li>
+                        <li><a href="{{ route('disclaimer') }}" class="hover:text-white transition-colors">Tuyên bố miễn trừ trách nhiệm</a></li>
                     </ul>
                 </div>
 
