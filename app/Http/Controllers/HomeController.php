@@ -10,6 +10,42 @@ class HomeController extends Controller
 {
     public function index()
     {
+
+        // 1. TOP THỊNH HÀNH (Sắp xếp theo View giảm dần, lấy 10)
+        $trendingComics = Comic::orderBy('views', 'desc')->take(10)->get();
+
+        // 2. MỚI CẬP NHẬT (Lấy 30 truyện để vừa đẹp lưới 5 cột x 6 hàng)
+        $newUpdateComics = Comic::where('approval_status', 'approved') // Chỉ lấy truyện đã duyệt
+            ->whereNotNull('last_chapter_at') // Bắt buộc phải có chương mới tính
+            ->orderBy('last_chapter_at', 'desc') // Mới nhất lên đầu
+            ->take(30) // Lấy 30 truyện (5 cột x 6 hàng)
+            ->get();
+
+        // 3. TOP THEO DÕI (Lấy 5 truyện)
+        $topFollowComics = Comic::orderBy('follows', 'desc')->take(5)->get();
+
+        $topViewedComics = Comic::query()
+            ->withMax('chapters', 'chapter_number') // lấy chapter mới nhất
+            ->orderByDesc('views')
+            ->limit(5)
+            ->get();
+
+        // Lấy 5 truyện view cao nhất cho slider
+        $sliderComics = Comic::orderBy('views', 'desc')
+            ->take(5)
+            ->get();
+
+        // JS của bạn đang cần các trường: img, title, desc, url, badge
+        $sliderData = $sliderComics->map(function ($comic) {
+            return [
+                'img'   => $comic->cover_url, // Đường dẫn ảnh bìa
+                'title' => $comic->title,
+                'desc'  => \Str::limit($comic->description, 100), // Cắt ngắn mô tả
+                'url'   => route('user.comics.show', $comic->slug), // Link truyện
+                'badge' => $comic->status === 'ongoing' ? 'Hot' : 'Full', // Badge hiển thị
+            ];
+        });
+
         // Chỉ lấy truyện đã được duyệt
         $baseQuery = Comic::where('approval_status', 'approved');
 
@@ -130,7 +166,11 @@ class HomeController extends Controller
             'trendingData'  => $trendingData,
             'updatesData'   => $updatesData,
             'sidebarData'   => $sidebarData,
-            'genreSections' => $genreSections, // dùng cho các hàng “Truyện HangTruyen / Gợi ý / Tuyển chọn...”
+            'genreSections' => $genreSections,
+            'trendingComics' => $trendingComics,
+            'newUpdateComics' => $newUpdateComics,
+            'topFollowComics' => $topFollowComics,
+            'topViewedComics' => $topViewedComics,
         ]);
     }
 }

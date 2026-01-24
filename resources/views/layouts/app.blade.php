@@ -104,6 +104,26 @@
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
+
+        .chatbox {
+            position: fixed;
+            bottom: -500px;
+            /* ẩn dưới màn hình */
+            right: 20px;
+            width: 320px;
+            height: 420px;
+            z-index: 1100;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            transition: bottom 0.15s ease-in-out;
+            /* hiệu ứng trượt */
+        }
+
+        .chatbox.show {
+            bottom: 20px;
+            /* trượt lên khi mở */
+        }
     </style>
 </head>
 
@@ -304,6 +324,127 @@
             </div>
         </div>
         @endif
+        <!-- Chatbox -->
+        <div id="chat-box-container" class="chatbox card shadow-lg">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <span>💬 Hỗ trợ</span>
+                <button id="chat-close" class="btn btn-sm btn-light">×</button>
+            </div>
+
+            <div class="card-body" id="chat-box" style="overflow-y: auto; flex: 1;">
+                <div id="chat-messages">
+                    {{-- Render messages --}}
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <form id="chat-form" action="" method="POST" class="d-flex">
+                    @csrf
+                    <input type="hidden" id="chat-receiver" name="receiver_id" value="">
+                    <input type="text" name="message" class="form-control me-2" placeholder="Nhập tin nhắn..." required>
+                    <button class="btn btn-primary">Gửi</button>
+                </form>
+
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const chatToggle = document.getElementById("chat-toggle");
+                const chatBox = document.getElementById("chat-box-container");
+                const chatClose = document.getElementById("chat-close");
+                const chatMessages = document.getElementById("chat-messages");
+                const chatForm = document.getElementById("chat-form");
+
+                // ===== Hàm cuộn xuống cuối =====
+                function scrollToBottom(smooth = true) {
+                    if (smooth) {
+                        chatMessages.scrollTo({
+                            top: chatMessages.scrollHeight,
+                            behavior: "smooth"
+                        });
+                    } else {
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
+                }
+
+                // ===== Load tin nhắn =====
+                function loadMessages() {
+                    fetch("#", {
+                            headers: {
+                                "X-Requested-With": "XMLHttpRequest"
+                            }
+                        })
+                        .then(res => res.text())
+                        .then(html => {
+                            chatMessages.innerHTML = html;
+                            scrollToBottom(false); // cuộn ngay lập tức xuống cuối
+                        });
+                }
+
+                // ===== Hàm cuộn xuống cuối =====
+                function scrollToBottom(smooth = true) {
+                    if (smooth) {
+                        chatMessages.scrollTo({
+                            top: chatMessages.scrollHeight,
+                            behavior: "smooth"
+                        });
+                    } else {
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
+                }
+
+                // ===== Mở chat =====
+                chatToggle.addEventListener("click", function() {
+                    chatBox.classList.add("show");
+                    chatToggle.style.display = "none";
+
+                    loadMessages();
+
+                    // Đợi loadMessages() render xong rồi cuộn
+                    setTimeout(() => scrollToBottom(false), 300);
+                });
+
+
+                // ===== Đóng chat =====
+                chatClose.addEventListener("click", function() {
+                    chatBox.classList.remove("show");
+                    chatToggle.style.display = "flex";
+                });
+
+                // ===== Gửi tin nhắn AJAX =====
+                chatForm.addEventListener("submit", function(e) {
+                    e.preventDefault();
+
+                    let formData = new FormData(chatForm);
+
+                    fetch("#", {
+                            method: "POST",
+                            body: formData,
+                            headers: {
+                                "X-Requested-With": "XMLHttpRequest",
+                                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+                            }
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                chatForm.reset();
+                                loadMessages();
+                                setTimeout(() => scrollToBottom(true), 100); // cuộn mượt sau khi gửi
+                            }
+                        })
+                        .catch(err => console.error("Lỗi gửi tin:", err));
+                });
+
+                // ===== Tự refresh tin nhắn mỗi 5 giây =====
+                setInterval(() => {
+                    if (chatBox.classList.contains("show")) {
+                        loadMessages();
+                    }
+                }, 5000);
+            });
+        </script>
 
     </main>
 

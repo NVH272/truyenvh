@@ -23,90 +23,201 @@
         </div>
     </section>
 
-    {{-- SECTION 2: TOP THỊNH HÀNH --}}
+    {{-- SECTION 2: TOP THỊNH HÀNH (DESIGN Y HỆT GENRE CARD) --}}
     <section>
         <div class="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
             <h2 class="text-xl md:text-2xl font-extrabold text-blue-700 uppercase flex items-center gap-2">
                 <i class="fas fa-fire text-red-500"></i> Top thịnh hành
             </h2>
             <div class="flex gap-2">
-                <button type="button" onclick="scrollSection('trending-list', -300)"
-                    class="w-8 h-8 rounded border border-gray-300 hover:bg-blue-50 text-gray-500 hover:text-blue-600 transition flex items-center justify-center">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <button type="button" onclick="scrollSection('trending-list', 300)"
-                    class="w-8 h-8 rounded border border-gray-300 hover:bg-blue-50 text-gray-500 hover:text-blue-600 transition flex items-center justify-center">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
+                <button type="button" onclick="scrollSection('trending-list', -300)" class="w-8 h-8 rounded border border-gray-300 hover:bg-blue-50 text-gray-500 hover:text-blue-600 transition flex items-center justify-center"><i class="fas fa-chevron-left"></i></button>
+                <button type="button" onclick="scrollSection('trending-list', 300)" class="w-8 h-8 rounded border border-gray-300 hover:bg-blue-50 text-gray-500 hover:text-blue-600 transition flex items-center justify-center"><i class="fas fa-chevron-right"></i></button>
             </div>
         </div>
 
-        <div id="trending-list"
-            class="flex gap-4 overflow-x-auto hide-scrollbar scrolling-wrapper pb-4">
-            {{-- JS render từ biến trendingData --}}
+        <div id="trending-list" class="flex gap-4 overflow-x-auto hide-scrollbar scrolling-wrapper pb-4">
+            @foreach($trendingComics as $index => $comic)
+            {{-- Card giống hệt Genre: w-[140px] --}}
+            <div class="flex-none w-[140px] group relative bg-transparent rounded-md overflow-hidden transition-all duration-300 hover:-translate-y-1">
+
+                <a href="{{ route('user.comics.show', $comic->slug) }}" class="absolute inset-0 z-10" aria-label="{{ $comic->title }}"></a>
+
+                {{-- Ảnh bìa aspect-[2/3] --}}
+                <div class="relative aspect-[2/3] rounded-md overflow-hidden shadow-md border border-slate-700/50 group-hover:shadow-lg group-hover:border-blue-500/50 transition-all">
+                    <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+
+                    {{-- Rank Badge (Chỉ khác biệt phần này là có thêm số thứ tự) --}}
+                    @php
+                    $rankClass = match($index) {
+                    0 => 'bg-red-600',
+                    1 => 'bg-orange-500',
+                    2 => 'bg-yellow-500',
+                    default => 'bg-gray-800/80'
+                    };
+                    @endphp
+                    <span class="absolute top-0 right-0 {{ $rankClass }} text-white px-2 py-0.5 text-[10px] font-bold rounded-bl-md shadow-sm z-20">#{{ $index + 1 }}</span>
+
+                    {{-- Stats Overlay --}}
+                    <div class="absolute inset-x-0 bottom-0 pt-3 pb-1.5 px-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex justify-between items-end text-[10px] text-white/90 pointer-events-none z-20">
+                        <span class="flex items-center gap-1"><i class="fas fa-eye text-[9px]"></i> {{ number_format($comic->views) }}</span>
+                        <span class="flex items-center gap-1"><i class="fas fa-heart text-red-400 text-[9px]"></i> {{ number_format($comic->follows) }}</span>
+                    </div>
+                </div>
+
+                {{-- Content Below --}}
+                <div class="mt-2 space-y-1 relative z-20 pointer-events-none">
+                    <h3 class="text-[13px] font-bold text-slate-800 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors" title="{{ $comic->title }}">{{ $comic->title }}</h3>
+                    <div class="text-[11px] text-slate-500">{{ $comic->chapter_count }} chương</div>
+                    {{-- Rating (read-only) --}}
+                    @php
+                    $avgRating = $comic->rating_avg ?? $comic->rating ?? 0;
+                    $ratingCount = $comic->reviews_count ?? $comic->rating_count ?? 0;
+                    @endphp
+                    <div class="flex items-center gap-0.5 text-[10px]">
+                        <x-rating-stars :rating="$avgRating" class="shrink-0" />
+                        <span class="text-slate-500 ml-1">({{ number_format($avgRating, 1) }} • {{ $ratingCount }})</span>
+                    </div>
+                    {{-- Author --}}
+                    <div class="text-[11px] text-slate-500 truncate" title="Tác giả">
+                        <i class="fas fa-user-edit text-[9px] mr-1"></i> {{ $comic->author ?? 'Đang cập nhật' }}
+                    </div>
+                </div>
+            </div>
+            @endforeach
         </div>
     </section>
 
     {{-- SECTION 3: MỚI CẬP NHẬT + SIDEBAR --}}
     <div class="grid grid-cols-12 gap-8">
-        {{-- LEFT --}}
+        {{-- SECTION: MỚI CẬP NHẬT --}}
         <div class="col-span-12 lg:col-span-9">
             <div class="flex items-center justify-between mb-4 border-b border-gray-200 pb-2">
                 <h3 class="text-xl font-extrabold text-blue-700 uppercase flex items-center gap-2">
                     <i class="fas fa-clock text-blue-500"></i> Mới cập nhật
                 </h3>
-                <a href="{{ route('home') }}"
-                    class="text-xs font-semibold text-gray-400 hover:text-blue-600">
+                <a href="{{ route('home') }}" class="text-xs font-semibold text-gray-400 hover:text-blue-600">
                     Xem tất cả <i class="fas fa-angle-double-right"></i>
                 </a>
             </div>
 
-            <div id="updates-grid"
-                class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-8">
-                {{-- JS render từ updatesData --}}
+            {{-- Grid 30 items --}}
+            <div id="updates-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-6">
+                @foreach($newUpdateComics as $comic)
+                <div class="group relative bg-transparent rounded-md overflow-hidden transition-all duration-300 hover:-translate-y-1">
+
+                    <a href="{{ route('user.comics.show', $comic->slug) }}" class="absolute inset-0 z-10" aria-label="{{ $comic->title }}"></a>
+
+                    {{-- Ảnh bìa --}}
+                    <div class="relative aspect-[2/3] rounded-md overflow-hidden shadow-md border border-slate-700/50 group-hover:shadow-lg group-hover:border-blue-500/50 transition-all">
+                        <img src="{{ $comic->cover_url }}" alt="{{ $comic->title }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+
+                        {{-- Badge UP --}}
+                        <div class="absolute top-1.5 left-1.5 pointer-events-none z-20">
+                            <span class="px-1.5 py-0.5 text-[9px] font-bold bg-green-600/90 text-white rounded shadow-sm">UP</span>
+                        </div>
+
+                        {{-- Stats Overlay --}}
+                        <div class="absolute inset-x-0 bottom-0 pt-3 pb-1.5 px-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex justify-between items-end text-[10px] text-white/90 pointer-events-none z-20">
+                            <span class="flex items-center gap-1"><i class="fas fa-eye text-[9px]"></i> {{ number_format($comic->views) }}</span>
+                            <span class="flex items-center gap-1"><i class="fas fa-heart text-red-400 text-[9px]"></i> {{ number_format($comic->follows) }}</span>
+                        </div>
+                    </div>
+
+                    {{-- Thông tin --}}
+                    <div class="mt-2 space-y-1 relative z-20 pointer-events-none">
+                        <h3 class="text-[13px] font-bold text-slate-800 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors" title="{{ $comic->title }}">
+                            {{ $comic->title }}
+                        </h3>
+                        <div class="flex justify-between items-center">
+                            <div class="text-[11px] text-slate-500">{{ $comic->chapter_count }} chương</div>
+                            {{-- SỬA Ở ĐÂY: Dùng last_chapter_at thay vì updated_at --}}
+                            <div class="text-[10px] text-gray-400 italic">
+                                {{ \Carbon\Carbon::parse($comic->last_chapter_at)->diffForHumans(null, true, true) }}
+                            </div>
+                        </div>
+                        <div class="text-[11px] text-slate-500 truncate">
+                            <i class="fas fa-user-edit text-[9px] mr-1"></i> {{ $comic->author ?? 'N/A' }}
+                        </div>
+                    </div>
+                </div>
+                @endforeach
             </div>
         </div>
 
         {{-- RIGHT SIDEBAR --}}
         <aside class="col-span-12 lg:col-span-3 space-y-6">
-            {{-- TOP THEO DÕI --}}
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div class="p-4 border-b border-gray-100">
-                    <h4 class="font-bold text-blue-700 uppercase text-sm mb-3">Top theo dõi</h4>
-                    <div class="flex bg-gray-100 p-1 rounded-lg">
-                        <button type="button" onclick="switchTab('day')"
-                            id="tab-day"
-                            class="flex-1 py-1 text-[11px] font-bold rounded text-center bg-white shadow-sm text-blue-600 tab-btn">
+            <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100">
+                {{-- HEADER --}}
+                <div class="px-5 py-3 border-b border-gray-100 flex justify-between items-center">
+                    <h3 class="font-bold text-gray-800 text-base border-l-4 border-blue-600 pl-3 uppercase">
+                        Top Theo Dõi
+                    </h3>
+                    {{-- Tabs --}}
+                    <div class="flex gap-1">
+                        <button type="button" onclick="switchTab('day')" id="tab-day"
+                            class="text-[10px] px-2 py-0.5 bg-blue-600 text-white rounded-full tab-btn transition-colors">
                             Ngày
                         </button>
-                        <button type="button" onclick="switchTab('week')"
-                            id="tab-week"
-                            class="flex-1 py-1 text-[11px] font-bold rounded text-center text-gray-500 hover:text-gray-700 tab-btn">
+                        <button type="button" onclick="switchTab('week')" id="tab-week"
+                            class="text-[10px] px-2 py-0.5 bg-gray-200 text-gray-500 rounded-full hover:bg-gray-300 tab-btn transition-colors">
                             Tuần
                         </button>
-                        <button type="button" onclick="switchTab('month')"
-                            id="tab-month"
-                            class="flex-1 py-1 text-[11px] font-bold rounded text-center text-gray-500 hover:text-gray-700 tab-btn">
+                        <button type="button" onclick="switchTab('month')" id="tab-month"
+                            class="text-[10px] px-2 py-0.5 bg-gray-200 text-gray-500 rounded-full hover:bg-gray-300 tab-btn transition-colors">
                             Tháng
                         </button>
                     </div>
                 </div>
 
-                <div id="sidebar-list" class="p-2 space-y-2">
-                    {{-- JS render từ sidebarData --}}
+                {{-- LIST --}}
+                <div id="sidebar-list" class="divide-y divide-gray-100">
+                    @foreach($topFollowComics as $index => $comic)
+                    <div class="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors cursor-pointer group">
+
+                        {{-- Thứ hạng --}}
+                        <span class="w-6 h-6 flex-shrink-0 flex items-center justify-center rounded-full
+                {{ $index < 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600' }}
+                text-xs font-bold">
+                            {{ $index + 1 }}
+                        </span>
+
+                        {{-- Ảnh bìa (giữ nguyên tỷ lệ và kích thước như mẫu bạn đưa) --}}
+                        <div class="w-12 h-16 flex-shrink-0 rounded overflow-hidden border border-gray-200 shadow-sm">
+                            <a href="{{ route('user.comics.show', $comic->slug) }}" class="block w-full h-full">
+                                <img src="{{ $comic->cover_url }}"
+                                    class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                    alt="{{ $comic->title }}">
+                            </a>
+                        </div>
+
+                        {{-- Thông tin --}}
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-sm font-bold text-gray-800 group-hover:text-blue-600 truncate transition-colors">
+                                <a href="{{ route('user.comics.show', $comic->slug) }}">
+                                    {{ $comic->title }}
+                                </a>
+                            </h4>
+
+                            <div class="flex justify-between items-center mt-1.5">
+                                {{-- Số chương --}}
+                                <span class="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                                    {{ $comic->chapter_count }} chương
+                                </span>
+
+                                {{-- Lượt theo dõi --}}
+                                <span class="text-xs text-gray-500 flex items-center gap-1">
+                                    <i class="fas fa-heart text-red-500 text-[10px]"></i>
+                                    {{ number_format($comic->follows) }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
                 </div>
             </div>
 
-            {{-- History --}}
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                <h4 class="font-bold text-gray-700 uppercase text-sm mb-3 border-b pb-2">
-                    Lịch sử đọc
-                </h4>
-                <div class="text-center py-4 text-gray-400 text-xs">
-                    <i class="fas fa-history text-2xl mb-2 block"></i>
-                    Chưa có lịch sử nào
-                </div>
-            </div>
+            {{-- TOP LƯỢT XEM --}}
+            @include('user.comics.partials.topview')
         </aside>
     </div>
 

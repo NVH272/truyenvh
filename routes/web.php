@@ -10,6 +10,7 @@ use App\Http\Controllers\NewPasswordController;
 use App\Http\Controllers\PasswordResetLinkController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PolicyController;
+use App\Http\Controllers\ChatController;
 
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\CategoryController;
@@ -82,6 +83,7 @@ Route::controller(PolicyController::class)->group(function () {
 | LOGGED ROUTES
 |--------------------------------------------------------------------------
 */
+
 
 // Theo dõi & đánh giá: yêu cầu user đã xác thực email
 Route::middleware(['auth', 'verified'])->group(function () {
