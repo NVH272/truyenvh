@@ -7,75 +7,161 @@
 
     {{-- HEADER --}}
     <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-bold text-slate-800">
+        <h1 class="text-2xl font-bold text-slate-100">
             📊 Thống kê & Báo cáo
         </h1>
     </div>
 
-    {{-- GRID BIỂU ĐỒ --}}
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+    {{-- KPI TỔNG QUAN --}}
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-4 shadow-lg">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div>
+                    <p class="text-slate-400 text-xs font-medium uppercase">Truyện</p>
+                    <p class="text-xl font-bold text-white">{{ number_format($totalComics) }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-4 shadow-lg">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                    <i class="fas fa-list-alt"></i>
+                </div>
+                <div>
+                    <p class="text-slate-400 text-xs font-medium uppercase">Chương</p>
+                    <p class="text-xl font-bold text-white">{{ number_format($totalChapters) }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-4 shadow-lg">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-400">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div>
+                    <p class="text-slate-400 text-xs font-medium uppercase">Người dùng</p>
+                    <p class="text-xl font-bold text-white">{{ number_format($totalUsers) }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-4 shadow-lg">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-rose-500/20 flex items-center justify-center text-rose-400">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <div>
+                    <p class="text-slate-400 text-xs font-medium uppercase">Lượt xem</p>
+                    <p class="text-xl font-bold text-white">{{ number_format($totalViews) }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-4 shadow-lg">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center text-violet-400">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <div>
+                    <p class="text-slate-400 text-xs font-medium uppercase">Theo dõi</p>
+                    <p class="text-xl font-bold text-white">{{ number_format($totalFollows) }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-4 shadow-lg">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center text-cyan-400">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <div>
+                    <p class="text-slate-400 text-xs font-medium uppercase">Bình luận</p>
+                    <p class="text-xl font-bold text-white">{{ number_format($totalComments) }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        {{-- BIỂU ĐỒ LƯỢT ĐỌC THEO NGÀY --}}
-        <div class="bg-white rounded-lg shadow p-5">
-            <h2 class="font-semibold text-slate-700 mb-4">
-                📈 Lượt đọc 7 ngày gần nhất
-            </h2>
-            <div class="relative h-64">
+    {{-- BIỂU ĐỒ THEO THỜI GIAN (7 ngày) --}}
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5 shadow-lg">
+            <h2 class="font-semibold text-slate-200 mb-4">📈 Lượt đọc 7 ngày</h2>
+            <div class="relative h-56">
                 <canvas id="viewsByDayChart"></canvas>
             </div>
         </div>
-
-        {{-- BIỂU ĐỒ NGƯỜI DÙNG MỚI --}}
-        <div class="bg-white rounded-lg shadow p-5">
-            <h2 class="font-semibold text-slate-700 mb-4">
-                👤 Người dùng mới
-            </h2>
-            <div class="relative h-64">
+        <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5 shadow-lg">
+            <h2 class="font-semibold text-slate-200 mb-4">👤 Người dùng mới</h2>
+            <div class="relative h-56">
                 <canvas id="usersByDayChart"></canvas>
             </div>
         </div>
+        <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5 shadow-lg">
+            <h2 class="font-semibold text-slate-200 mb-4">💬 Bình luận mới</h2>
+            <div class="relative h-56">
+                <canvas id="commentsByDayChart"></canvas>
+            </div>
+        </div>
+    </div>
 
-        {{-- BIỂU ĐỒ TOP TRUYỆN --}}
-        <div class="bg-white rounded-lg shadow p-5 xl:col-span-2">
-            <h2 class="font-semibold text-slate-700 mb-4">
-                📚 Top truyện nhiều lượt đọc
-            </h2>
-            <div class="relative h-80">
+    {{-- TOP TRUYỆN & TRẠNG THÁI --}}
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5 shadow-lg">
+            <h2 class="font-semibold text-slate-200 mb-4">📚 Top truyện theo lượt đọc (phiên đọc)</h2>
+            <div class="relative h-64">
                 <canvas id="topComicsChart"></canvas>
             </div>
         </div>
-
+        <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5 shadow-lg">
+            <h2 class="font-semibold text-slate-200 mb-4">🔥 Top truyện theo lượt xem</h2>
+            <div class="relative h-64">
+                <canvas id="topComicsByViewsChart"></canvas>
+            </div>
+        </div>
+        <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5 shadow-lg">
+            <h2 class="font-semibold text-slate-200 mb-4">❤️ Top truyện theo theo dõi</h2>
+            <div class="relative h-64">
+                <canvas id="topComicsByFollowsChart"></canvas>
+            </div>
+        </div>
+        <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5 shadow-lg">
+            <h2 class="font-semibold text-slate-200 mb-4">📂 Truyện theo trạng thái</h2>
+            <div class="relative h-64 flex items-center justify-center">
+                <canvas id="comicsByStatusChart"></canvas>
+            </div>
+        </div>
     </div>
+
 </div>
 @endsection
 
 @push('scripts')
-{{-- Chart.js --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script>
-    /* =========================
-           LƯỢT ĐỌC THEO NGÀY
-       ==========================*/
-    const viewsCtx = document.getElementById('viewsByDayChart').getContext('2d');
+// Màu nền cho Chart (dark)
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = 'rgba(71, 85, 105, 0.5)';
+Chart.defaults.font.family = "'Nunito', sans-serif";
 
-    // Tạo gradient màu cho đẹp
-    const gradientViews = viewsCtx.createLinearGradient(0, 0, 0, 400);
-    gradientViews.addColorStop(0, 'rgba(59, 130, 246, 0.5)'); // Blue
-    gradientViews.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+const chartLabels = @json($chartLabels);
 
-    new Chart(viewsCtx, {
+/* --- LƯỢT ĐỌC 7 NGÀY --- */
+(function() {
+    const ctx = document.getElementById('viewsByDayChart').getContext('2d');
+    const g = ctx.createLinearGradient(0, 0, 0, 250);
+    g.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
+    g.addColorStop(1, 'rgba(59, 130, 246, 0)');
+    new Chart(ctx, {
         type: 'line',
         data: {
-            // SỬA LỖI: Xóa khoảng trắng giữa - và >
-            labels: @json($viewsByDay->pluck('date')),
+            labels: chartLabels,
             datasets: [{
                 label: 'Lượt đọc',
-                data: @json($viewsByDay->pluck('total')),
-                borderColor: '#3b82f6', // Màu xanh dương
-                backgroundColor: gradientViews,
+                data: @json($viewsByDayData),
+                borderColor: '#3b82f6',
+                backgroundColor: g,
                 borderWidth: 2,
-                tension: 0.4, // Làm mềm đường cong
+                tension: 0.4,
                 fill: true,
                 pointRadius: 4,
                 pointHoverRadius: 6
@@ -84,40 +170,29 @@
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
+            plugins: { legend: { display: false } },
             scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    }
-                }
+                y: { beginAtZero: true, ticks: { stepSize: 1 } }
             }
         }
     });
+})();
 
-    /* =========================
-           NGƯỜI DÙNG MỚI
-       ==========================*/
-    const usersCtx = document.getElementById('usersByDayChart').getContext('2d');
-
-    const gradientUsers = usersCtx.createLinearGradient(0, 0, 0, 400);
-    gradientUsers.addColorStop(0, 'rgba(16, 185, 129, 0.5)'); // Green
-    gradientUsers.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
-
-    new Chart(usersCtx, {
+/* --- NGƯỜI DÙNG MỚI --- */
+(function() {
+    const ctx = document.getElementById('usersByDayChart').getContext('2d');
+    const g = ctx.createLinearGradient(0, 0, 0, 250);
+    g.addColorStop(0, 'rgba(16, 185, 129, 0.4)');
+    g.addColorStop(1, 'rgba(16, 185, 129, 0)');
+    new Chart(ctx, {
         type: 'line',
         data: {
-            labels: @json($usersByDay->pluck('date')),
+            labels: chartLabels,
             datasets: [{
                 label: 'Người dùng mới',
-                data: @json($usersByDay->pluck('total')),
+                data: @json($usersByDayData),
                 borderColor: '#10b981',
-                backgroundColor: gradientUsers,
+                backgroundColor: g,
                 borderWidth: 2,
                 tension: 0.4,
                 fill: true,
@@ -127,65 +202,141 @@
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
+            plugins: { legend: { display: false } },
             scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    }
-                }
+                y: { beginAtZero: true, ticks: { stepSize: 1 } }
             }
         }
     });
+})();
 
-    /* =========================
-           TOP TRUYỆN
-       ==========================*/
-    new Chart(document.getElementById('topComicsChart'), {
-        type: 'bar',
+/* --- BÌNH LUẬN MỚI --- */
+(function() {
+    const ctx = document.getElementById('commentsByDayChart').getContext('2d');
+    const g = ctx.createLinearGradient(0, 0, 0, 250);
+    g.addColorStop(0, 'rgba(6, 182, 212, 0.4)');
+    g.addColorStop(1, 'rgba(6, 182, 212, 0)');
+    new Chart(ctx, {
+        type: 'line',
         data: {
-            // SỬA LỖI: Xóa khoảng trắng
-            labels: @json($topComics->pluck('title')),
+            labels: chartLabels,
             datasets: [{
-                label: 'Lượt đọc',
-                data: @json($topComics->pluck('reading_histories_count')),
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.7)',
-                    'rgba(54, 162, 235, 0.7)',
-                    'rgba(255, 206, 86, 0.7)',
-                    'rgba(75, 192, 192, 0.7)',
-                    'rgba(153, 102, 255, 0.7)'
-                ],
-                borderColor: [
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)'
-                ],
-                borderWidth: 1,
-                borderRadius: 4
+                label: 'Bình luận',
+                data: @json($commentsByDayData),
+                borderColor: '#06b6d4',
+                backgroundColor: g,
+                borderWidth: 2,
+                tension: 0.4,
+                fill: true,
+                pointRadius: 4
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
+            plugins: { legend: { display: false } },
             scales: {
-                y: {
-                    beginAtZero: true
-                }
+                y: { beginAtZero: true, ticks: { stepSize: 1 } }
             }
         }
     });
+})();
+
+/* --- TOP TRUYỆN (lượt đọc / phiên đọc) --- */
+new Chart(document.getElementById('topComicsChart'), {
+    type: 'bar',
+    data: {
+        labels: @json($topComicsTitles),
+        datasets: [{
+            label: 'Lượt đọc',
+            data: @json($topComics->pluck('reading_histories_count')),
+            backgroundColor: ['rgba(59, 130, 246, 0.7)', 'rgba(16, 185, 129, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(239, 68, 68, 0.7)', 'rgba(139, 92, 246, 0.7)'],
+            borderColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+            borderWidth: 1,
+            borderRadius: 6
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { beginAtZero: true }
+        }
+    }
+});
+
+/* --- TOP TRUYỆN THEO LƯỢT XEM --- */
+new Chart(document.getElementById('topComicsByViewsChart'), {
+    type: 'bar',
+    data: {
+        labels: @json($topComicsByViewsTitles),
+        datasets: [{
+            label: 'Lượt xem',
+            data: @json($topComicsByViews->pluck('views')),
+            backgroundColor: ['rgba(239, 68, 68, 0.7)', 'rgba(249, 115, 22, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(34, 197, 94, 0.7)', 'rgba(59, 130, 246, 0.7)'],
+            borderColor: ['#ef4444', '#f97316', '#f59e0b', '#22c55e', '#3b82f6'],
+            borderWidth: 1,
+            borderRadius: 6
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { beginAtZero: true }
+        }
+    }
+});
+
+/* --- TOP TRUYỆN THEO THEO DÕI --- */
+new Chart(document.getElementById('topComicsByFollowsChart'), {
+    type: 'bar',
+    data: {
+        labels: @json($topComicsByFollowsTitles),
+        datasets: [{
+            label: 'Theo dõi',
+            data: @json($topComicsByFollows->pluck('follows')),
+            backgroundColor: ['rgba(236, 72, 153, 0.7)', 'rgba(168, 85, 247, 0.7)', 'rgba(59, 130, 246, 0.7)', 'rgba(20, 184, 166, 0.7)', 'rgba(34, 197, 94, 0.7)'],
+            borderColor: ['#ec4899', '#a855f7', '#3b82f6', '#14b8a6', '#22c55e'],
+            borderWidth: 1,
+            borderRadius: 6
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { beginAtZero: true }
+        }
+    }
+});
+
+/* --- TRUYỆN THEO TRẠNG THÁI (Doughnut) --- */
+new Chart(document.getElementById('comicsByStatusChart'), {
+    type: 'doughnut',
+    data: {
+        labels: @json($comicsByStatusLabels),
+        datasets: [{
+            data: @json($comicsByStatusData),
+            backgroundColor: ['rgba(59, 130, 246, 0.8)', 'rgba(16, 185, 129, 0.8)', 'rgba(245, 158, 11, 0.8)'],
+            borderColor: ['#3b82f6', '#10b981', '#f59e0b'],
+            borderWidth: 2,
+            hoverOffset: 8
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'bottom' }
+        }
+    }
+});
 </script>
 @endpush
