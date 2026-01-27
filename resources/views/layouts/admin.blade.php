@@ -275,15 +275,7 @@
             filter: blur(0px);
             pointer-events: auto;
         }
-    </style>
 
-    <script>
-        // Script chạy ngay lập tức để tránh FOUC
-        if (localStorage.getItem('sidebar-collapsed') === 'true') {
-            document.documentElement.classList.add('sidebar-closed');
-        }
-    </script>
-    <style>
         /* CSS Override khi script trên hoạt động ngay lúc load trang */
         .sidebar-closed #sidebar {
             width: 5.5rem !important;
@@ -321,28 +313,13 @@
             padding-left: 0;
             justify-content: center;
         }
-
-        /* Chatbox styles */
-        .admin-chatbox {
-            position: fixed;
-            bottom: -500px;
-            right: 20px;
-            width: 320px;
-            height: 420px;
-            z-index: 1100;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            transition: bottom 0.15s ease-in-out;
-            background: #1e293b;
-            border: 1px solid #334155;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-        }
-
-        .admin-chatbox.show {
-            bottom: 20px;
-        }
     </style>
+    <script>
+        // Script chạy ngay lập tức để tránh FOUC
+        if (localStorage.getItem('sidebar-collapsed') === 'true') {
+            document.documentElement.classList.add('sidebar-closed');
+        }
+    </script>
 </head>
 
 <body class="antialiased h-screen flex overflow-hidden bg-slate-900">
@@ -423,6 +400,10 @@
                     <div class="nav-icon-wrapper"><i class="fas fa-users text-lg"></i></div>
                     <span class="sidebar-text">Thành viên</span>
                 </a>
+                <a href="{{ route('admin.messages.index') }}" class="nav-item text-slate-400 rounded-lg" title="Live chat">
+                    <div class="nav-icon-wrapper"><i class="fas fa-comments text-lg"></i></div>
+                    <span class="sidebar-text">Live chat</span>
+                </a>
                 <a href="{{ route('admin.violation.index') }}" class="nav-item text-slate-400 rounded-lg" title="Xử lý vi phạm">
                     <div class="nav-icon-wrapper"><i class="fas fa-comment-dots text-lg"></i></div>
                     <span class="sidebar-text">Bình luận vi phạm</span>
@@ -491,11 +472,6 @@
                         <span class="relative inline-flex rounded-full h-3 w-3 bg-orange-500"></span>
                     </span>
                 </button>
-
-                <!-- CHAT TOGGLE BUTTON -->
-                <button id="admin-chat-toggle" class="text-slate-400 hover:text-white relative transition" title="Chat">
-                    <i class="fas fa-comments text-xl"></i>
-                </button>
             </div>
         </header>
 
@@ -514,164 +490,6 @@
             </div>
         </div>
     </main>
-
-    <!-- Admin Chatbox -->
-    <div id="admin-chat-box-container" class="admin-chatbox">
-        <div class="bg-orange-600 text-white d-flex justify-content-between align-items-center p-3 rounded-t-lg">
-            <span>💬 Chat</span>
-            <button id="admin-chat-close" class="btn btn-sm btn-light text-dark">×</button>
-        </div>
-
-        <div class="card-body bg-slate-800 text-slate-200 flex-1 overflow-y-auto" id="admin-chat-box" style="overflow-y: auto; flex: 1;">
-            <div id="admin-chat-messages">
-                {{-- Render messages --}}
-            </div>
-        </div>
-
-        <div class="card-footer bg-slate-800 border-t border-slate-700">
-            <form id="admin-chat-form" action="" method="POST" class="d-flex">
-                @csrf
-                <input type="hidden" id="admin-chat-receiver" name="receiver_id" value="">
-                <input type="text" name="message" class="form-control me-2 bg-slate-700 text-slate-200 border-slate-600" placeholder="Nhập tin nhắn..." required>
-                <button class="btn btn-orange-600 text-white">Gửi</button>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const chatToggle = document.getElementById("admin-chat-toggle");
-            const chatBox = document.getElementById("admin-chat-box-container");
-            const chatClose = document.getElementById("admin-chat-close");
-            const chatMessages = document.getElementById("admin-chat-messages");
-            const chatForm = document.getElementById("admin-chat-form");
-            const chatReceiverInput = document.getElementById("admin-chat-receiver");
-
-            if (!chatToggle || !chatBox) return;
-
-            let currentReceiverId = null;
-
-            function scrollToBottom(smooth = true) {
-                if (chatMessages) {
-                    if (smooth) {
-                        chatMessages.scrollTo({
-                            top: chatMessages.scrollHeight,
-                            behavior: "smooth"
-                        });
-                    } else {
-                        chatMessages.scrollTop = chatMessages.scrollHeight;
-                    }
-                }
-            }
-
-            function loadMessages(receiverId = null) {
-                if (!receiverId) {
-                    // Admin cần chọn người chat, tạm thời để null
-                    if (chatMessages) {
-                        chatMessages.innerHTML = '<p class="text-slate-400 text-center p-4">Vui lòng chọn người chat từ danh sách hoặc truy cập <a href="{{ route("admin.messages.index") }}" class="text-orange-500">trang quản lý chat</a></p>';
-                    }
-                    return;
-                }
-
-                const url = "{{ route('chat.messages') }}" + '?receiver_id=' + receiverId;
-                
-                fetch(url, {
-                        headers: {
-                            "X-Requested-With": "XMLHttpRequest",
-                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
-                        }
-                    })
-                    .then(res => {
-                        if (!res.ok) {
-                            return res.json().then(err => {
-                                throw new Error(err.error || 'Lỗi tải tin nhắn');
-                            });
-                        }
-                        return res.text();
-                    })
-                    .then(html => {
-                        if (chatMessages) {
-                            chatMessages.innerHTML = html;
-                            scrollToBottom(false);
-                            
-                            if (!currentReceiverId && chatReceiverInput) {
-                                const receiverIdMatch = html.match(/data-receiver-id="(\d+)"/);
-                                if (receiverIdMatch) {
-                                    currentReceiverId = receiverIdMatch[1];
-                                    chatReceiverInput.value = currentReceiverId;
-                                }
-                            }
-                        }
-                    })
-                    .catch(err => {
-                        console.error("Lỗi tải tin nhắn:", err);
-                        if (chatMessages) {
-                            chatMessages.innerHTML = '<p class="text-slate-400 text-center p-4">' + err.message + '</p>';
-                        }
-                    });
-            }
-
-            chatToggle.addEventListener("click", function() {
-                chatBox.classList.add("show");
-                chatToggle.style.display = "none";
-                loadMessages(currentReceiverId);
-                setTimeout(() => scrollToBottom(false), 300);
-            });
-
-            chatClose.addEventListener("click", function() {
-                chatBox.classList.remove("show");
-                if (chatToggle) {
-                    chatToggle.style.display = "block";
-                }
-            });
-
-            chatForm.addEventListener("submit", function(e) {
-                e.preventDefault();
-
-                if (!currentReceiverId && chatReceiverInput) {
-                    loadMessages();
-                    return;
-                }
-
-                let formData = new FormData(chatForm);
-                if (currentReceiverId) {
-                    formData.set('receiver_id', currentReceiverId);
-                }
-
-                fetch("{{ route('chat.send') }}", {
-                        method: "POST",
-                        body: formData,
-                        headers: {
-                            "X-Requested-With": "XMLHttpRequest",
-                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
-                        }
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            chatForm.reset();
-                            if (chatReceiverInput && currentReceiverId) {
-                                chatReceiverInput.value = currentReceiverId;
-                            }
-                            loadMessages(currentReceiverId);
-                            setTimeout(() => scrollToBottom(true), 100);
-                        } else if (data.error) {
-                            alert(data.error);
-                        }
-                    })
-                    .catch(err => {
-                        console.error("Lỗi gửi tin:", err);
-                        alert("Có lỗi xảy ra khi gửi tin nhắn");
-                    });
-            });
-
-            setInterval(() => {
-                if (chatBox.classList.contains("show") && currentReceiverId) {
-                    loadMessages(currentReceiverId);
-                }
-            }, 5000);
-        });
-    </script>
 
     <!-- SCRIPT XỬ LÝ TOGGLE SIDEBAR + LOCALSTORAGE -->
     <script>

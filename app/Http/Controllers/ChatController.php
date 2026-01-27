@@ -22,7 +22,7 @@ class ChatController extends Controller
     public function userIndex()
     {
         $admin = User::where('role', 'admin')->first();
-        
+
         if (!$admin) {
             return back()->with('error', 'Hệ thống chưa có nhân viên hỗ trợ.');
         }
@@ -66,19 +66,19 @@ class ChatController extends Controller
             if ($receiver->role !== 'admin') {
                 return response()->json(['error' => 'Bạn chỉ có thể chat với admin'], 403);
             }
-            // Kiểm tra email đã xác thực
+            // Kiểm tra email đã xác thực (chỉ áp dụng cho user/poster khi gửi tin)
             if (!$user->hasVerifiedEmail()) {
                 return response()->json(['error' => 'Vui lòng xác thực email để sử dụng chat'], 403);
             }
         } elseif ($user->role === 'admin') {
-            // Admin có thể chat với admin khác hoặc user/poster đã xác thực
+            // Admin có thể chat với admin khác hoặc user/poster
             if ($receiver->id === $user->id) {
                 return response()->json(['error' => 'Bạn không thể chat với chính mình'], 403);
             }
-            // Nếu chat với user/poster, họ phải đã xác thực email
-            if (($receiver->role === 'user' || $receiver->role === 'poster') && !$receiver->hasVerifiedEmail()) {
-                return response()->json(['error' => 'Người dùng này chưa xác thực email'], 403);
-            }
+            // KHÔNG kiểm tra email_verified_at của receiver:
+            // yêu cầu "chỉ poster/user đã xác thực mới nhắn được với admin"
+            // đã được đảm bảo bởi middleware 'verified' + logic phía user,
+            // còn admin thì luôn được phép trả lời.
         }
 
         // Đánh dấu tin nhắn đã đọc
@@ -113,19 +113,17 @@ class ChatController extends Controller
             if ($receiver->role !== 'admin') {
                 return response()->json(['error' => 'Bạn chỉ có thể chat với admin'], 403);
             }
-            // Kiểm tra email đã xác thực
+            // Kiểm tra email đã xác thực (chỉ áp dụng cho user/poster khi gửi tin)
             if (!$user->hasVerifiedEmail()) {
                 return response()->json(['error' => 'Vui lòng xác thực email để sử dụng chat'], 403);
             }
         } elseif ($user->role === 'admin') {
-            // Admin có thể chat với admin khác hoặc user/poster đã xác thực
+            // Admin có thể chat với admin khác hoặc user/poster
             if ($receiver->id === $user->id) {
                 return response()->json(['error' => 'Bạn không thể chat với chính mình'], 403);
             }
-            // Nếu chat với user/poster, họ phải đã xác thực email
-            if (($receiver->role === 'user' || $receiver->role === 'poster') && !$receiver->hasVerifiedEmail()) {
-                return response()->json(['error' => 'Người dùng này chưa xác thực email'], 403);
-            }
+            // KHÔNG kiểm tra email_verified_at của receiver
+            // để admin luôn có thể trả lời user/poster.
         }
 
         $message = Message::create([
@@ -134,7 +132,7 @@ class ChatController extends Controller
             'message'     => $request->message,
         ]);
 
-        if ($request->ajax()) {
+        if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
                 'message' => $message->load('sender')
@@ -163,9 +161,9 @@ class ChatController extends Controller
                     $q->whereHas('sentMessages', function ($q2) use ($user) {
                         $q2->where('receiver_id', $user->id);
                     })
-                    ->orWhereHas('receivedMessages', function ($q2) use ($user) {
-                        $q2->where('sender_id', $user->id);
-                    });
+                        ->orWhereHas('receivedMessages', function ($q2) use ($user) {
+                            $q2->where('sender_id', $user->id);
+                        });
                 })
                 ->withCount(['sentMessages as unread_count' => function ($q) use ($user) {
                     $q->where('receiver_id', $user->id)->whereNull('read_at');
@@ -226,28 +224,38 @@ class ChatController extends Controller
         })->orderBy('created_at', 'asc')->get();
 
         // Lấy danh sách users và admins cho sidebar
+        // Hiển thị tất cả users/poster đã xác thực email đã từng nhắn tin hoặc nhận tin từ admin
         $users = User::whereIn('role', ['user', 'poster'])
             ->whereNotNull('email_verified_at')
             ->where(function ($q) {
                 $q->whereHas('sentMessages', function ($q2) {
                     $q2->where('receiver_id', Auth::id());
                 })
-                ->orWhereHas('receivedMessages', function ($q2) {
-                    $q2->where('sender_id', Auth::id());
-                });
+                    ->orWhereHas('receivedMessages', function ($q2) {
+                        $q2->where('sender_id', Auth::id());
+                    });
             })
+            ->withCount(['sentMessages as unread_count' => function ($q) {
+                $q->where('receiver_id', Auth::id())->whereNull('read_at');
+            }])
+            ->orderByDesc('unread_count')
             ->get();
 
+        // Lấy admin khác
         $admins = User::where('role', 'admin')
             ->where('id', '!=', Auth::id())
             ->where(function ($q) {
                 $q->whereHas('sentMessages', function ($q2) {
                     $q2->where('receiver_id', Auth::id());
                 })
-                ->orWhereHas('receivedMessages', function ($q2) {
-                    $q2->where('sender_id', Auth::id());
-                });
+                    ->orWhereHas('receivedMessages', function ($q2) {
+                        $q2->where('sender_id', Auth::id());
+                    });
             })
+            ->withCount(['sentMessages as unread_count' => function ($q) {
+                $q->where('receiver_id', Auth::id())->whereNull('read_at');
+            }])
+            ->orderByDesc('unread_count')
             ->get();
 
         if ($request->ajax()) {
