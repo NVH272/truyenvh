@@ -437,7 +437,7 @@
         </div>
         @endif
 
-        @include('user.live_chat.chat_content')
+        @include('user.live_chat.chat_box')
 
     </main>
 

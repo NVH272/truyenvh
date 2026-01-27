@@ -18,28 +18,6 @@ class ChatController extends Controller
             ->update(['read_at' => now()]);
     }
 
-    // Trang chat index cho user
-    public function userIndex()
-    {
-        $admin = User::where('role', 'admin')->first();
-
-        if (!$admin) {
-            return back()->with('error', 'Hệ thống chưa có nhân viên hỗ trợ.');
-        }
-
-        // Đánh dấu tin nhắn từ admin gửi cho user này là đã đọc
-        $this->markAsRead($admin->id, Auth::id());
-
-        $messages = Message::where(function ($q) use ($admin) {
-            $q->where('sender_id', Auth::id())->where('receiver_id', $admin->id);
-        })->orWhere(function ($q) use ($admin) {
-            $q->where('sender_id', $admin->id)->where('receiver_id', Auth::id());
-        })->orderBy('created_at', 'asc')->get();
-
-        return view('user.live_chat.index', compact('messages', 'admin'));
-    }
-
-    // Lấy tin nhắn cho chatbox trong layout (dùng cho cả user và admin)
     public function getMessages(Request $request)
     {
         $user = Auth::user();
@@ -165,13 +143,38 @@ class ChatController extends Controller
                 ->orderByDesc('unread_count')
                 ->get();
         } else {
-            // User/poster: chỉ lấy admin
+            // 1. Tạo subquery để lấy thời gian tin nhắn cuối cùng (gửi hoặc nhận)
+            // Giữa user hiện tại và admin đang được query
+            $lastMessageQuery = Message::select('created_at')
+                ->where(function ($q) use ($user) {
+                    $q->where('sender_id', $user->id)
+                      ->whereColumn('receiver_id', 'users.id'); // users.id là id của admin trong danh sách
+                })
+                ->orWhere(function ($q) use ($user) {
+                    $q->where('receiver_id', $user->id)
+                      ->whereColumn('sender_id', 'users.id');
+                })
+                ->latest() // Lấy tin mới nhất
+                ->limit(1);
+
+            // 2. Query chính
             $users = User::where('role', 'admin')
-            ->withCount(['sentMessages as unread_count' => function ($q) use ($user) {
-                // Đếm tin nhắn admin gửi cho user mà user chưa đọc
-                $q->where('receiver_id', $user->id)->whereNull('read_at');
-            }])
-            ->get();
+                // Thêm cột ảo 'last_interaction' từ subquery trên
+                ->addSelect(['last_interaction' => $lastMessageQuery])
+                
+                // Đếm tin nhắn chưa đọc (giữ nguyên)
+                ->withCount(['sentMessages as unread_count' => function ($q) use ($user) {
+                    $q->where('receiver_id', $user->id)->whereNull('read_at');
+                }])
+                
+                // Sắp xếp:
+                // Ưu tiên 1: Thời gian tương tác mới nhất (DESC). 
+                // MySQL mặc định xếp NULL (chưa nhắn bao giờ) xuống cuối cùng khi dùng DESC.
+                ->orderByDesc('last_interaction')
+                
+                // Ưu tiên 2: Nếu chưa nhắn (last_interaction là null), xếp theo tên A-Z
+                ->orderBy('name', 'asc')
+                ->get();
         }
 
         return response()->json(['users' => $users]);
