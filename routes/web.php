@@ -295,7 +295,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'isAdmin', 'verified
     Route::get('chapters/{comic}', [AdminChapterController::class, 'index'])->name('chapters.by-comic');
     Route::delete('/comics/{comic}/chapters/{chapter}', [AdminChapterController::class, 'destroy'])->name('chapters.destroy');
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-    
+
     // Admin chat routes
     Route::get('/messages', [ChatController::class, 'adminIndex'])->name('messages.index');
     Route::get('/messages/{user}', [ChatController::class, 'adminChat'])->name('messages.chat');

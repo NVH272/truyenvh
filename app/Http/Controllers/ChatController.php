@@ -75,10 +75,6 @@ class ChatController extends Controller
             if ($receiver->id === $user->id) {
                 return response()->json(['error' => 'Bạn không thể chat với chính mình'], 403);
             }
-            // KHÔNG kiểm tra email_verified_at của receiver:
-            // yêu cầu "chỉ poster/user đã xác thực mới nhắn được với admin"
-            // đã được đảm bảo bởi middleware 'verified' + logic phía user,
-            // còn admin thì luôn được phép trả lời.
         }
 
         // Đánh dấu tin nhắn đã đọc
@@ -93,7 +89,7 @@ class ChatController extends Controller
 
         $receiver = User::find($receiverId);
 
-        return view('user.live_chat.chat', compact('messages', 'receiver'))->render();
+        return view('user.live_chat.chat_content', compact('messages', 'receiver'))->render();
     }
 
     // Gửi tin nhắn
@@ -122,8 +118,6 @@ class ChatController extends Controller
             if ($receiver->id === $user->id) {
                 return response()->json(['error' => 'Bạn không thể chat với chính mình'], 403);
             }
-            // KHÔNG kiểm tra email_verified_at của receiver
-            // để admin luôn có thể trả lời user/poster.
         }
 
         $message = Message::create([
@@ -172,7 +166,12 @@ class ChatController extends Controller
                 ->get();
         } else {
             // User/poster: chỉ lấy admin
-            $users = User::where('role', 'admin')->get();
+            $users = User::where('role', 'admin')
+            ->withCount(['sentMessages as unread_count' => function ($q) use ($user) {
+                // Đếm tin nhắn admin gửi cho user mà user chưa đọc
+                $q->where('receiver_id', $user->id)->whereNull('read_at');
+            }])
+            ->get();
         }
 
         return response()->json(['users' => $users]);
@@ -214,17 +213,24 @@ class ChatController extends Controller
 
     public function adminChat(User $user, Request $request)
     {
-        // Đánh dấu tin nhắn user gửi đến admin là đã đọc
+        // 1. Đánh dấu đã đọc
         $this->markAsRead($user->id, Auth::id());
 
+        // 2. Lấy tin nhắn
         $messages = Message::where(function ($q) use ($user) {
             $q->where('sender_id', Auth::id())->where('receiver_id', $user->id);
         })->orWhere(function ($q) use ($user) {
             $q->where('sender_id', $user->id)->where('receiver_id', Auth::id());
         })->orderBy('created_at', 'asc')->get();
 
-        // Lấy danh sách users và admins cho sidebar
-        // Hiển thị tất cả users/poster đã xác thực email đã từng nhắn tin hoặc nhận tin từ admin
+        // --- QUAN TRỌNG: XỬ LÝ AJAX ---
+        // Nếu click từ sidebar -> Chỉ trả về HTML của khung chat bên phải
+        if ($request->ajax()) {
+            return view('admin.live_chat.chat_content', compact('messages', 'user'))->render();
+        }
+
+        // 3. Nếu không phải AJAX (truy cập trực tiếp) -> Lấy dữ liệu cho Sidebar để hiển thị full trang
+        // (Logic lấy users/admins giữ nguyên như cũ)
         $users = User::whereIn('role', ['user', 'poster'])
             ->whereNotNull('email_verified_at')
             ->where(function ($q) {
@@ -241,7 +247,6 @@ class ChatController extends Controller
             ->orderByDesc('unread_count')
             ->get();
 
-        // Lấy admin khác
         $admins = User::where('role', 'admin')
             ->where('id', '!=', Auth::id())
             ->where(function ($q) {
@@ -258,10 +263,9 @@ class ChatController extends Controller
             ->orderByDesc('unread_count')
             ->get();
 
-        if ($request->ajax()) {
-            return view('admin.live_chat.chat', compact('messages', 'user', 'users', 'admins'))->render();
-        }
-
-        return view('admin.live_chat.chat', compact('user', 'messages', 'users', 'admins'));
+        // --- QUAN TRỌNG: TRẢ VỀ VIEW INDEX ---
+        // Thay vì trả về view 'chat' cũ, ta trả về view 'index' (trang gộp)
+        // Kèm theo biến $user và $messages để view index biết đang chat với ai
+        return view('admin.live_chat.index', compact('users', 'admins', 'messages', 'user'));
     }
 }

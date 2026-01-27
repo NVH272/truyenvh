@@ -7,20 +7,13 @@
 <style>
     /* === STEINS;GATE THEME (TRANSPARENT VERSION) === */
     :root {
-        /* Xóa màu nền cứng, dùng transparent hoặc màu bán trong suốt */
         --sg-bg-dark: transparent;
         --sg-bg-panel: rgba(0, 0, 0, 0.2);
-        /* Sidebar tối hơn nền một chút */
         --sg-border: #334155;
-        /* Khớp với border-slate-700 của layout admin */
         --sg-text-main: #cbd5e1;
-        /* Khớp với text-slate-300 */
         --sg-text-dim: #64748b;
-        /* Khớp với text-slate-500 */
         --sg-accent: #ea580c;
-        /* Cam cháy (Orange-600) */
         --sg-accent-glow: #fb923c;
-        /* Cam sáng */
     }
 
     .font-tech {
@@ -31,22 +24,19 @@
         font-family: 'Courier New', Courier, monospace;
     }
 
-    /* CONTAINER CHÍNH - HÒA VÀO NỀN */
+    /* CONTAINER CHÍNH */
     .messenger-container {
         display: flex;
-        /* Chiều cao tính toán để vừa khung admin */
         height: calc(100vh - 180px);
         min-height: 600px;
         background: var(--sg-bg-dark);
-        /* Transparent */
-        /* Loại bỏ border và shadow bao quanh để không bị tách biệt */
         border: none;
         box-shadow: none;
         overflow: hidden;
         position: relative;
     }
 
-    /* Hiệu ứng Scanline - Giữ lại nhưng làm mờ hơn để hợp với nền xanh */
+    /* Hiệu ứng Scanline & Vignette */
     .messenger-container::after {
         content: " ";
         display: block;
@@ -56,15 +46,12 @@
         bottom: 0;
         right: 0;
         background: linear-gradient(rgba(15, 23, 42, 0) 50%, rgba(0, 0, 0, 0.2) 50%);
-        /* Dùng màu xanh đen của nền */
         background-size: 100% 4px;
         z-index: 50;
         pointer-events: none;
         opacity: 0.3;
-        /* Giảm opacity */
     }
 
-    /* Hiệu ứng Vignette (Tối 4 góc) */
     .messenger-container::before {
         content: " ";
         display: block;
@@ -78,7 +65,7 @@
         pointer-events: none;
     }
 
-    /* SIDEBAR - Tối hơn nền chính một chút để phân biệt */
+    /* SIDEBAR */
     .messenger-sidebar {
         width: 300px;
         background: var(--sg-bg-panel);
@@ -86,9 +73,7 @@
         display: flex;
         flex-direction: column;
         z-index: 60;
-        /* Nổi lên trên scanline */
         backdrop-filter: blur(5px);
-        /* Hiệu ứng mờ nhẹ nếu có nội dung phía sau */
     }
 
     .messenger-header {
@@ -97,12 +82,9 @@
         padding: 1rem;
         font-size: 1.1rem;
         border-bottom: 1px solid var(--sg-border);
-        text-transform: uppercase;
-        letter-spacing: 2px;
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        text-shadow: 0 0 10px rgba(234, 88, 12, 0.4);
     }
 
     /* DANH SÁCH CHAT */
@@ -113,10 +95,6 @@
 
     .conversation-list::-webkit-scrollbar {
         width: 4px;
-    }
-
-    .conversation-list::-webkit-scrollbar-track {
-        background: transparent;
     }
 
     .conversation-list::-webkit-scrollbar-thumb {
@@ -147,7 +125,6 @@
 
     .conversation-item:hover {
         background: rgba(234, 88, 12, 0.08);
-        /* Cam rất nhạt khi hover */
         padding-left: 1.25rem;
     }
 
@@ -179,7 +156,47 @@
         font-size: 0.9rem;
         font-weight: 600;
         color: #e2e8f0;
-        /* Slate-200 */
+        display: flex;
+        /* Dùng flex để căn chỉnh badge */
+        align-items: center;
+        gap: 6px;
+        /* Khoảng cách giữa tên và badge */
+    }
+
+    /* Style cho Badge Role */
+    .role-badge {
+        font-size: 0.6rem;
+        padding: 1px 4px;
+        border-radius: 2px;
+        text-transform: uppercase;
+        font-family: 'Share Tech Mono', monospace;
+        letter-spacing: 0.5px;
+        border: 1px solid transparent;
+        line-height: 1;
+    }
+
+    /* Màu sắc cho từng Role */
+    .role-admin {
+        color: #ef4444;
+        /* Màu đỏ */
+        border-color: #ef4444;
+        background: rgba(239, 68, 68, 0.1);
+        box-shadow: 0 0 5px rgba(239, 68, 68, 0.2);
+    }
+
+    .role-poster {
+        color: #10b981;
+        /* Màu xanh lá */
+        border-color: #10b981;
+        background: rgba(16, 185, 129, 0.1);
+        box-shadow: 0 0 5px rgba(16, 185, 129, 0.2);
+    }
+
+    .role-user {
+        color: #94a3b8;
+        /* Màu xám */
+        border-color: #475569;
+        background: rgba(71, 85, 105, 0.2);
     }
 
     .conversation-preview {
@@ -201,7 +218,166 @@
         box-shadow: 0 0 8px var(--sg-accent);
     }
 
-    /* EMPTY STATE */
+    /* RIGHT SIDE (CHAT AREA & EMPTY STATE) */
+    .chat-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: transparent;
+        z-index: 60;
+        position: relative;
+    }
+
+    .chat-header {
+        background: rgba(0, 0, 0, 0.2);
+        padding: 0 1rem;
+        height: 60px;
+        border-bottom: 1px solid var(--sg-border);
+        display: flex;
+        align-items: center;
+        backdrop-filter: blur(5px);
+    }
+
+    .chat-header-avatar {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 4px;
+        margin-right: 0.75rem;
+        object-fit: cover;
+        border: 1px solid var(--sg-border);
+    }
+
+    .chat-header-name {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: var(--sg-accent-glow);
+        text-shadow: 0 0 5px rgba(234, 88, 12, 0.3);
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.5rem;
+        background: transparent;
+    }
+
+    .chat-messages::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+        background: #475569;
+        border-radius: 2px;
+    }
+
+    .message-wrapper {
+        display: flex;
+        margin-bottom: 1rem;
+        align-items: flex-end;
+    }
+
+    .message-wrapper.sent {
+        justify-content: flex-end;
+    }
+
+    .message-wrapper.received {
+        justify-content: flex-start;
+    }
+
+    .message-avatar {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 4px;
+        margin: 0 0.5rem;
+        object-fit: cover;
+        border: 1px solid var(--sg-border);
+    }
+
+    .message-bubble {
+        max-width: 70%;
+        padding: 0.75rem 1rem;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        word-wrap: break-word;
+        position: relative;
+        font-family: 'Courier New', Courier, monospace;
+    }
+
+    .message-bubble.sent {
+        background: rgba(234, 88, 12, 0.2);
+        border: 1px solid var(--sg-accent);
+        color: #fff;
+        border-bottom-right-radius: 0;
+        box-shadow: 0 0 10px rgba(234, 88, 12, 0.1);
+    }
+
+    .message-bubble.received {
+        background: rgba(51, 65, 85, 0.4);
+        border: 1px solid var(--sg-border);
+        color: #e2e8f0;
+        border-bottom-left-radius: 0;
+    }
+
+    .chat-input-area {
+        background: rgba(0, 0, 0, 0.2);
+        padding: 1rem;
+        border-top: 1px solid var(--sg-border);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        backdrop-filter: blur(5px);
+    }
+
+    .chat-input {
+        flex: 1;
+        border: 1px solid var(--sg-border);
+        outline: none;
+        padding: 0.75rem 1rem;
+        background: rgba(15, 23, 42, 0.6);
+        border-radius: 4px;
+        font-size: 0.95rem;
+        color: #fff;
+        font-family: 'Courier New', Courier, monospace;
+        transition: all 0.2s;
+    }
+
+    .chat-input:focus {
+        border-color: var(--sg-accent);
+        box-shadow: 0 0 10px rgba(234, 88, 12, 0.2);
+    }
+
+    .send-button {
+        width: 40px;
+        height: 40px;
+        background: rgba(234, 88, 12, 0.1);
+        color: var(--sg-accent);
+        border: 1px solid var(--sg-accent);
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .send-button:hover {
+        background: var(--sg-accent);
+        color: #fff;
+        box-shadow: 0 0 15px var(--sg-accent);
+    }
+
+    .empty-chat {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: var(--sg-text-dim);
+        font-family: 'Share Tech Mono', monospace;
+    }
+
+    /* EMPTY STATE (DEFAULT) */
     .empty-state-container {
         flex: 1;
         display: flex;
@@ -209,22 +385,15 @@
         align-items: center;
         justify-content: center;
         background-color: transparent;
-        /* Trong suốt */
-        /* Lưới tọa độ mờ */
-        background-image:
-            linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-        background-size: 40px 40px;
-        color: var(--sg-text-dim);
         position: relative;
         z-index: 10;
+        background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 40px 40px;
     }
 
     .empty-content-box {
-        /* Bỏ nền đen, chỉ giữ viền mờ hoặc bỏ luôn viền để trông như đang lơ lửng */
         border: 1px dashed var(--sg-border);
         background: rgba(15, 23, 42, 0.4);
-        /* Nền xanh đen bán trong suốt */
         padding: 3rem;
         border-radius: 4px;
         text-align: center;
@@ -240,7 +409,6 @@
 
     .gear-icon {
         color: #475569;
-        /* Slate-600 */
         position: absolute;
     }
 
@@ -272,14 +440,6 @@
         animation: spin-reverse 18s linear infinite;
     }
 
-    .empty-text {
-        font-size: 1.2rem;
-        color: var(--sg-text-main);
-        letter-spacing: 3px;
-        margin-bottom: 0.5rem;
-        text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
-    }
-
     .divergence-number {
         color: var(--sg-accent);
         font-size: 1.8rem;
@@ -298,36 +458,53 @@
         </div>
 
         <div class="conversation-list custom-scroll">
-            @if($users->count() > 0 || $admins->count() > 0)
+            @if(isset($users) && isset($admins) && ($users->count() > 0 || $admins->count() > 0))
             @if($users->count() > 0)
             <div class="section-title">Lab Members</div>
-            @foreach($users as $user)
-            <a href="{{ route('admin.messages.chat', $user->id) }}" class="conversation-item text-decoration-none">
-                <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="conversation-avatar">
+            @foreach($users as $u)
+            <div class="conversation-item {{ (isset($user) && $u->id == $user->id) ? 'active' : '' }}"
+                onclick="loadChat('{{ $u->id }}', this)">
+
+                <img src="{{ $u->avatar_url }}" alt="{{ $u->name }}" class="conversation-avatar">
+
                 <div class="conversation-info">
-                    <div class="conversation-name">{{ $user->name }}</div>
-                    <div class="conversation-preview font-term">{{ $user->email }}</div>
+                    <div class="conversation-name">
+                        <span class="truncate max-w-[120px]">{{ $u->name }}</span>
+
+                        {{-- Hiển thị Badge dựa theo Role --}}
+                        @if($u->role === 'admin')
+                        <span class="role-badge role-admin">AD</span>
+                        @elseif($u->role === 'poster')
+                        <span class="role-badge role-poster">POSTER</span>
+                        @else
+                        {{-- User thường có thể không hiện hoặc hiện chữ nhỏ --}}
+                        {{-- <span class="role-badge role-user">USER</span> --}}
+                        @endif
+                    </div>
+                    <div class="conversation-preview font-term">{{ $u->email }}</div>
                 </div>
-                @if($user->unread_count > 0)
-                <span class="unread-badge">{{ $user->unread_count }}</span>
+
+                @if($u->unread_count > 0)
+                <span class="unread-badge">{{ $u->unread_count }}</span>
                 @endif
-            </a>
+            </div>
             @endforeach
             @endif
 
             @if($admins->count() > 0)
             <div class="section-title">Round Table</div>
-            @foreach($admins as $admin)
-            <a href="{{ route('admin.messages.chat', $admin->id) }}" class="conversation-item text-decoration-none">
-                <img src="{{ $admin->avatar_url }}" alt="{{ $admin->name }}" class="conversation-avatar">
+            @foreach($admins as $a)
+            <div class="conversation-item {{ (isset($user) && $a->id == $user->id) ? 'active' : '' }}"
+                onclick="loadChat('{{ $a->id }}', this)">
+                <img src="{{ $a->avatar_url }}" alt="{{ $a->name }}" class="conversation-avatar">
                 <div class="conversation-info">
-                    <div class="conversation-name">{{ $admin->name }}</div>
-                    <div class="conversation-preview font-term">{{ $admin->email }}</div>
+                    <div class="conversation-name">{{ $a->name }}</div>
+                    <div class="conversation-preview font-term">{{ $a->email }}</div>
                 </div>
-                @if($admin->unread_count > 0)
-                <span class="unread-badge">{{ $admin->unread_count }}</span>
+                @if($a->unread_count > 0)
+                <span class="unread-badge">{{ $a->unread_count }}</span>
                 @endif
-            </a>
+            </div>
             @endforeach
             @endif
             @else
@@ -339,18 +516,147 @@
         </div>
     </div>
 
-    <div class="empty-state-container">
-        <div class="empty-content-box">
-            <div class="divergence-number">1.048596</div>
-
-            <div class="gear-wrapper">
-                <i class="fas fa-cog gear-icon gear-1"></i>
-                <i class="fas fa-cog gear-icon gear-2"></i>
+    <div class="chat-area" id="right-side-content">
+        @if(isset($user))
+        {{-- Nếu trang được load trực tiếp qua URL, include partial chat vào đây --}}
+        @include('admin.live_chat.chat_content')
+        @else
+        {{-- Mặc định hiển thị Empty State --}}
+        <div class="empty-state-container">
+            <div class="empty-content-box">
+                <div class="divergence-number">1.048596</div>
+                <div class="gear-wrapper">
+                    <i class="fas fa-cog gear-icon gear-1"></i>
+                    <i class="fas fa-cog gear-icon gear-2"></i>
+                </div>
+                <p class="empty-text" style="font-size: 1.2rem; color: var(--sg-text-main); letter-spacing: 3px; margin-bottom: 0.5rem; text-shadow: 0 0 10px rgba(255,255,255,0.1);">EL PSY KONGROO</p>
+                <p class="text-xs text-slate-500 mt-2 font-term">Select a timeline to establish connection...</p>
             </div>
-
-            <p class="empty-text">EL PSY KONGROO</p>
-            <p class="text-xs text-slate-500 mt-2 font-term">Select a timeline to establish connection...</p>
         </div>
+        @endif
     </div>
 </div>
+
+<script>
+    // Hàm escape HTML
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    // Auto scroll
+    function scrollToBottom() {
+        const chatBox = document.getElementById('chat-box');
+        if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Load Chat bằng AJAX
+    function loadChat(userId, element) {
+        // Active class handling
+        document.querySelectorAll('.conversation-item').forEach(el => el.classList.remove('active'));
+        if (element) element.classList.add('active');
+
+        // Hiển thị loading (tùy chọn)
+        const container = document.getElementById('right-side-content');
+        container.style.opacity = '0.5';
+
+        fetch(`/admin/messages/${userId}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => res.text())
+            .then(html => {
+                container.innerHTML = html;
+                container.style.opacity = '1';
+                scrollToBottom();
+
+                // Re-attach form submit listener vì DOM mới
+                attachFormListener();
+
+                // Cập nhật URL (để khi F5 vẫn ở đúng chat)
+                window.history.pushState({
+                    path: `/admin/messages/${userId}`
+                }, '', `/admin/messages/${userId}`);
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Signal lost. Cannot retrieve timeline data.');
+                container.style.opacity = '1';
+            });
+    }
+
+    // Gắn sự kiện submit cho form (được gọi sau khi load chat)
+    function attachFormListener() {
+        const form = document.getElementById('admin-chat-form');
+        if (!form) return;
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const messageInput = document.getElementById('admin-message-input');
+            const messageText = messageInput.value.trim();
+            const receiverId = document.querySelector('input[name="receiver_id"]').value;
+            const csrfToken = document.querySelector('input[name="_token"]').value;
+
+            if (!messageText) return;
+
+            const sendButton = this.querySelector('.send-button');
+            sendButton.disabled = true;
+            sendButton.style.opacity = '0.5';
+
+            fetch('{{ route("admin.messages.send") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        receiver_id: receiverId,
+                        message: messageText
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        messageInput.value = '';
+                        const chatBox = document.getElementById('chat-box');
+
+                        // Remove empty state if exists
+                        const emptyChat = chatBox.querySelector('.empty-chat');
+                        if (emptyChat) emptyChat.remove();
+
+                        // Append message
+                        const messageWrapper = document.createElement('div');
+                        messageWrapper.className = 'message-wrapper sent';
+                        messageWrapper.innerHTML = `<div class="message-bubble sent">${escapeHtml(messageText)}</div>`;
+                        chatBox.appendChild(messageWrapper);
+                        scrollToBottom();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('D-Mail failed to send.');
+                })
+                .finally(() => {
+                    sendButton.disabled = false;
+                    sendButton.style.opacity = '1';
+                    messageInput.focus();
+                });
+        });
+    }
+
+    // Init scripts on load
+    document.addEventListener("DOMContentLoaded", function() {
+        scrollToBottom();
+        attachFormListener();
+    });
+</script>
 @endsection
