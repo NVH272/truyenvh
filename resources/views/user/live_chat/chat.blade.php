@@ -1,40 +1,63 @@
+@if(isset($receiver))
+<div data-receiver-id="{{ $receiver->id }}" style="display: none;"></div>
+@endif
+
 @forelse($messages as $msg)
-<div class="d-flex mb-3 {{ $msg->sender_id == auth()->id() ? 'justify-content-end' : 'justify-content-start' }}">
-
-    {{-- Nếu không phải mình thì hiện avatar --}}
+<div class="message-wrapper {{ $msg->sender_id == auth()->id() ? 'sent' : 'received' }}">
     @if($msg->sender_id != auth()->id())
-    <img src="https://ui-avatars.com/api/?name={{ urlencode($msg->sender->name) }}&background=E4E6EB&color=000"
-        class="rounded-circle me-2" width="32" height="32" alt="avatar">
+    <img src="{{ $msg->sender->avatar_url }}" alt="{{ $msg->sender->name }}" class="message-avatar">
     @endif
-
-    <div class="chat-bubble {{ $msg->sender_id == auth()->id() ? 'me' : 'them' }}">
+    <div class="message-bubble {{ $msg->sender_id == auth()->id() ? 'sent' : 'received' }}">
         {{ $msg->message }}
     </div>
 </div>
 @empty
-<p class="text-muted text-center">Chưa có tin nhắn nào.</p>
+<div style="text-align: center; padding: 40px; color: #65676b;">
+    <p>Chưa có tin nhắn nào. Bắt đầu cuộc trò chuyện!</p>
+</div>
 @endforelse
+
 <style>
-    .chat-bubble {
-        padding: 10px 15px;
-        border-radius: 20px;
-        max-width: 70%;
+    .message-wrapper {
+        display: flex;
+        margin-bottom: 8px;
+        align-items: flex-end;
+    }
+
+    .message-wrapper.sent {
+        justify-content: flex-end;
+    }
+
+    .message-wrapper.received {
+        justify-content: flex-start;
+    }
+
+    .message-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        margin: 0 8px;
+        object-fit: cover;
+    }
+
+    .message-bubble {
+        max-width: 65%;
+        padding: 8px 12px;
+        border-radius: 18px;
         font-size: 15px;
         line-height: 1.4;
-        display: inline-block;
+        word-wrap: break-word;
     }
 
-    .chat-bubble.me {
-        background-color: #0084FF;
-        /* xanh Messenger */
+    .message-bubble.sent {
+        background: #0084ff;
         color: white;
-        border-bottom-right-radius: 5px;
+        border-bottom-right-radius: 4px;
     }
 
-    .chat-bubble.them {
-        background-color: #E4E6EB;
-        /* xám Messenger */
-        color: black;
-        border-bottom-left-radius: 5px;
+    .message-bubble.received {
+        background: #e4e6eb;
+        color: #050505;
+        border-bottom-left-radius: 4px;
     }
 </style>

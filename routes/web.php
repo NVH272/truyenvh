@@ -198,6 +198,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('user.comics.followed');
 });
 
+// Chat routes - yêu cầu đã xác thực email
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/chat', [ChatController::class, 'userIndex'])->name('user.live_chat.index');
+    Route::get('/chat/messages', [ChatController::class, 'getMessages'])->name('chat.messages');
+    Route::post('/chat/send', [ChatController::class, 'send'])->name('chat.send');
+    Route::get('/chat/list', [ChatController::class, 'getChatList'])->name('chat.list');
+});
+
 /*
 |--------------------------------------------------------------------------
 | USER PROFILE ROUTES
@@ -287,6 +295,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'isAdmin', 'verified
     Route::get('chapters/{comic}', [AdminChapterController::class, 'index'])->name('chapters.by-comic');
     Route::delete('/comics/{comic}/chapters/{chapter}', [AdminChapterController::class, 'destroy'])->name('chapters.destroy');
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    
+    // Admin chat routes
+    Route::get('/messages', [ChatController::class, 'adminIndex'])->name('messages.index');
+    Route::get('/messages/{user}', [ChatController::class, 'adminChat'])->name('messages.chat');
+    Route::post('/messages/send', [ChatController::class, 'send'])->name('messages.send');
 });
 
 // Route::post('/reading-history', [ReadingHistoryController::class, 'store'])

@@ -18,11 +18,11 @@ class ChatController extends Controller
             ->update(['read_at' => now()]);
     }
 
-    public function index(Request $request)
+    // Trang chat index cho user
+    public function userIndex()
     {
-        // Lấy admin để chat (Tạm thời lấy người đầu tiên, nên nâng cấp logic này sau)
         $admin = User::where('role', 'admin')->first();
-
+        
         if (!$admin) {
             return back()->with('error', 'Hệ thống chưa có nhân viên hỗ trợ.');
         }
@@ -34,16 +34,69 @@ class ChatController extends Controller
             $q->where('sender_id', Auth::id())->where('receiver_id', $admin->id);
         })->orWhere(function ($q) use ($admin) {
             $q->where('sender_id', $admin->id)->where('receiver_id', Auth::id());
-        })->orderBy('created_at', 'asc')->get(); // Sửa thành ASC để tin cũ hiện trên, tin mới dưới
+        })->orderBy('created_at', 'asc')->get();
 
-        if ($request->ajax()) {
-            // Trả về view partial thay vì JSON hay String cứng
-            return view('chat.partials.messages', compact('messages', 'admin'))->render();
-        }
-
-        return view('chat.customer', compact('messages', 'admin'));
+        return view('user.live_chat.index', compact('messages', 'admin'));
     }
 
+    // Lấy tin nhắn cho chatbox trong layout (dùng cho cả user và admin)
+    public function getMessages(Request $request)
+    {
+        $user = Auth::user();
+        $receiverId = $request->input('receiver_id');
+
+        if (!$receiverId) {
+            // Nếu là user/poster: lấy admin đầu tiên
+            if ($user->role === 'user' || $user->role === 'poster') {
+                $receiver = User::where('role', 'admin')->first();
+                if (!$receiver) {
+                    return response()->json(['error' => 'Không tìm thấy admin'], 404);
+                }
+                $receiverId = $receiver->id;
+            } else {
+                return response()->json(['error' => 'Vui lòng chọn người nhận'], 400);
+            }
+        } else {
+            $receiver = User::findOrFail($receiverId);
+        }
+
+        // Kiểm tra quyền chat
+        if ($user->role === 'user' || $user->role === 'poster') {
+            // User/poster chỉ được chat với admin
+            if ($receiver->role !== 'admin') {
+                return response()->json(['error' => 'Bạn chỉ có thể chat với admin'], 403);
+            }
+            // Kiểm tra email đã xác thực
+            if (!$user->hasVerifiedEmail()) {
+                return response()->json(['error' => 'Vui lòng xác thực email để sử dụng chat'], 403);
+            }
+        } elseif ($user->role === 'admin') {
+            // Admin có thể chat với admin khác hoặc user/poster đã xác thực
+            if ($receiver->id === $user->id) {
+                return response()->json(['error' => 'Bạn không thể chat với chính mình'], 403);
+            }
+            // Nếu chat với user/poster, họ phải đã xác thực email
+            if (($receiver->role === 'user' || $receiver->role === 'poster') && !$receiver->hasVerifiedEmail()) {
+                return response()->json(['error' => 'Người dùng này chưa xác thực email'], 403);
+            }
+        }
+
+        // Đánh dấu tin nhắn đã đọc
+        $this->markAsRead($receiverId, $user->id);
+
+        // Lấy tin nhắn
+        $messages = Message::where(function ($q) use ($user, $receiverId) {
+            $q->where('sender_id', $user->id)->where('receiver_id', $receiverId);
+        })->orWhere(function ($q) use ($user, $receiverId) {
+            $q->where('sender_id', $receiverId)->where('receiver_id', $user->id);
+        })->orderBy('created_at', 'asc')->get();
+
+        $receiver = User::find($receiverId);
+
+        return view('user.live_chat.chat', compact('messages', 'receiver'))->render();
+    }
+
+    // Gửi tin nhắn
     public function send(Request $request)
     {
         $request->validate([
@@ -51,39 +104,114 @@ class ChatController extends Controller
             'message'     => 'required|string|max:1000',
         ]);
 
-        // TODO: Kiểm tra xem receiver_id có phải là admin không (để chặn user chat với user)
+        $user = Auth::user();
+        $receiver = User::findOrFail($request->receiver_id);
+
+        // Kiểm tra quyền chat
+        if ($user->role === 'user' || $user->role === 'poster') {
+            // User/poster chỉ được chat với admin
+            if ($receiver->role !== 'admin') {
+                return response()->json(['error' => 'Bạn chỉ có thể chat với admin'], 403);
+            }
+            // Kiểm tra email đã xác thực
+            if (!$user->hasVerifiedEmail()) {
+                return response()->json(['error' => 'Vui lòng xác thực email để sử dụng chat'], 403);
+            }
+        } elseif ($user->role === 'admin') {
+            // Admin có thể chat với admin khác hoặc user/poster đã xác thực
+            if ($receiver->id === $user->id) {
+                return response()->json(['error' => 'Bạn không thể chat với chính mình'], 403);
+            }
+            // Nếu chat với user/poster, họ phải đã xác thực email
+            if (($receiver->role === 'user' || $receiver->role === 'poster') && !$receiver->hasVerifiedEmail()) {
+                return response()->json(['error' => 'Người dùng này chưa xác thực email'], 403);
+            }
+        }
 
         $message = Message::create([
-            'sender_id'   => Auth::id(),
+            'sender_id'   => $user->id,
             'receiver_id' => $request->receiver_id,
             'message'     => $request->message,
         ]);
 
         if ($request->ajax()) {
-            // Trả về view partial của 1 tin nhắn mới để append vào khung chat
             return response()->json([
                 'success' => true,
-                'html' => view('chat.partials.single_message', compact('message'))->render()
+                'message' => $message->load('sender')
             ]);
         }
 
         return back();
     }
 
-    // --- Phần Admin ---
+    // Lấy danh sách người có thể chat (cho admin)
+    public function getChatList(Request $request)
+    {
+        $user = Auth::user();
+
+        if ($user->role === 'admin') {
+            // Admin có thể chat với: user/poster đã xác thực email, và admin khác
+            $users = User::where('id', '!=', $user->id)
+                ->where(function ($q) {
+                    $q->where('role', 'admin')
+                        ->orWhere(function ($q2) {
+                            $q2->whereIn('role', ['user', 'poster'])
+                                ->whereNotNull('email_verified_at');
+                        });
+                })
+                ->where(function ($q) use ($user) {
+                    $q->whereHas('sentMessages', function ($q2) use ($user) {
+                        $q2->where('receiver_id', $user->id);
+                    })
+                    ->orWhereHas('receivedMessages', function ($q2) use ($user) {
+                        $q2->where('sender_id', $user->id);
+                    });
+                })
+                ->withCount(['sentMessages as unread_count' => function ($q) use ($user) {
+                    $q->where('receiver_id', $user->id)->whereNull('read_at');
+                }])
+                ->orderByDesc('unread_count')
+                ->get();
+        } else {
+            // User/poster: chỉ lấy admin
+            $users = User::where('role', 'admin')->get();
+        }
+
+        return response()->json(['users' => $users]);
+    }
+
+    // --- Phần Admin (trang riêng) ---
 
     public function adminIndex()
     {
-        // Chỉ lấy những user đã từng nhắn tin
-        $users = User::where('role', 'user')
-            ->whereHas('sentMessages') // Cần định nghĩa relationship sentMessages trong User Model
+        // Lấy user và poster đã xác thực email đã từng nhắn tin
+        $users = User::whereIn('role', ['user', 'poster'])
+            ->whereNotNull('email_verified_at')
+            ->whereHas('sentMessages', function ($q) {
+                $q->where('receiver_id', Auth::id());
+            })
             ->withCount(['sentMessages as unread_count' => function ($q) {
                 $q->where('receiver_id', Auth::id())->whereNull('read_at');
             }])
-            ->orderByDesc('unread_count') // Ưu tiên user có tin nhắn chưa đọc
+            ->orderByDesc('unread_count')
             ->get();
 
-        return view('chat.admin', compact('users'));
+        // Lấy admin khác (không phải bản thân)
+        $admins = User::where('role', 'admin')
+            ->where('id', '!=', Auth::id())
+            ->whereHas('sentMessages', function ($q) {
+                $q->where('receiver_id', Auth::id());
+            })
+            ->orWhereHas('receivedMessages', function ($q) {
+                $q->where('sender_id', Auth::id());
+            })
+            ->withCount(['sentMessages as unread_count' => function ($q) {
+                $q->where('receiver_id', Auth::id())->whereNull('read_at');
+            }])
+            ->orderByDesc('unread_count')
+            ->get();
+
+        return view('admin.live_chat.index', compact('users', 'admins'));
     }
 
     public function adminChat(User $user, Request $request)
@@ -97,13 +225,35 @@ class ChatController extends Controller
             $q->where('sender_id', $user->id)->where('receiver_id', Auth::id());
         })->orderBy('created_at', 'asc')->get();
 
+        // Lấy danh sách users và admins cho sidebar
+        $users = User::whereIn('role', ['user', 'poster'])
+            ->whereNotNull('email_verified_at')
+            ->where(function ($q) {
+                $q->whereHas('sentMessages', function ($q2) {
+                    $q2->where('receiver_id', Auth::id());
+                })
+                ->orWhereHas('receivedMessages', function ($q2) {
+                    $q2->where('sender_id', Auth::id());
+                });
+            })
+            ->get();
+
+        $admins = User::where('role', 'admin')
+            ->where('id', '!=', Auth::id())
+            ->where(function ($q) {
+                $q->whereHas('sentMessages', function ($q2) {
+                    $q2->where('receiver_id', Auth::id());
+                })
+                ->orWhereHas('receivedMessages', function ($q2) {
+                    $q2->where('sender_id', Auth::id());
+                });
+            })
+            ->get();
+
         if ($request->ajax()) {
-            // SỬ DỤNG VIEW THAY VÌ NỐI CHUỖI HTML
-            return view('chat.partials.admin_messages_list', compact('messages', 'user'))->render();
+            return view('admin.live_chat.chat', compact('messages', 'user', 'users', 'admins'))->render();
         }
 
-        return view('chat.admin_chat', compact('user', 'messages'));
+        return view('admin.live_chat.chat', compact('user', 'messages', 'users', 'admins'));
     }
-
-    // adminSend tương tự send...
 }

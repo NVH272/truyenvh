@@ -107,8 +107,7 @@
 
         .chatbox {
             position: fixed;
-            bottom: -500px;
-            /* ẩn dưới màn hình */
+            bottom: -450px;
             right: 20px;
             width: 320px;
             height: 420px;
@@ -116,13 +115,126 @@
             border-radius: 12px;
             display: flex;
             flex-direction: column;
-            transition: bottom 0.15s ease-in-out;
-            /* hiệu ứng trượt */
+            transition: bottom 0.3s ease-in-out;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            background: #fff;
+            overflow: hidden;
+            font-family: Helvetica, Arial, sans-serif;
         }
 
         .chatbox.show {
             bottom: 20px;
-            /* trượt lên khi mở */
+        }
+
+        .chatbox-header {
+            background: #0084ff;
+            color: white;
+            padding: 10px 12px;
+            /* Giảm padding */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+            font-size: 15px;
+            /* Giảm cỡ chữ tiêu đề */
+        }
+
+        .chatbox-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            font-size: 14px;
+        }
+
+        .chatbox-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .chatbox-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            background: #f0f2f5;
+        }
+
+        .chatbox-input-area {
+            background: #fff;
+            padding: 8px 10px;
+            border-top: 1px solid #e4e6eb;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chatbox-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 8px 12px;
+            background: #f0f2f5;
+            border-radius: 18px;
+            font-size: 13px;
+            color: #050505;
+        }
+
+        .chatbox-input::placeholder {
+            color: #8a8d91;
+        }
+
+        .chatbox-send-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: transparent;
+            color: #0084ff;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 16px;
+        }
+
+        .chatbox-send-btn:hover {
+            background: #f0f2f5;
+        }
+
+        .chat-toggle-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background-color: #0084FF;
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1050;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        /* Hiệu ứng khi di chuột vào nút */
+        .chat-toggle-btn:hover {
+            transform: scale(1.05);
+            background-color: #0073e6;
+        }
+
+        .chat-toggle-btn i {
+            font-size: 28px;
+            line-height: 0;
         }
     </style>
 </head>
@@ -324,30 +436,40 @@
             </div>
         </div>
         @endif
+
+        <!-- Nút chat nổi -->
+        @auth
+        @if(Auth::user()->hasVerifiedEmail())
+        <div id="chat-toggle" class="chat-toggle-btn">
+            <i class="fas fa-comment-dots"></i>
+        </div>
+        @endif
+        @endauth
         <!-- Chatbox -->
-        <div id="chat-box-container" class="chatbox card shadow-lg">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <div id="chat-box-container" class="chatbox">
+            <div class="chatbox-header">
                 <span>💬 Hỗ trợ</span>
-                <button id="chat-close" class="btn btn-sm btn-light">×</button>
+                <button id="chat-close" class="chatbox-close">×</button>
             </div>
 
-            <div class="card-body" id="chat-box" style="overflow-y: auto; flex: 1;">
-                <div id="chat-messages">
-                    {{-- Render messages --}}
-                </div>
+            <div class="chatbox-messages" id="chat-messages">
+                {{-- Render messages --}}
             </div>
 
-            <div class="card-footer">
-                <form id="chat-form" action="" method="POST" class="d-flex">
+            <div class="chatbox-input-area">
+                <form id="chat-form" action="" method="POST" style="display: flex; width: 100%; align-items: center; gap: 8px;">
                     @csrf
                     <input type="hidden" id="chat-receiver" name="receiver_id" value="">
-                    <input type="text" name="message" class="form-control me-2" placeholder="Nhập tin nhắn..." required>
-                    <button class="btn btn-primary">Gửi</button>
+                    <input type="text" name="message" class="chatbox-input" placeholder="Nhập tin nhắn..." required autocomplete="off">
+                    <button type="submit" class="chatbox-send-btn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
                 </form>
-
             </div>
         </div>
 
+        @auth
+        @if(Auth::user()->hasVerifiedEmail())
         <script>
             document.addEventListener("DOMContentLoaded", function() {
                 const chatToggle = document.getElementById("chat-toggle");
@@ -355,43 +477,82 @@
                 const chatClose = document.getElementById("chat-close");
                 const chatMessages = document.getElementById("chat-messages");
                 const chatForm = document.getElementById("chat-form");
+                const chatReceiverInput = document.getElementById("chat-receiver");
+
+                if (!chatToggle || !chatBox) return;
+
+                let currentReceiverId = null;
 
                 // ===== Hàm cuộn xuống cuối =====
                 function scrollToBottom(smooth = true) {
-                    if (smooth) {
-                        chatMessages.scrollTo({
-                            top: chatMessages.scrollHeight,
-                            behavior: "smooth"
-                        });
-                    } else {
-                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    if (chatMessages) {
+                        if (smooth) {
+                            chatMessages.scrollTo({
+                                top: chatMessages.scrollHeight,
+                                behavior: "smooth"
+                            });
+                        } else {
+                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                        }
                     }
+                }
+
+                // ===== Xác định receiver_id dựa trên role =====
+                function determineReceiver() {
+                    @if(Auth::user()->role === 'admin')
+                    // Admin: lấy danh sách có thể chat, nếu chưa có thì để null
+                    // Có thể mở rộng để chọn người chat sau
+                    return null;
+                    @else
+                    // User/Poster: luôn chat với admin đầu tiên
+                    // Sẽ được set khi load messages
+                    return null;
+                    @endif
                 }
 
                 // ===== Load tin nhắn =====
-                function loadMessages() {
-                    fetch("#", {
+                function loadMessages(receiverId = null) {
+                    if (!receiverId) {
+                        receiverId = currentReceiverId || determineReceiver();
+                    }
+
+                    const url = "{{ route('chat.messages') }}" + (receiverId ? '?receiver_id=' + receiverId : '');
+
+                    fetch(url, {
                             headers: {
-                                "X-Requested-With": "XMLHttpRequest"
+                                "X-Requested-With": "XMLHttpRequest",
+                                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
                             }
                         })
-                        .then(res => res.text())
+                        .then(res => {
+                            if (!res.ok) {
+                                return res.json().then(err => {
+                                    throw new Error(err.error || 'Lỗi tải tin nhắn');
+                                });
+                            }
+                            return res.text();
+                        })
                         .then(html => {
-                            chatMessages.innerHTML = html;
-                            scrollToBottom(false); // cuộn ngay lập tức xuống cuối
-                        });
-                }
+                            if (chatMessages) {
+                                chatMessages.innerHTML = html;
+                                scrollToBottom(false);
 
-                // ===== Hàm cuộn xuống cuối =====
-                function scrollToBottom(smooth = true) {
-                    if (smooth) {
-                        chatMessages.scrollTo({
-                            top: chatMessages.scrollHeight,
-                            behavior: "smooth"
+                                // Lấy receiver_id từ response nếu chưa có
+                                if (!currentReceiverId && chatReceiverInput) {
+                                    const receiverIdMatch = html.match(/data-receiver-id="(\d+)"/);
+                                    if (receiverIdMatch) {
+                                        currentReceiverId = receiverIdMatch[1];
+                                        chatReceiverInput.value = currentReceiverId;
+                                    }
+                                }
+                            }
+                        })
+                        .catch(err => {
+                            console.error("Lỗi tải tin nhắn:", err);
+                            if (chatMessages) {
+                                chatMessages.innerHTML = '<p class="text-muted text-center">' + err.message + '</p>';
+                            }
                         });
-                    } else {
-                        chatMessages.scrollTop = chatMessages.scrollHeight;
-                    }
                 }
 
                 // ===== Mở chat =====
@@ -405,20 +566,72 @@
                     setTimeout(() => scrollToBottom(false), 300);
                 });
 
-
                 // ===== Đóng chat =====
                 chatClose.addEventListener("click", function() {
                     chatBox.classList.remove("show");
-                    chatToggle.style.display = "flex";
+                    if (chatToggle) {
+                        chatToggle.style.display = "flex";
+                    }
                 });
+
+                // Thêm style cho message bubbles trong chatbox
+                const style = document.createElement('style');
+                style.textContent = `
+                    .chatbox-messages .message-wrapper {
+                        display: flex;
+                        margin-bottom: 8px;
+                        align-items: flex-end;
+                    }
+                    .chatbox-messages .message-wrapper.sent {
+                        justify-content: flex-end;
+                    }
+                    .chatbox-messages .message-wrapper.received {
+                        justify-content: flex-start;
+                    }
+                    .chatbox-messages .message-avatar {
+                        width: 28px;
+                        height: 28px;
+                        border-radius: 50%;
+                        margin: 0 8px;
+                        object-fit: cover;
+                    }
+                    .chatbox-messages .message-bubble {
+                        max-width: 75%;
+                        padding: 8px 12px;
+                        border-radius: 18px;
+                        font-size: 15px;
+                        line-height: 1.4;
+                        word-wrap: break-word;
+                    }
+                    .chatbox-messages .message-bubble.sent {
+                        background: #0084ff;
+                        color: white;
+                        border-bottom-right-radius: 4px;
+                    }
+                    .chatbox-messages .message-bubble.received {
+                        background: #e4e6eb;
+                        color: #050505;
+                        border-bottom-left-radius: 4px;
+                    }
+                `;
+                document.head.appendChild(style);
 
                 // ===== Gửi tin nhắn AJAX =====
                 chatForm.addEventListener("submit", function(e) {
                     e.preventDefault();
 
-                    let formData = new FormData(chatForm);
+                    if (!currentReceiverId && chatReceiverInput) {
+                        // Nếu chưa có receiver_id, load lại để lấy
+                        loadMessages();
+                        return;
+                    }
 
-                    fetch("#", {
+                    let formData = new FormData(chatForm);
+                    if (currentReceiverId) {
+                        formData.set('receiver_id', currentReceiverId);
+                    }
+
+                    fetch("{{ route('chat.send') }}", {
                             method: "POST",
                             body: formData,
                             headers: {
@@ -430,21 +643,31 @@
                         .then(data => {
                             if (data.success) {
                                 chatForm.reset();
-                                loadMessages();
-                                setTimeout(() => scrollToBottom(true), 100); // cuộn mượt sau khi gửi
+                                if (chatReceiverInput && currentReceiverId) {
+                                    chatReceiverInput.value = currentReceiverId;
+                                }
+                                loadMessages(currentReceiverId);
+                                setTimeout(() => scrollToBottom(true), 100);
+                            } else if (data.error) {
+                                alert(data.error);
                             }
                         })
-                        .catch(err => console.error("Lỗi gửi tin:", err));
+                        .catch(err => {
+                            console.error("Lỗi gửi tin:", err);
+                            alert("Có lỗi xảy ra khi gửi tin nhắn");
+                        });
                 });
 
                 // ===== Tự refresh tin nhắn mỗi 5 giây =====
                 setInterval(() => {
-                    if (chatBox.classList.contains("show")) {
-                        loadMessages();
+                    if (chatBox.classList.contains("show") && currentReceiverId) {
+                        loadMessages(currentReceiverId);
                     }
                 }, 5000);
             });
         </script>
+        @endif
+        @endauth
 
     </main>
 
