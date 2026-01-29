@@ -14,13 +14,11 @@
         right: 20px;
         width: 330px;
         height: 480px;
-        /* Chiều cao cố định */
         background: #fff;
         border-radius: 16px;
         box-shadow: 0 12px 28px 0 rgba(0, 0, 0, 0.2), 0 2px 4px 0 rgba(0, 0, 0, 0.1);
         transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         z-index: 9999;
-        /* Flexbox để chia dọc: Header ở trên, View ở dưới */
         display: flex;
         flex-direction: column;
         overflow: hidden;
@@ -44,7 +42,6 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
         z-index: 10;
         flex-shrink: 0;
-        /* Quan trọng: Không bị co lại khi nội dung nhiều */
     }
 
     .chatbox-title-group {
@@ -84,13 +81,9 @@
     .chat-view {
         display: none;
         flex: 1;
-        /* Chiếm toàn bộ chiều cao còn lại sau header */
         flex-direction: column;
-        /* Chia dọc bên trong view */
         overflow: hidden;
-        /* Quan trọng: Ngăn view tràn ra ngoài chatbox */
         min-height: 0;
-        /* Fix lỗi flexbox trên một số trình duyệt */
         background: #fff;
     }
 
@@ -118,7 +111,6 @@
 
     .admin-item:hover {
         background: #f2f2f2;
-        /* Hover xám nhẹ */
     }
 
     .admin-avatar-wrapper {
@@ -132,18 +124,6 @@
         border-radius: 50%;
         object-fit: cover;
         border: 1px solid rgba(0, 0, 0, 0.1);
-    }
-
-    /* Chấm xanh online */
-    .online-status {
-        position: absolute;
-        bottom: 2px;
-        right: 2px;
-        width: 12px;
-        height: 12px;
-        background: #31a24c;
-        border: 2px solid #fff;
-        border-radius: 50%;
     }
 
     .admin-info {
@@ -177,14 +157,12 @@
     /* Vùng chat messages */
     .chatbox-messages {
         flex: 1;
-        /* Chiếm toàn bộ khoảng trống giữa Header và Input */
         overflow-y: auto;
-        /* Khi tin nhắn dài, thanh cuộn xuất hiện ở đây */
         padding: 12px;
         background: #fff;
         display: flex;
         flex-direction: column;
-        scroll-behavior: smooth;
+        /* scroll-behavior: smooth; */
     }
 
     /* Vùng nhập liệu */
@@ -196,14 +174,12 @@
         align-items: center;
         gap: 8px;
         flex-shrink: 0;
-        /* Quan trọng: Không bị co lại hoặc đẩy đi */
         z-index: 20;
     }
 
     .chatbox-input {
         flex: 1;
         background: #f0f2f5;
-        /* Nền xám cho input */
         border: none;
         border-radius: 20px;
         padding: 9px 12px;
@@ -240,8 +216,8 @@
         position: fixed;
         bottom: 20px;
         right: 20px;
-        width: 60px;
-        height: 60px;
+        width: 50px;
+        height: 50px;
         background: #0084ff;
         color: white;
         border-radius: 50%;
@@ -256,7 +232,7 @@
     }
 
     .chat-toggle-btn:hover {
-        transform: scale(1.1);
+        transform: scale(1.05);
     }
 
     /* Scrollbar đẹp hơn */
@@ -316,6 +292,57 @@
         background: #e4e6eb;
         color: #050505;
     }
+
+    /* Nút cuộn xuống đáy */
+    .scroll-bottom-btn {
+        position: absolute;
+        bottom: 70px;
+        /* Nằm trên ô nhập liệu một chút */
+        left: 50%;
+        transform: translateX(-50%) scale(0);
+        /* Mặc định ẩn bằng scale */
+        width: 35px;
+        height: 35px;
+        background: #fff;
+        border-radius: 50%;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        border: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #0084ff;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        z-index: 50;
+    }
+
+    .scroll-bottom-btn.show {
+        transform: translateX(-50%) scale(1);
+        /* Hiện lên */
+    }
+
+    .scroll-bottom-btn:hover {
+        background: #f5f5f5;
+    }
+
+    /* Badge thông báo tin mới trên nút cuộn */
+    .new-msg-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #ff3b30;
+        color: white;
+        font-size: 10px;
+        font-weight: bold;
+        padding: 2px 5px;
+        border-radius: 10px;
+        display: none;
+        /* Mặc định ẩn */
+    }
+
+    .scroll-bottom-btn.has-new .new-msg-badge {
+        display: block;
+    }
 </style>
 
 {{-- 2. HTML --}}
@@ -349,6 +376,10 @@
         <div id="chat-view-conversation" class="chat-view">
             <div class="chatbox-messages custom-scroll" id="chat-messages">
             </div>
+            <div id="scroll-bottom-btn" class="scroll-bottom-btn">
+                <i class="fas fa-arrow-down"></i>
+                <span class="new-msg-badge">New</span>
+            </div>
             <div class="chatbox-input-area">
                 <form id="chat-form" style="display: flex; width: 100%; align-items: center; gap: 8px;">
                     @csrf
@@ -373,8 +404,36 @@
         const viewChat = document.getElementById("chat-view-conversation");
         const adminList = document.getElementById("admin-list-content");
         const messages = document.getElementById("chat-messages");
+        const scrollBtn = document.getElementById("scroll-bottom-btn");
         const form = document.getElementById("chat-form");
         const receiverInput = document.getElementById("chat-receiver");
+
+        let isUserScrolling = false;
+
+        // --- SỰ KIỆN SCROLL ĐỂ ẨN/HIỆN NÚT ---
+        messages.addEventListener("scroll", () => {
+            // Khoảng cách từ vị trí hiện tại đến đáy
+            const distanceToBottom = messages.scrollHeight - messages.scrollTop - messages.clientHeight;
+
+            if (distanceToBottom > 100) {
+                // Nếu đang ở xa đáy (>100px) -> Hiện nút
+                scrollBtn.classList.add("show");
+                isUserScrolling = true;
+            } else {
+                // Nếu đang ở gần đáy -> Ẩn nút và xóa badge
+                scrollBtn.classList.remove("show");
+                scrollBtn.classList.remove("has-new");
+                isUserScrolling = false;
+            }
+        });
+
+        // --- SỰ KIỆN CLICK NÚT CUỘN ---
+        scrollBtn.addEventListener("click", () => {
+            messages.scrollTo({
+                top: messages.scrollHeight,
+                behavior: "smooth"
+            });
+        });
 
         let currentReceiverId = null;
         let pollInterval = null;
@@ -446,20 +505,29 @@
         window.openChat = function(id, name) {
             viewList.classList.remove("active");
             viewChat.classList.add("active");
-            backBtn.style.display = "flex"; // Dùng flex để căn giữa icon
+            backBtn.style.display = "flex";
             title.innerText = name;
-            title.style.color = "#0084ff"; // Tên người chat màu xanh cho nổi
+            title.style.color = "#0084ff";
             currentReceiverId = id;
             receiverInput.value = id;
 
-            loadMessages(id, true);
+            // Gọi loadMessages với tham số scroll là 'instant' (tức thì)
+            loadMessages(id, 'instant');
 
             if (pollInterval) clearInterval(pollInterval);
             pollInterval = setInterval(() => loadMessages(id, false), 3000);
         };
 
+        // --- KIỂM TRA NGƯỜI DÙNG Ở GẦN CUỐI KHÔNG ---
+        function isUserNearBottom() {
+            const threshold = 100; // khoảng cách cho phép (px)
+            return messages.scrollHeight - messages.scrollTop - messages.clientHeight < threshold;
+        }
+
         // --- LOAD TIN NHẮN (AJAX) ---
-        function loadMessages(id, scroll) {
+        function loadMessages(id, scrollBehavior = false) {
+            const wasNearBottom = !isUserScrolling; // Lưu trạng thái trước khi load
+
             fetch("{{ route('chat.messages') }}?receiver_id=" + id, {
                     headers: {
                         "X-Requested-With": "XMLHttpRequest"
@@ -467,8 +535,36 @@
                 })
                 .then(res => res.text())
                 .then(html => {
+                    // Mẹo: Kiểm tra độ dài nội dung để biết có tin nhắn mới không
+                    const oldHtmlLength = messages.innerHTML.length;
                     messages.innerHTML = html;
-                    if (scroll) messages.scrollTop = messages.scrollHeight;
+                    const newHtmlLength = messages.innerHTML.length;
+
+                    // 1. Trường hợp 'instant' (Mở chat): Cuộn ngay lập tức
+                    if (scrollBehavior === 'instant') {
+                        messages.scrollTop = messages.scrollHeight;
+                        return;
+                    }
+
+                    // 2. Trường hợp 'smooth' (Mình gửi tin): Cuộn mượt
+                    if (scrollBehavior === 'smooth') {
+                        messages.scrollTo({
+                            top: messages.scrollHeight,
+                            behavior: 'smooth'
+                        });
+                        return;
+                    }
+
+                    // 3. Trường hợp Auto-refresh (Người khác gửi tin)
+                    if (scrollBehavior === false) {
+                        if (wasNearBottom) {
+                            // Nếu đang ở đáy -> Tự cuộn xuống tiếp
+                            messages.scrollTop = messages.scrollHeight;
+                        } else if (newHtmlLength > oldHtmlLength) {
+                            // Nếu đang ở trên CAO và CÓ tin mới -> Hiện badge đỏ
+                            scrollBtn.classList.add("has-new");
+                        }
+                    }
                 });
         }
 
@@ -476,7 +572,7 @@
         form.addEventListener("submit", (e) => {
             e.preventDefault();
             const input = form.querySelector('input[name="message"]');
-            if (!input.value.trim()) return; // Không gửi tin rỗng
+            if (!input.value.trim()) return;
 
             let formData = new FormData(form);
             fetch("{{ route('chat.send') }}", {
@@ -490,7 +586,8 @@
                 if (data.success) {
                     form.reset();
                     receiverInput.value = currentReceiverId;
-                    loadMessages(currentReceiverId, true);
+                    // Khi gửi tin xong, muốn cuộn mượt xuống dưới thì dùng 'smooth'
+                    loadMessages(currentReceiverId, 'smooth');
                 }
             });
         });

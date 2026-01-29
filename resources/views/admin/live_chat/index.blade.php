@@ -538,6 +538,9 @@
 </div>
 
 <script>
+    // --- KHAI BÁO BIẾN TOÀN CỤC ---
+    let refreshInterval;
+
     // Hàm escape HTML
     function escapeHtml(text) {
         const map = {
@@ -550,21 +553,86 @@
         return text.replace(/[&<>"']/g, m => map[m]);
     }
 
-    // Auto scroll
+    // Hàm cuộn xuống đáy
     function scrollToBottom() {
         const chatBox = document.getElementById('chat-box');
         if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    // Load Chat bằng AJAX
+    // --- 1. HÀM BẮT ĐẦU TỰ ĐỘNG LOAD (ĐÃ TỐI ƯU) ---
+    function startAutoRefresh(userId) {
+        stopAutoRefresh();
+
+        // Tăng thời gian lên 6000ms (6 giây) để giảm tải server
+        refreshInterval = setInterval(() => {
+            const container = document.getElementById('right-side-content');
+            if (!userId || !container) return;
+
+            // Gọi AJAX lấy dữ liệu mới
+            fetch(`/admin/messages/${userId}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(res => res.text())
+                .then(html => {
+                    // --- KỸ THUẬT DOM PARSER (CHỐNG NHẤP NHÁY) ---
+
+                    // 1. Biến chuỗi HTML trả về thành một tài liệu DOM ảo
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+
+                    // 2. Lấy phần tin nhắn từ HTML mới
+                    const newChatBox = doc.getElementById('chat-box');
+                    // 3. Lấy phần tin nhắn hiện tại trên màn hình
+                    const currentChatBox = document.getElementById('chat-box');
+
+                    if (newChatBox && currentChatBox) {
+                        // Kiểm tra xem Admin có đang ở dưới cùng không TRƯỚC KHI cập nhật
+                        const isAtBottom = (currentChatBox.scrollHeight - currentChatBox.scrollTop - currentChatBox.clientHeight) < 100;
+
+                        // CHỈ CẬP NHẬT NỘI DUNG TIN NHẮN (Không đụng vào Form nhập liệu)
+                        // Nếu nội dung thay đổi thì mới cập nhật để đỡ tốn tài nguyên render
+                        if (currentChatBox.innerHTML !== newChatBox.innerHTML) {
+                            currentChatBox.innerHTML = newChatBox.innerHTML;
+
+                            // Nếu đang ở dưới đáy thì tự cuộn xuống tin mới
+                            if (isAtBottom) {
+                                scrollToBottom();
+                            }
+                        }
+                    } else {
+                        // Fallback: Nếu cấu trúc HTML thay đổi quá nhiều hoặc load lần đầu
+                        // Thì mới replace toàn bộ container (chấp nhận nháy 1 lần này)
+                        container.innerHTML = html;
+                        scrollToBottom();
+                        attachFormListener();
+                    }
+                })
+                .catch(err => console.error("Auto refresh error:", err));
+
+        }, 3000); // <--- Đã sửa thành 3 giây
+    }
+
+    // --- 2. HÀM DỪNG TỰ ĐỘNG LOAD ---
+    function stopAutoRefresh() {
+        if (refreshInterval) {
+            clearInterval(refreshInterval);
+            refreshInterval = null;
+        }
+    }
+
+    // --- 3. SỬA LẠI HÀM loadChat ---
     function loadChat(userId, element) {
-        // Active class handling
+        // UI Active Class
         document.querySelectorAll('.conversation-item').forEach(el => el.classList.remove('active'));
         if (element) element.classList.add('active');
 
-        // Hiển thị loading (tùy chọn)
         const container = document.getElementById('right-side-content');
-        container.style.opacity = '0.5';
+
+        // Hiệu ứng mờ nhẹ khi chuyển người khác
+        container.style.opacity = '0.6';
+        stopAutoRefresh();
 
         fetch(`/admin/messages/${userId}`, {
                 headers: {
@@ -573,31 +641,38 @@
             })
             .then(res => res.text())
             .then(html => {
+                // Khi chuyển người thì thay thế toàn bộ (Full Replace)
                 container.innerHTML = html;
                 container.style.opacity = '1';
+
                 scrollToBottom();
+                attachFormListener(); // Gắn sự kiện submit form mới
 
-                // Re-attach form submit listener vì DOM mới
-                attachFormListener();
-
-                // Cập nhật URL (để khi F5 vẫn ở đúng chat)
+                // Cập nhật URL
                 window.history.pushState({
                     path: `/admin/messages/${userId}`
                 }, '', `/admin/messages/${userId}`);
+
+                // Bắt đầu auto refresh
+                startAutoRefresh(userId);
             })
             .catch(err => {
                 console.error(err);
-                alert('Signal lost. Cannot retrieve timeline data.');
                 container.style.opacity = '1';
+                alert('Không thể tải tin nhắn.');
             });
     }
 
-    // Gắn sự kiện submit cho form (được gọi sau khi load chat)
+    // --- 4. SỰ KIỆN GỬI TIN NHẮN ---
     function attachFormListener() {
         const form = document.getElementById('admin-chat-form');
         if (!form) return;
 
-        form.addEventListener('submit', function(e) {
+        // Xóa clone cũ để tránh gán sự kiện nhiều lần
+        const newForm = form.cloneNode(true);
+        form.parentNode.replaceChild(newForm, form);
+
+        newForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const messageInput = document.getElementById('admin-message-input');
             const messageText = messageInput.value.trim();
@@ -606,6 +681,7 @@
 
             if (!messageText) return;
 
+            // UX: Disable nút gửi nhưng KHÔNG disable input để tránh mất focus
             const sendButton = this.querySelector('.send-button');
             sendButton.disabled = true;
             sendButton.style.opacity = '0.5';
@@ -626,141 +702,45 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        messageInput.value = '';
-                        const chatBox = document.getElementById('chat-box');
+                        messageInput.value = ''; // Xóa input
 
-                        // Remove empty state if exists
+                        // Append tin nhắn mới vào ngay lập tức (UI Optimistic Update)
+                        const chatBox = document.getElementById('chat-box');
                         const emptyChat = chatBox.querySelector('.empty-chat');
                         if (emptyChat) emptyChat.remove();
 
-                        // Append message
                         const messageWrapper = document.createElement('div');
                         messageWrapper.className = 'message-wrapper sent';
-                        messageWrapper.innerHTML = `<div class="message-bubble sent">${escapeHtml(messageText)}</div>`;
+                        messageWrapper.innerHTML = `
+                            <div class="message-bubble sent">
+                                ${escapeHtml(messageText)}
+                            </div>
+                        `;
                         chatBox.appendChild(messageWrapper);
                         scrollToBottom();
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('D-Mail failed to send.');
+                    alert('Gửi tin nhắn thất bại.');
                 })
                 .finally(() => {
                     sendButton.disabled = false;
                     sendButton.style.opacity = '1';
-                    messageInput.focus();
+                    messageInput.focus(); // Giữ focus vào ô nhập liệu
                 });
         });
     }
 
-    // Init scripts on load
+    // --- KHỞI TẠO ---
     document.addEventListener("DOMContentLoaded", function() {
         scrollToBottom();
         attachFormListener();
-        // ... (Giữ nguyên các hàm escapeHtml, scrollToBottom, loadChat, attachFormListener ở trên)
 
-        // --- LOGIC AUTO REFRESH ---
-        let refreshInterval; // Biến lưu interval để quản lý bật/tắt
-
-        function startAutoRefresh(userId) {
-            // Xóa interval cũ nếu có để tránh chạy chồng chéo
-            stopAutoRefresh();
-
-            refreshInterval = setInterval(() => {
-                // Chỉ chạy khi đang ở màn hình chat và có userId
-                const container = document.getElementById('right-side-content');
-                if (!userId || !container) return;
-
-                // Gọi AJAX lấy tin nhắn mới
-                fetch(`/admin/messages/${userId}`, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                    .then(res => res.text())
-                    .then(html => {
-                        // Kiểm tra xem người dùng có đang cuộn lên xem tin nhắn cũ không
-                        const chatBox = document.getElementById('chat-box');
-                        const isAtBottom = chatBox && (chatBox.scrollHeight - chatBox.scrollTop <= chatBox.clientHeight + 100);
-
-                        // Cập nhật nội dung chat (Thay thế HTML cũ bằng mới)
-                        // Lưu ý: Cách này đơn giản nhưng sẽ replace toàn bộ khung chat. 
-                        // Nếu muốn tối ưu hơn thì cần so sánh và append tin nhắn mới (phức tạp hơn).
-                        container.innerHTML = html;
-
-                        // Nếu người dùng đang ở dưới cùng thì mới tự cuộn xuống tin mới
-                        if (isAtBottom) {
-                            scrollToBottom();
-                        }
-
-                        // Gắn lại sự kiện submit cho form vì DOM đã bị thay thế
-                        attachFormListener();
-                    })
-                    .catch(err => console.error("Auto refresh error:", err));
-
-            }, 3000); // Chạy mỗi 3 giây (3000ms)
+        const receiverInput = document.querySelector('input[name="receiver_id"]');
+        if (receiverInput && receiverInput.value) {
+            startAutoRefresh(receiverInput.value);
         }
-
-        function stopAutoRefresh() {
-            if (refreshInterval) {
-                clearInterval(refreshInterval);
-                refreshInterval = null;
-            }
-        }
-
-        // --- SỬA LẠI HÀM loadChat ---
-        // Cần cập nhật hàm loadChat để KÍCH HOẠT auto refresh khi chọn user
-        const originalLoadChat = loadChat; // Lưu hàm cũ (nếu muốn giữ logic cũ)
-
-        // Ghi đè hàm loadChat mới
-        loadChat = function(userId, element) {
-            // ... (Logic UI active class giữ nguyên) ...
-            document.querySelectorAll('.conversation-item').forEach(el => el.classList.remove('active'));
-            if (element) element.classList.add('active');
-
-            const container = document.getElementById('right-side-content');
-            container.style.opacity = '0.5';
-
-            fetch(`/admin/messages/${userId}`, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(res => res.text())
-                .then(html => {
-                    container.innerHTML = html;
-                    container.style.opacity = '1';
-                    scrollToBottom();
-                    attachFormListener();
-
-                    // Cập nhật URL
-                    window.history.pushState({
-                        path: `/admin/messages/${userId}`
-                    }, '', `/admin/messages/${userId}`);
-
-                    // [MỚI] Bắt đầu tự động refresh cho user này
-                    startAutoRefresh(userId);
-                })
-                .catch(err => {
-                    console.error(err);
-                    alert('Signal lost.');
-                    container.style.opacity = '1';
-                });
-        };
-
-        // --- INIT ---
-        document.addEventListener("DOMContentLoaded", function() {
-            scrollToBottom();
-            attachFormListener();
-
-            // Nếu load trang đã có sẵn user (ví dụ F5 lại trang chat), 
-            // cần lấy ID từ DOM hoặc URL để bật auto refresh ngay lập tức.
-            // Cách đơn giản nhất: Kiểm tra input hidden trong form
-            const receiverInput = document.querySelector('input[name="receiver_id"]');
-            if (receiverInput && receiverInput.value) {
-                startAutoRefresh(receiverInput.value);
-            }
-        });
     });
 </script>
 @endsection
