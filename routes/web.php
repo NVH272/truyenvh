@@ -204,6 +204,38 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/chat/messages', [ChatController::class, 'getMessages'])->name('chat.messages');
     Route::post('/chat/send', [ChatController::class, 'send'])->name('chat.send');
     Route::get('/chat/list', [ChatController::class, 'getChatList'])->name('chat.list');
+    Route::post('/chat/ai', [App\Http\Controllers\ChatController::class, 'askAI'])->name('chat.ai');
+    Route::get('/test-gemini-connection', function () {
+        $apiKey = env('GEMINI_API_KEY');
+
+        if (!$apiKey) {
+            return "❌ KHÔNG CÓ API KEY trong .env";
+        }
+
+        try {
+            $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}";
+
+            $response = \Illuminate\Support\Facades\Http::withoutVerifying()
+                ->timeout(30)
+                ->post($url, [
+                    'contents' => [
+                        ['parts' => [['text' => 'Hello']]]
+                    ]
+                ]);
+
+            if ($response->successful()) {
+                return "✅ KẾT NỐI THÀNH CÔNG!<br>" .
+                    "Status: " . $response->status() . "<br>" .
+                    "Response: " . $response->body();
+            } else {
+                return "❌ KẾT NỐI THẤT BẠI!<br>" .
+                    "Status: " . $response->status() . "<br>" .
+                    "Error: " . $response->body();
+            }
+        } catch (\Exception $e) {
+            return "❌ EXCEPTION: " . $e->getMessage();
+        }
+    });
 });
 
 /*

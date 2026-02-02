@@ -1,0 +1,320 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Message;
+use App\Models\User;
+use App\Models\Comic;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+
+class ChatController extends Controller
+{
+    // Đánh dấu đã đọc tin nhắn
+    private function markAsRead($sender_id, $receiver_id)
+    {
+        Message::where('sender_id', $sender_id)
+            ->where('receiver_id', $receiver_id)
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+    }
+
+    public function getMessages(Request $request)
+    {
+        $user = Auth::user();
+        $receiverId = $request->input('receiver_id');
+
+        if (!$receiverId) {
+            // Nếu là user/poster: lấy admin đầu tiên
+            if ($user->role === 'user' || $user->role === 'poster') {
+                $receiver = User::where('role', 'admin')->first();
+                if (!$receiver) {
+                    return response()->json(['error' => 'Không tìm thấy admin'], 404);
+                }
+                $receiverId = $receiver->id;
+            } else {
+                return response()->json(['error' => 'Vui lòng chọn người nhận'], 400);
+            }
+        } else {
+            $receiver = User::findOrFail($receiverId);
+        }
+
+        // Kiểm tra quyền chat
+        if ($user->role === 'user' || $user->role === 'poster') {
+            // User/poster chỉ được chat với admin
+            if ($receiver->role !== 'admin') {
+                return response()->json(['error' => 'Bạn chỉ có thể chat với admin'], 403);
+            }
+            // Kiểm tra email đã xác thực (chỉ áp dụng cho user/poster khi gửi tin)
+            if (!$user->hasVerifiedEmail()) {
+                return response()->json(['error' => 'Vui lòng xác thực email để sử dụng chat'], 403);
+            }
+        } elseif ($user->role === 'admin') {
+            // Admin có thể chat với admin khác hoặc user/poster
+            if ($receiver->id === $user->id) {
+                return response()->json(['error' => 'Bạn không thể chat với chính mình'], 403);
+            }
+        }
+
+        // Đánh dấu tin nhắn đã đọc
+        $this->markAsRead($receiverId, $user->id);
+
+        // Lấy tin nhắn
+        $messages = Message::where(function ($q) use ($user, $receiverId) {
+            $q->where('sender_id', $user->id)->where('receiver_id', $receiverId);
+        })->orWhere(function ($q) use ($user, $receiverId) {
+            $q->where('sender_id', $receiverId)->where('receiver_id', $user->id);
+        })->orderBy('created_at', 'asc')->get();
+
+        $receiver = User::find($receiverId);
+
+        return view('user.live_chat.chat_content', compact('messages', 'receiver'))->render();
+    }
+
+    // Gửi tin nhắn
+    public function send(Request $request)
+    {
+        $request->validate([
+            'receiver_id' => 'required|exists:users,id',
+            'message'     => 'required|string|max:1000',
+        ]);
+
+        $user = Auth::user();
+        $receiver = User::findOrFail($request->receiver_id);
+
+        // Kiểm tra quyền chat
+        if ($user->role === 'user' || $user->role === 'poster') {
+            // User/poster chỉ được chat với admin
+            if ($receiver->role !== 'admin') {
+                return response()->json(['error' => 'Bạn chỉ có thể chat với admin'], 403);
+            }
+            // Kiểm tra email đã xác thực (chỉ áp dụng cho user/poster khi gửi tin)
+            if (!$user->hasVerifiedEmail()) {
+                return response()->json(['error' => 'Vui lòng xác thực email để sử dụng chat'], 403);
+            }
+        } elseif ($user->role === 'admin') {
+            // Admin có thể chat với admin khác hoặc user/poster
+            if ($receiver->id === $user->id) {
+                return response()->json(['error' => 'Bạn không thể chat với chính mình'], 403);
+            }
+        }
+
+        $message = Message::create([
+            'sender_id'   => $user->id,
+            'receiver_id' => $request->receiver_id,
+            'message'     => $request->message,
+        ]);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message->load('sender')
+            ]);
+        }
+
+        return back();
+    }
+
+    // Lấy danh sách người có thể chat (cho admin)
+    public function getChatList(Request $request)
+    {
+        $user = Auth::user();
+
+        if ($user->role === 'admin') {
+            // Admin có thể chat với: user/poster đã xác thực email, và admin khác
+            $users = User::where('id', '!=', $user->id)
+                ->where(function ($q) {
+                    $q->where('role', 'admin')
+                        ->orWhere(function ($q2) {
+                            $q2->whereIn('role', ['user', 'poster'])
+                                ->whereNotNull('email_verified_at');
+                        });
+                })
+                ->where(function ($q) use ($user) {
+                    $q->whereHas('sentMessages', function ($q2) use ($user) {
+                        $q2->where('receiver_id', $user->id);
+                    })
+                        ->orWhereHas('receivedMessages', function ($q2) use ($user) {
+                            $q2->where('sender_id', $user->id);
+                        });
+                })
+                ->withCount(['sentMessages as unread_count' => function ($q) use ($user) {
+                    $q->where('receiver_id', $user->id)->whereNull('read_at');
+                }])
+                ->orderByDesc('unread_count')
+                ->get();
+        } else {
+            // 1. Tạo subquery để lấy thời gian tin nhắn cuối cùng (gửi hoặc nhận)
+            // Giữa user hiện tại và admin đang được query
+            $lastMessageQuery = Message::select('created_at')
+                ->where(function ($q) use ($user) {
+                    $q->where('sender_id', $user->id)
+                        ->whereColumn('receiver_id', 'users.id'); // users.id là id của admin trong danh sách
+                })
+                ->orWhere(function ($q) use ($user) {
+                    $q->where('receiver_id', $user->id)
+                        ->whereColumn('sender_id', 'users.id');
+                })
+                ->latest() // Lấy tin mới nhất
+                ->limit(1);
+
+            // 2. Query chính
+            $users = User::where('role', 'admin')
+                // Thêm cột ảo 'last_interaction' từ subquery trên
+                ->addSelect(['last_interaction' => $lastMessageQuery])
+
+                // Đếm tin nhắn chưa đọc (giữ nguyên)
+                ->withCount(['sentMessages as unread_count' => function ($q) use ($user) {
+                    $q->where('receiver_id', $user->id)->whereNull('read_at');
+                }])
+
+                // Sắp xếp:
+                // Ưu tiên 1: Thời gian tương tác mới nhất (DESC). 
+                // MySQL mặc định xếp NULL (chưa nhắn bao giờ) xuống cuối cùng khi dùng DESC.
+                ->orderByDesc('last_interaction')
+
+                // Ưu tiên 2: Nếu chưa nhắn (last_interaction là null), xếp theo tên A-Z
+                ->orderBy('name', 'asc')
+                ->get();
+        }
+
+        return response()->json(['users' => $users]);
+    }
+
+    // --- Phần Admin (trang riêng) ---
+
+    public function adminIndex()
+    {
+        // Lấy user và poster đã xác thực email đã từng nhắn tin
+        $users = User::whereIn('role', ['user', 'poster'])
+            ->whereNotNull('email_verified_at')
+            ->whereHas('sentMessages', function ($q) {
+                $q->where('receiver_id', Auth::id());
+            })
+            ->withCount(['sentMessages as unread_count' => function ($q) {
+                $q->where('receiver_id', Auth::id())->whereNull('read_at');
+            }])
+            ->orderByDesc('unread_count')
+            ->get();
+
+        // Lấy admin khác (không phải bản thân)
+        $admins = User::where('role', 'admin')
+            ->where('id', '!=', Auth::id())
+            ->whereHas('sentMessages', function ($q) {
+                $q->where('receiver_id', Auth::id());
+            })
+            ->orWhereHas('receivedMessages', function ($q) {
+                $q->where('sender_id', Auth::id());
+            })
+            ->withCount(['sentMessages as unread_count' => function ($q) {
+                $q->where('receiver_id', Auth::id())->whereNull('read_at');
+            }])
+            ->orderByDesc('unread_count')
+            ->get();
+
+        return view('admin.live_chat.index', compact('users', 'admins'));
+    }
+
+    public function adminChat(User $user, Request $request)
+    {
+        // 1. Đánh dấu đã đọc
+        $this->markAsRead($user->id, Auth::id());
+
+        // 2. Lấy tin nhắn
+        $messages = Message::where(function ($q) use ($user) {
+            $q->where('sender_id', Auth::id())->where('receiver_id', $user->id);
+        })->orWhere(function ($q) use ($user) {
+            $q->where('sender_id', $user->id)->where('receiver_id', Auth::id());
+        })->orderBy('created_at', 'asc')->get();
+
+        // --- QUAN TRỌNG: XỬ LÝ AJAX ---
+        // Nếu click từ sidebar -> Chỉ trả về HTML của khung chat bên phải
+        if ($request->ajax()) {
+            return view('admin.live_chat.chat_content', compact('messages', 'user'))->render();
+        }
+
+        // 3. Nếu không phải AJAX (truy cập trực tiếp) -> Lấy dữ liệu cho Sidebar để hiển thị full trang
+        // (Logic lấy users/admins giữ nguyên như cũ)
+        $users = User::whereIn('role', ['user', 'poster'])
+            ->whereNotNull('email_verified_at')
+            ->where(function ($q) {
+                $q->whereHas('sentMessages', function ($q2) {
+                    $q2->where('receiver_id', Auth::id());
+                })
+                    ->orWhereHas('receivedMessages', function ($q2) {
+                        $q2->where('sender_id', Auth::id());
+                    });
+            })
+            ->withCount(['sentMessages as unread_count' => function ($q) {
+                $q->where('receiver_id', Auth::id())->whereNull('read_at');
+            }])
+            ->orderByDesc('unread_count')
+            ->get();
+
+        $admins = User::where('role', 'admin')
+            ->where('id', '!=', Auth::id())
+            ->where(function ($q) {
+                $q->whereHas('sentMessages', function ($q2) {
+                    $q2->where('receiver_id', Auth::id());
+                })
+                    ->orWhereHas('receivedMessages', function ($q2) {
+                        $q2->where('sender_id', Auth::id());
+                    });
+            })
+            ->withCount(['sentMessages as unread_count' => function ($q) {
+                $q->where('receiver_id', Auth::id())->whereNull('read_at');
+            }])
+            ->orderByDesc('unread_count')
+            ->get();
+
+        // --- QUAN TRỌNG: TRẢ VỀ VIEW INDEX ---
+        // Thay vì trả về view 'chat' cũ, ta trả về view 'index' (trang gộp)
+        // Kèm theo biến $user và $messages để view index biết đang chat với ai
+        return view('admin.live_chat.index', compact('users', 'admins', 'messages', 'user'));
+    }
+
+    public function askAI(Request $request)
+    {
+        $message = $request->input('message');
+        $apiKey = env('GEMINI_API_KEY');
+
+        if (!$apiKey) {
+            return response()->json(['error' => 'Chưa cấu hình API Key'], 500);
+        }
+
+        try {
+            // Đã đổi sang model gemini-2.5-flash (có trong danh sách của bạn)
+            $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}";
+
+            $response = \Illuminate\Support\Facades\Http::withoutVerifying()
+                ->withHeaders(['Content-Type' => 'application/json'])
+                ->post($url, [
+                    'contents' => [
+                        [
+                            'parts' => [
+                                ['text' => $message]
+                            ]
+                        ]
+                    ]
+                ]);
+
+            if ($response->failed()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Google Error: ' . $response->status() . ' - ' . $response->body()
+                ]);
+            }
+
+            $data = $response->json();
+            $answer = $data['candidates'][0]['content']['parts'][0]['text'] ?? 'AI không trả lời được.';
+
+            return response()->json([
+                'success' => true,
+                'reply' => $answer
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+}

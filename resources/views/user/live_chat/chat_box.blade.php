@@ -343,6 +343,66 @@
     .scroll-bottom-btn.has-new .new-msg-badge {
         display: block;
     }
+
+    /* CSS riêng cho mục AI trong danh sách */
+    .ai-item {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border: 1px solid #bae6fd;
+    }
+
+    .ai-item:hover {
+        background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+    }
+
+    .ai-avatar {
+        background: #0ea5e9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 20px;
+    }
+
+    /* Hiệu ứng loading 3 chấm khi AI đang trả lời */
+    .typing-indicator {
+        background: #e4e6eb;
+        padding: 10px 15px;
+        border-radius: 18px;
+        border-bottom-left-radius: 2px;
+        display: inline-block;
+        margin-bottom: 8px;
+    }
+
+    .typing-dot {
+        height: 6px;
+        width: 6px;
+        background: #65676b;
+        border-radius: 50%;
+        display: inline-block;
+        animation: typing 1.4s infinite ease-in-out both;
+        margin: 0 2px;
+    }
+
+    .typing-dot:nth-child(1) {
+        animation-delay: -0.32s;
+    }
+
+    .typing-dot:nth-child(2) {
+        animation-delay: -0.16s;
+    }
+
+    @keyframes typing {
+
+        0%,
+        80%,
+        100% {
+            transform: scale(0);
+        }
+
+        40% {
+            transform: scale(1);
+        }
+    }
 </style>
 
 {{-- 2. HTML --}}
@@ -366,9 +426,23 @@
         </div>
 
         <div id="chat-view-list" class="chat-view active">
-            <div class="admin-list-container custom-scroll" id="admin-list-content">
-                <div style="text-align: center; margin-top: 40px; color: #65676b;">
-                    <i class="fas fa-circle-notch fa-spin" style="font-size: 24px; color: #0084ff;"></i>
+            <div class="admin-list-container custom-scroll">
+
+                <div class="admin-item ai-item" onclick="openAIChat()">
+                    <div class="admin-avatar-wrapper">
+                        <div class="admin-avatar ai-avatar"><i class="fas fa-robot"></i></div>
+                        <div class="online-status" style="background: #0ea5e9;"></div>
+                    </div>
+                    <div class="admin-info">
+                        <div class="admin-name" style="color: #0284c7;">Trợ lý ảo AI</div>
+                        <div class="admin-role">Hỗ trợ tự động 24/7</div>
+                    </div>
+                </div>
+
+                <div id="admin-list-content">
+                    <div style="text-align: center; margin-top: 20px; color: #666;">
+                        <i class="fas fa-circle-notch fa-spin" style="font-size: 24px; color: #0084ff;"></i>
+                    </div>
                 </div>
             </div>
         </div>
@@ -437,6 +511,69 @@
 
         let currentReceiverId = null;
         let pollInterval = null;
+        let isAIConversation = false;
+
+        function appendMessage(text, type) {
+            const wrapper = document.createElement('div');
+            wrapper.className = `message-wrapper ${type}`;
+
+            let avatarHtml = '';
+            if (type === 'received') {
+                // Nếu là AI thì dùng icon robot, nếu là người thì dùng avatar mặc định
+                let imgUrl = isAIConversation ?
+                    'https://ui-avatars.com/api/?name=AI&background=0ea5e9&color=fff' :
+                    'https://ui-avatars.com/api/?name=Admin&background=random';
+
+                avatarHtml = `<img src="${imgUrl}" class="message-avatar">`;
+            }
+
+            wrapper.innerHTML = `
+                ${avatarHtml}
+                <div class="message-bubble ${type}">${text}</div>
+            `;
+            messages.appendChild(wrapper);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const loader = document.createElement('div');
+            loader.id = 'ai-typing';
+            loader.className = 'message-wrapper received';
+            loader.innerHTML = `
+                <img src="https://ui-avatars.com/api/?name=AI&background=0ea5e9&color=fff" class="message-avatar">
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+                </div>
+            `;
+            messages.appendChild(loader);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const loader = document.getElementById('ai-typing');
+            if (loader) loader.remove();
+        }
+
+        // --- LOGIC MỞ CHAT VỚI AI ---
+        window.openAIChat = function() {
+            isAIConversation = true; // Bật cờ AI
+            currentReceiverId = 'ai_bot';
+
+            // UI Update
+            viewList.classList.remove("active");
+            viewChat.classList.add("active");
+            backBtn.style.display = "flex";
+            title.innerText = "Trợ lý ảo AI";
+            title.style.color = "#0ea5e9";
+
+            // Dừng polling tin nhắn DB
+            if (pollInterval) clearInterval(pollInterval);
+
+            // Xóa tin nhắn cũ và hiển thị lời chào
+            messages.innerHTML = '';
+            appendMessage("Xin chào! Tôi là trợ lý ảo Gemini. Bạn cần giúp gì không?", "received");
+        }
+
 
         // --- MỞ CHATBOX ---
         toggle.addEventListener("click", () => {
@@ -464,6 +601,7 @@
             title.innerText = "Đoạn chat";
             title.style.color = "#050505"; // Màu đen cho title danh sách
             if (pollInterval) clearInterval(pollInterval);
+            isAIConversation = false;
             loadAdmins();
         }
 
@@ -572,24 +710,68 @@
         form.addEventListener("submit", (e) => {
             e.preventDefault();
             const input = form.querySelector('input[name="message"]');
-            if (!input.value.trim()) return;
+            const messageText = input.value.trim();
+            if (!messageText) return;
 
-            let formData = new FormData(form);
-            fetch("{{ route('chat.send') }}", {
-                method: "POST",
-                body: formData,
-                headers: {
-                    "X-Requested-With": "XMLHttpRequest",
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
-                }
-            }).then(res => res.json()).then(data => {
-                if (data.success) {
-                    form.reset();
-                    receiverInput.value = currentReceiverId;
-                    // Khi gửi tin xong, muốn cuộn mượt xuống dưới thì dùng 'smooth'
-                    loadMessages(currentReceiverId, 'smooth');
-                }
-            });
+            // 1. Hiển thị tin nhắn của mình ngay lập tức
+            appendMessage(messageText, "sent");
+            input.value = '';
+
+            if (isAIConversation) {
+                // === XỬ LÝ GỬI CHO AI ===
+                showTypingIndicator(); // Hiện 3 chấm
+
+                fetch("{{ route('chat.ai') }}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({
+                            message: messageText
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        removeTypingIndicator(); // Tắt 3 chấm
+                        if (data.success) {
+                            // Hiển thị câu trả lời của AI
+                            // Chuyển đổi ký tự xuống dòng \n thành <br> để hiển thị đẹp
+                            let reply = data.reply.replace(/\n/g, '<br>');
+
+                            // Xử lý markdown cơ bản (in đậm) nếu Gemini trả về **text**
+                            reply = reply.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+
+                            appendMessage(reply, "received");
+                        } else {
+                            appendMessage("Lỗi: " + (data.error || "Không thể kết nối AI"), "received");
+                        }
+                    })
+                    .catch(err => {
+                        removeTypingIndicator();
+                        appendMessage("Lỗi kết nối mạng.", "received");
+                    });
+
+            } else {
+                // === XỬ LÝ GỬI CHO ADMIN (Logic cũ) ===
+                let formData = new FormData();
+                formData.append('receiver_id', currentReceiverId);
+                formData.append('message', messageText);
+
+                fetch("{{ route('chat.send') }}", {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest",
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+                    }
+                }).then(res => res.json()).then(data => {
+                    if (data.success) {
+                        // Load lại tin nhắn để đồng bộ ID, thời gian...
+                        loadMessages(currentReceiverId, 'smooth');
+                    }
+                });
+            }
         });
 
         // --- CSS DYNAMIC CHO BUBBLES (Style giống Messenger) ---
