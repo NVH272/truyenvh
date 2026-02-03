@@ -86,7 +86,7 @@ class Comic extends Model
     // Quan hệ N-N với User qua bảng comic_follows
     public function followers(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'comic_follows')
+        return $this->belongsToMany(User::class, 'comic_follows', 'comic_id', 'user_id')
             ->withTimestamps();
     }
 

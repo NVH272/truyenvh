@@ -104,6 +104,20 @@
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
+
+        /* CSS cho scrollbar đẹp */
+        .custom-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 4px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
     </style>
 </head>
 
@@ -166,13 +180,43 @@
                     </button>
                 </form>
 
-                <!-- DARK MODE BUTTON (same height/shape as userMenuBtn avatar size) -->
-                <button class="relative w-10 h-10 bg-white/80 backdrop-blur-md border border-slate-200/60 
-                   rounded-full shadow-sm hover:shadow-lg hover:shadow-blue-500/10 
-                   hover:border-blue-300 hover:bg-white text-slate-500 hover:text-blue-600 
-                   flex items-center justify-center transition-all duration-300 group">
-                    <i class="fas fa-moon transform group-hover:-rotate-12 transition-transform duration-300"></i>
-                </button>
+                <!-- Notification Wrapper -->
+                <div class="relative" id="notification-dropdown-wrapper">
+
+                    <!-- Button Chuông -->
+                    <button id="notification-btn" class="relative w-10 h-10 bg-white/80 backdrop-blur-md border border-slate-200/60 
+                        rounded-full shadow-sm hover:shadow-lg hover:shadow-blue-500/10 
+                        hover:border-blue-300 hover:bg-white text-slate-500 hover:text-blue-600 
+                        flex items-center justify-center transition-all duration-300 group">
+
+                        <i class="fas fa-bell transform group-hover:-rotate-12 transition-transform duration-300 text-lg"></i>
+
+                        <!-- Chấm đỏ báo hiệu số lượng (Ẩn mặc định) -->
+                        <span id="notification-count" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm border border-white">
+                            0
+                        </span>
+                    </button>
+
+                    <!-- Dropdown Content (Ẩn mặc định) -->
+                    <div id="notification-dropdown" class="hidden absolute right-0 mt-3 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50 origin-top-right transition-all duration-200 transform scale-95 opacity-0">
+                        <div class="px-4 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                            <h3 class="font-bold text-gray-700">Thông báo</h3>
+                            <button onclick="markAllAsRead()" class="text-xs text-blue-600 hover:text-blue-800 font-medium">Đánh dấu đã đọc</button>
+                        </div>
+
+                        <!-- KHUNG CHỨA DANH SÁCH -->
+                        <div id="notification-list" class="max-h-[400px] overflow-y-auto custom-scroll">
+                            <div class="p-6 text-center text-gray-500 flex flex-col items-center">
+                                <i class="fas fa-circle-notch fa-spin text-blue-500 text-2xl mb-2"></i>
+                                <span class="text-xs">Đang tải...</span>
+                            </div>
+                        </div>
+
+                        <div class="px-4 py-2 border-t border-gray-100 bg-gray-50 text-center">
+                            <a href="#" class="text-xs text-gray-500 hover:text-blue-600 font-medium">Xem tất cả</a>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- LOGIN BUTTON (đồng bộ chiều cao, bo tròn, texture) -->
                 @guest
@@ -395,6 +439,99 @@
 
             // Ngăn đóng khi click bên trong menu
             menu.addEventListener('click', (e) => e.stopPropagation());
+
+            // Thông báo
+            document.addEventListener("DOMContentLoaded", function() {
+                const btn = document.getElementById('notification-btn');
+                const dropdown = document.getElementById('notification-dropdown');
+                const list = document.getElementById('notification-list');
+                const countBadge = document.getElementById('notification-count');
+                let isOpen = false;
+
+                // 1. Load số lượng thông báo khi vào trang (Chạy ngay lập tức)
+                fetchNotifications(false);
+
+                // 2. Sự kiện Click vào nút chuông
+                if (btn) {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation(); // Ngăn sự kiện lan ra ngoài
+                        isOpen = !isOpen;
+
+                        if (isOpen) {
+                            // Hiện dropdown
+                            dropdown.classList.remove('hidden');
+                            // Hiệu ứng animation (optional)
+                            setTimeout(() => {
+                                dropdown.classList.remove('scale-95', 'opacity-0');
+                                dropdown.classList.add('scale-100', 'opacity-100');
+                            }, 10);
+
+                            // Load nội dung HTML danh sách
+                            fetchNotifications(true);
+                        } else {
+                            closeDropdown();
+                        }
+                    });
+                }
+
+                // 3. Click ra ngoài thì đóng
+                document.addEventListener('click', function(e) {
+                    if (dropdown && !dropdown.contains(e.target) && !btn.contains(e.target)) {
+                        closeDropdown();
+                    }
+                });
+
+                function closeDropdown() {
+                    if (!dropdown) return;
+                    isOpen = false;
+                    dropdown.classList.remove('scale-100', 'opacity-100');
+                    dropdown.classList.add('scale-95', 'opacity-0');
+                    setTimeout(() => dropdown.classList.add('hidden'), 200);
+                }
+
+                // 4. Hàm gọi API lấy thông báo
+                function fetchNotifications(loadHtml = false) {
+                    fetch("{{ route('notifications.get') }}")
+                        .then(res => {
+                            if (!res.ok) throw new Error('Network response was not ok');
+                            return res.json();
+                        })
+                        .then(data => {
+                            // Cập nhật số lượng
+                            if (data.unread_count > 0) {
+                                countBadge.innerText = data.unread_count > 99 ? '99+' : data.unread_count;
+                                countBadge.classList.remove('hidden');
+                            } else {
+                                countBadge.classList.add('hidden');
+                            }
+
+                            // Cập nhật danh sách nếu cần (khi mở dropdown)
+                            if (loadHtml && list) {
+                                list.innerHTML = data.html;
+                            }
+                        })
+                        .catch(error => console.error('Error fetching notifications:', error));
+                }
+
+                // 5. Hàm đánh dấu đã đọc (Global để gọi từ onclick trong HTML nếu cần)
+                window.markAllAsRead = function() {
+                    fetch("{{ route('notifications.markRead') }}", {
+                        method: "POST",
+                        headers: {
+                            "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                            "Content-Type": "application/json"
+                        }
+                    }).then(() => {
+                        countBadge.classList.add('hidden');
+                        // Làm mờ các item chưa đọc trong list (nếu đang mở)
+                        const unreadItems = list.querySelectorAll('.bg-blue-50\\/60'); // Class nền xanh bạn set ở view
+                        unreadItems.forEach(item => {
+                            item.classList.remove('bg-blue-50/60');
+                            item.classList.add('bg-white', 'opacity-60');
+                        });
+                    });
+                }
+            });
         });
     </script>
 </body>

@@ -27,6 +27,7 @@ use App\Http\Controllers\User\ChapterController;
 use App\Http\Controllers\User\CommentReportController;
 use App\Http\Controllers\User\ReadChapterController;
 use App\Http\Controllers\User\ReadingHistoryController;
+use App\Http\Controllers\User\NotificationController;
 
 use App\Http\Controllers\Poster\MyComicsController;
 
@@ -84,6 +85,11 @@ Route::controller(PolicyController::class)->group(function () {
 |--------------------------------------------------------------------------
 */
 
+Route::middleware(['auth'])->group(function () {
+    Route::get('/notifications/get', [App\Http\Controllers\User\NotificationController::class, 'index'])->name('notifications.get');
+    Route::post('/notifications/mark-read', [App\Http\Controllers\User\NotificationController::class, 'markAsRead'])->name('notifications.markRead');
+    Route::get('/notifications/{id}', [App\Http\Controllers\User\NotificationController::class, 'readAndRedirect'])->name('notifications.read');
+});
 
 // Theo dõi & đánh giá: yêu cầu user đã xác thực email
 Route::middleware(['auth', 'verified'])->group(function () {
