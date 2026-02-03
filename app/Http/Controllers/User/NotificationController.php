@@ -34,11 +34,37 @@ class NotificationController extends Controller
         ]);
     }
 
-    // Đánh dấu tất cả là đã đọc (khi bấm vào chuông)
+    // Đánh dấu tất cả là đã đọc (nút "Đánh dấu đã đọc" trong dropdown)
     public function markAsRead()
     {
         Auth::user()->unreadNotifications->markAsRead();
         return response()->json(['success' => true]);
+    }
+
+    // Đánh dấu 1 thông báo là đã đọc (từ menu ba chấm)
+    public function markOne($id, Request $request)
+    {
+        $notification = Auth::user()->notifications()->findOrFail($id);
+        $notification->markAsRead();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+
+        return back();
+    }
+
+    // Xoá 1 thông báo (từ menu ba chấm)
+    public function destroy($id, Request $request)
+    {
+        $notification = Auth::user()->notifications()->findOrFail($id);
+        $notification->delete();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+
+        return back();
     }
 
     // Đánh dấu 1 cái là đã đọc và chuyển hướng (khi click vào 1 thông báo)

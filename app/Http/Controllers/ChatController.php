@@ -13,6 +13,49 @@ use Illuminate\Support\Facades\Log;
 
 class ChatController extends Controller
 {
+    // ============================================
+    // HELPER: LOGIC TRUY VẤN CHUNG (CORE)
+    // ============================================
+
+    /**
+     * Hàm này trả về 3 danh sách riêng biệt: Admins, Posters, Users
+     * Dùng chung cho adminIndex, adminChat và API
+     */
+    private function getSharedChatLists($authId)
+{
+    // 1. LẤY TOÀN BỘ ADMIN (Trừ bản thân)
+    // Bỏ điều kiện whereHas sentMessages/receivedMessages
+    $admins = User::where('role', 'admin')
+        ->where('id', '!=', $authId)
+        ->withCount(['sentMessages as unread_count' => function ($q) use ($authId) {
+            $q->where('receiver_id', $authId)->whereNull('read_at');
+        }])
+        ->orderByDesc('unread_count') // Vẫn ưu tiên người có tin chưa đọc lên đầu
+        ->orderBy('name', 'asc')      // Sau đó xếp theo tên A-Z
+        ->get();
+
+    // 2. LẤY TOÀN BỘ USER & POSTER (Đã xác thực email)
+    // Bỏ điều kiện whereHas sentMessages/receivedMessages
+    $allCustomers = User::whereIn('role', ['user', 'poster'])
+        ->whereNotNull('email_verified_at')
+        ->withCount(['sentMessages as unread_count' => function ($q) use ($authId) {
+            $q->where('receiver_id', $authId)->whereNull('read_at');
+        }])
+        ->orderByDesc('unread_count')
+        ->orderBy('name', 'asc')
+        ->get();
+
+    // 3. Tách nhóm
+    $posters = $allCustomers->where('role', 'poster');
+    $users = $allCustomers->where('role', 'user');
+
+    return [$admins, $posters, $users];
+}
+
+    // ============================================
+    // CÁC FUNCTION CHÍNH
+    // ============================================
+
     // Đánh dấu đã đọc tin nhắn
     private function markAsRead($sender_id, $receiver_id)
     {
@@ -21,6 +64,124 @@ class ChatController extends Controller
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
     }
+
+    // [VIEW] Admin Index (Trang chủ chat Admin)
+    public function adminIndex()
+    {
+        // Gọi helper để lấy 3 biến
+        [$admins, $posters, $users] = $this->getSharedChatLists(Auth::id());
+
+        // Truyền đủ 3 biến vào view -> SỬA ĐƯỢC LỖI UNDEFINED VARIABLE
+        return view('admin.live_chat.index', compact('admins', 'posters', 'users'));
+    }
+
+    // [VIEW] Admin Chat Detail (Khi click vào một người)
+    public function adminChat(User $user, Request $request)
+    {
+        $this->markAsRead($user->id, Auth::id());
+
+        $messages = Message::where(function ($q) use ($user) {
+            $q->where('sender_id', Auth::id())->where('receiver_id', $user->id);
+        })->orWhere(function ($q) use ($user) {
+            $q->where('sender_id', $user->id)->where('receiver_id', Auth::id());
+        })->orderBy('created_at', 'asc')->get();
+
+        // Nếu là Ajax (chỉ load khung chat phải)
+        if ($request->ajax()) {
+            return view('admin.live_chat.chat_content', compact('messages', 'user'))->render();
+        }
+
+        // Nếu load cả trang -> Cần sidebar -> Gọi helper lấy 3 biến
+        [$admins, $posters, $users] = $this->getSharedChatLists(Auth::id());
+
+        return view('admin.live_chat.index', compact('admins', 'posters', 'users', 'messages', 'user'));
+    }
+
+    // [API] Lấy danh sách chat (JSON) cho JS
+    public function getChatList(Request $request)
+    {
+        $user = Auth::user();
+        $scope = $request->input('scope', 'public');
+
+        // LOGIC 1: Admin ở Dashboard
+        if ($user->role === 'admin' && $scope === 'admin_dashboard') {
+            
+            [$admins, $posters, $users] = $this->getSharedChatLists($user->id);
+
+            return response()->json([
+                'mode' => 'admin_dashboard',
+                'admins' => $admins->values(),   // values() để reset index array cho JSON đẹp
+                'posters' => $posters->values(),
+                'users' => $users->values()
+            ]);
+        }
+
+        // LOGIC 2: Admin ở Public hoặc User thường
+        else {
+            // Logic cũ: Chỉ hiển thị danh sách Admin để hỗ trợ
+            $lastMessageQuery = Message::select('created_at')
+                ->where(function ($q) use ($user) {
+                    $q->where('sender_id', $user->id)->whereColumn('receiver_id', 'users.id');
+                })
+                ->orWhere(function ($q) use ($user) {
+                    $q->where('receiver_id', $user->id)->whereColumn('sender_id', 'users.id');
+                })
+                ->latest()
+                ->limit(1);
+
+            $listAdmins = User::where('role', 'admin')
+                ->where('id', '!=', $user->id)
+                ->addSelect(['last_interaction' => $lastMessageQuery])
+                ->withCount(['sentMessages as unread_count' => function ($q) use ($user) {
+                    $q->where('receiver_id', $user->id)->whereNull('read_at');
+                }])
+                ->orderByDesc('last_interaction')
+                ->orderBy('name', 'asc')
+                ->get();
+
+            // Trả về key 'users' chung chung (vì JS bên public đang dùng key này)
+            return response()->json([
+                'mode' => 'public',
+                'users' => $listAdmins 
+            ]);
+        }
+    }
+
+    // [API] Tìm kiếm User (Cho thanh Search mới)
+    public function searchChatUsers(Request $request)
+    {
+        $search = $request->input('query');
+        $authId = Auth::id();
+
+        // Query tất cả user (trừ bản thân)
+        $query = User::where('id', '!=', $authId)
+            ->whereNotNull('email_verified_at');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('email', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $allResults = $query->withCount(['sentMessages as unread_count' => function ($q) use ($authId) {
+                $q->where('receiver_id', $authId)->whereNull('read_at');
+            }])
+            ->orderByDesc('unread_count')
+            ->orderBy('name', 'asc')
+            ->get();
+
+        // Chia nhóm kết quả tìm kiếm
+        return response()->json([
+            'admins' => $allResults->where('role', 'admin')->values(),
+            'posters' => $allResults->where('role', 'poster')->values(),
+            'users' => $allResults->where('role', 'user')->values(),
+        ]);
+    }
+
+    // ============================================
+    // PUBLIC CHAT FUNCTIONS
+    // ============================================
 
     public function getMessages(Request $request)
     {
@@ -41,7 +202,7 @@ class ChatController extends Controller
             $receiver = User::findOrFail($receiverId);
         }
 
-        // Kiểm tra quyền chat
+        // Kiểm tra quyền
         if ($user->role === 'user' || $user->role === 'poster') {
             if ($receiver->role !== 'admin') {
                 return response()->json(['error' => 'Bạn chỉ có thể chat với admin'], 403);
@@ -63,8 +224,6 @@ class ChatController extends Controller
             $q->where('sender_id', $receiverId)->where('receiver_id', $user->id);
         })->orderBy('created_at', 'asc')->get();
 
-        $receiver = User::find($receiverId);
-
         return view('user.live_chat.chat_content', compact('messages', 'receiver'))->render();
     }
 
@@ -78,6 +237,7 @@ class ChatController extends Controller
         $user = Auth::user();
         $receiver = User::findOrFail($request->receiver_id);
 
+        // Validate quyền gửi
         if ($user->role === 'user' || $user->role === 'poster') {
             if ($receiver->role !== 'admin') {
                 return response()->json(['error' => 'Bạn chỉ có thể chat với admin'], 403);
@@ -105,137 +265,6 @@ class ChatController extends Controller
         }
 
         return back();
-    }
-
-    public function getChatList(Request $request)
-    {
-        $user = Auth::user();
-
-        if ($user->role === 'admin') {
-            $users = User::where('id', '!=', $user->id)
-                ->where(function ($q) {
-                    $q->where('role', 'admin')
-                        ->orWhere(function ($q2) {
-                            $q2->whereIn('role', ['user', 'poster'])
-                                ->whereNotNull('email_verified_at');
-                        });
-                })
-                ->where(function ($q) use ($user) {
-                    $q->whereHas('sentMessages', function ($q2) use ($user) {
-                        $q2->where('receiver_id', $user->id);
-                    })
-                        ->orWhereHas('receivedMessages', function ($q2) use ($user) {
-                            $q2->where('sender_id', $user->id);
-                        });
-                })
-                ->withCount(['sentMessages as unread_count' => function ($q) use ($user) {
-                    $q->where('receiver_id', $user->id)->whereNull('read_at');
-                }])
-                ->orderByDesc('unread_count')
-                ->get();
-        } else {
-            $lastMessageQuery = Message::select('created_at')
-                ->where(function ($q) use ($user) {
-                    $q->where('sender_id', $user->id)
-                        ->whereColumn('receiver_id', 'users.id');
-                })
-                ->orWhere(function ($q) use ($user) {
-                    $q->where('receiver_id', $user->id)
-                        ->whereColumn('sender_id', 'users.id');
-                })
-                ->latest()
-                ->limit(1);
-
-            $users = User::where('role', 'admin')
-                ->addSelect(['last_interaction' => $lastMessageQuery])
-                ->withCount(['sentMessages as unread_count' => function ($q) use ($user) {
-                    $q->where('receiver_id', $user->id)->whereNull('read_at');
-                }])
-                ->orderByDesc('last_interaction')
-                ->orderBy('name', 'asc')
-                ->get();
-        }
-
-        return response()->json(['users' => $users]);
-    }
-
-    public function adminIndex()
-    {
-        $users = User::whereIn('role', ['user', 'poster'])
-            ->whereNotNull('email_verified_at')
-            ->whereHas('sentMessages', function ($q) {
-                $q->where('receiver_id', Auth::id());
-            })
-            ->withCount(['sentMessages as unread_count' => function ($q) {
-                $q->where('receiver_id', Auth::id())->whereNull('read_at');
-            }])
-            ->orderByDesc('unread_count')
-            ->get();
-
-        $admins = User::where('role', 'admin')
-            ->where('id', '!=', Auth::id())
-            ->whereHas('sentMessages', function ($q) {
-                $q->where('receiver_id', Auth::id());
-            })
-            ->orWhereHas('receivedMessages', function ($q) {
-                $q->where('sender_id', Auth::id());
-            })
-            ->withCount(['sentMessages as unread_count' => function ($q) {
-                $q->where('receiver_id', Auth::id())->whereNull('read_at');
-            }])
-            ->orderByDesc('unread_count')
-            ->get();
-
-        return view('admin.live_chat.index', compact('users', 'admins'));
-    }
-
-    public function adminChat(User $user, Request $request)
-    {
-        $this->markAsRead($user->id, Auth::id());
-
-        $messages = Message::where(function ($q) use ($user) {
-            $q->where('sender_id', Auth::id())->where('receiver_id', $user->id);
-        })->orWhere(function ($q) use ($user) {
-            $q->where('sender_id', $user->id)->where('receiver_id', Auth::id());
-        })->orderBy('created_at', 'asc')->get();
-
-        if ($request->ajax()) {
-            return view('admin.live_chat.chat_content', compact('messages', 'user'))->render();
-        }
-
-        $users = User::whereIn('role', ['user', 'poster'])
-            ->whereNotNull('email_verified_at')
-            ->where(function ($q) {
-                $q->whereHas('sentMessages', function ($q2) {
-                    $q2->where('receiver_id', Auth::id());
-                })
-                    ->orWhereHas('receivedMessages', function ($q2) {
-                        $q2->where('sender_id', Auth::id());
-                    });
-            })
-            ->withCount(['sentMessages as unread_count' => function ($q) {
-                $q->where('receiver_id', Auth::id())->whereNull('read_at');
-            }])
-            ->orderByDesc('unread_count')
-            ->get();
-
-        $admins = User::where('role', 'admin')
-            ->where('id', '!=', Auth::id())
-            ->where(function ($q) {
-                $q->whereHas('sentMessages', function ($q2) {
-                    $q2->where('receiver_id', Auth::id());
-                })
-                    ->orWhereHas('receivedMessages', function ($q2) {
-                        $q2->where('sender_id', Auth::id());
-                    });
-            })
-            ->withCount(['sentMessages as unread_count' => function ($q) {
-                $q->where('receiver_id', Auth::id())->whereNull('read_at');
-            }])
-            ->orderByDesc('unread_count')
-            ->get();
-
-        return view('admin.live_chat.index', compact('users', 'admins', 'messages', 'user'));
     }
 
     // ============================================

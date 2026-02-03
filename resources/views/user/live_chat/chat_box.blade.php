@@ -403,6 +403,39 @@
             transform: scale(1);
         }
     }
+
+    .chat-toggle-badge {
+        position: absolute;
+        top: 0;
+        /* Căn chỉnh lại vị trí */
+        left: 0;
+        /* Góc trên bên trái */
+        width: 14px;
+        height: 14px;
+        background: #ff3b30;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        /* Viền trắng để tách biệt với nút xanh */
+        display: none;
+        /* Mặc định ẩn */
+        z-index: 10000;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .chat-toggle-badge.show {
+        display: block;
+        animation: pulse-red 2s infinite;
+    }
+
+    @keyframes bounceIn {
+        0% {
+            transform: scale(0);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
 </style>
 
 {{-- 2. HTML --}}
@@ -412,6 +445,7 @@
 <div class="chatbox-wrapper">
     <div id="chat-toggle" class="chat-toggle-btn">
         <i class="fab fa-facebook-messenger"></i> {{-- Icon Messenger --}}
+        <span id="chat-toggle-count" class="chat-toggle-badge"></span>
     </div>
 
     <div id="chat-box-container" class="chatbox">
@@ -470,6 +504,7 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const toggle = document.getElementById("chat-toggle");
+        const toggleBadge = document.getElementById("chat-toggle-count");
         const box = document.getElementById("chat-box-container");
         const closeBtn = document.getElementById("chat-close");
         const backBtn = document.getElementById("chat-back");
@@ -483,6 +518,32 @@
         const receiverInput = document.getElementById("chat-receiver");
 
         let isUserScrolling = false;
+        let currentReceiverId = null;
+        let pollInterval = null;
+        let globalPollInterval = null;
+        let isAIConversation = false;
+
+        const isChatOpen = localStorage.getItem('chatbox_state') === 'open';
+
+        loadAdmins();
+
+        globalPollInterval = setInterval(() => {
+            // Chỉ check ngầm khi chatbox đang đóng hoặc đang ở màn hình danh sách
+            if (!box.classList.contains('show') || viewList.classList.contains('active')) {
+                loadAdmins();
+            }
+        }, 15000);
+
+        if (isChatOpen) {
+            box.style.transition = 'none';
+            box.classList.add("show");
+            toggle.style.opacity = "0";
+            toggle.style.pointerEvents = "none";
+            showListView();
+            setTimeout(() => {
+                box.style.transition = '';
+            }, 100);
+        }
 
         // --- SỰ KIỆN SCROLL ĐỂ ẨN/HIỆN NÚT ---
         messages.addEventListener("scroll", () => {
@@ -509,9 +570,44 @@
             });
         });
 
-        let currentReceiverId = null;
-        let pollInterval = null;
-        let isAIConversation = false;
+        // --- MỞ CHATBOX NẾU TRƯỚC ĐÓ ĐÃ MỞ ---
+        toggle.addEventListener("click", () => {
+            box.classList.add("show");
+            toggle.style.opacity = "0";
+            toggle.style.pointerEvents = "none";
+
+            // Lưu trạng thái mở
+            localStorage.setItem('chatbox_state', 'open');
+
+            showListView();
+        });
+
+        // --- ĐÓNG CHATBOX ---
+        closeBtn.addEventListener("click", () => {
+            box.classList.remove("show");
+            toggle.style.opacity = "1";
+            toggle.style.pointerEvents = "auto";
+            localStorage.setItem('chatbox_state', 'closed');
+            if (pollInterval) clearInterval(pollInterval);
+
+            // Khi đóng chat, load lại admins một lần nữa để cập nhật dấu chấm đỏ
+            loadAdmins();
+        });
+
+        // --- QUAY LẠI LIST ---
+        backBtn.addEventListener("click", showListView);
+
+        // --- HÀM HIỂN THỊ DANH SÁCH ---
+        function showListView() {
+            viewList.classList.add("active");
+            viewChat.classList.remove("active");
+            backBtn.style.display = "none";
+            title.innerText = "Đoạn chat";
+            title.style.color = "#050505"; // Màu đen cho title danh sách
+            if (pollInterval) clearInterval(pollInterval);
+            isAIConversation = false;
+            loadAdmins();
+        }
 
         function appendMessage(text, type) {
             const wrapper = document.createElement('div');
@@ -575,68 +671,52 @@
         }
 
 
-        // --- MỞ CHATBOX ---
-        toggle.addEventListener("click", () => {
-            box.classList.add("show");
-            toggle.style.opacity = "0";
-            toggle.style.pointerEvents = "none"; // Ẩn nút nhẹ nhàng
-            showListView();
-        });
-
-        // --- ĐÓNG CHATBOX ---
-        closeBtn.addEventListener("click", () => {
-            box.classList.remove("show");
-            toggle.style.opacity = "1";
-            toggle.style.pointerEvents = "auto";
-            if (pollInterval) clearInterval(pollInterval);
-        });
-
-        // --- QUAY LẠI LIST ---
-        backBtn.addEventListener("click", showListView);
-
-        function showListView() {
-            viewList.classList.add("active");
-            viewChat.classList.remove("active");
-            backBtn.style.display = "none";
-            title.innerText = "Đoạn chat";
-            title.style.color = "#050505"; // Màu đen cho title danh sách
-            if (pollInterval) clearInterval(pollInterval);
-            isAIConversation = false;
-            loadAdmins();
-        }
-
-        // --- LOAD ADMIN LIST (HTML Template đã sửa lại cho đẹp) ---
+        // --- LOAD ADMIN LIST ---
         function loadAdmins() {
-            fetch("{{ route('chat.list') }}")
+            fetch("{{ route('chat.list') }}?scope=public")
                 .then(res => res.json())
                 .then(data => {
-                    if (data.users.length === 0) {
-                        adminList.innerHTML = "<div style='text-align:center; padding:20px; color:#65676b;'>Hiện không có nhân viên hỗ trợ online.</div>";
-                        return;
-                    }
-                    let html = "";
-                    data.users.forEach(u => {
-                        let badge = u.unread_count > 0 ? `<span class="admin-unread">${u.unread_count}</span>` : "";
-                        // Fallback avatar nếu null
-                        let avatar = u.avatar ?
-                            "{{ asset('storage') }}/" + u.avatar :
-                            `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=random`;
+                    let totalUnread = 0;
 
-                        html += `
-                            <div class="admin-item" onclick="openChat(${u.id}, '${u.name}')">
-                                <div class="admin-avatar-wrapper">
-                                    <img src="${avatar}" class="admin-avatar">
+                    if (!data.users || data.users.length === 0) {
+                        adminList.innerHTML = "<div style='text-align:center; padding:20px; color:#65676b;'>Hiện không có nhân viên hỗ trợ online.</div>";
+                    } else {
+                        let html = "";
+                        data.users.forEach(u => {
+                            totalUnread += parseInt(u.unread_count || 0);
+
+                            let badge = u.unread_count > 0 ? `<span class="admin-unread">${u.unread_count}</span>` : "";
+                            let avatar = u.avatar ? "{{ asset('storage') }}/" + u.avatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=random`;
+
+                            html += `
+                                <div class="admin-item" onclick="openChat(${u.id}, '${u.name}')">
+                                    <div class="admin-avatar-wrapper">
+                                        <img src="${avatar}" class="admin-avatar">
+                                    </div>
+                                    <div class="admin-info">
+                                        <div class="admin-name">${u.name}</div>
+                                        <div class="admin-role">${u.email}</div>
+                                    </div>
+                                    ${badge}
                                 </div>
-                                <div class="admin-info">
-                                    <div class="admin-name">${u.name}</div>
-                                    <div class="admin-role">${u.email}</div>
-                                </div>
-                                ${badge}
-                            </div>
-                        `;
-                    });
-                    adminList.innerHTML = html;
-                });
+                            `;
+                        });
+                        // Chỉ update HTML danh sách nếu người dùng đang MỞ chatbox và xem danh sách
+                        // Để tránh render lại DOM không cần thiết khi đang đóng chat
+                        if (box.classList.contains('show') && viewList.classList.contains('active')) {
+                            adminList.innerHTML = html;
+                        }
+                    }
+
+                    // --- CẬP NHẬT DẤU CHẤM ĐỎ (RED DOT) ---
+                    // Logic này chạy bất kể chatbox đóng hay mở
+                    if (totalUnread > 0) {
+                        toggleBadge.classList.add('show');
+                    } else {
+                        toggleBadge.classList.remove('show');
+                    }
+                })
+                .catch(err => console.error("Lỗi load admin:", err));
         }
 
         // --- MỞ ĐOẠN CHAT (Global function) ---

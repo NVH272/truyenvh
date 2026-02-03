@@ -1,4 +1,17 @@
 {{-- resources/views/admin/live_chat/partials/chat_content.blade.php --}}
+<style>
+    .chat-header {
+        height: 72px;
+        min-height: 72px;
+        display: flex;
+        align-items: center;
+        padding: 0 1rem;
+        border-bottom: 1px solid var(--sg-border);
+        background: rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(5px);
+        box-sizing: border-box;
+    }
+</style>
 <div class="chat-header">
     <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="chat-header-avatar">
     <div class="chat-header-name">{{ $user->name }}</div>

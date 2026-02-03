@@ -86,9 +86,11 @@ Route::controller(PolicyController::class)->group(function () {
 */
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/notifications/get', [App\Http\Controllers\User\NotificationController::class, 'index'])->name('notifications.get');
-    Route::post('/notifications/mark-read', [App\Http\Controllers\User\NotificationController::class, 'markAsRead'])->name('notifications.markRead');
-    Route::get('/notifications/{id}', [App\Http\Controllers\User\NotificationController::class, 'readAndRedirect'])->name('notifications.read');
+    Route::get('/notifications/get', [NotificationController::class, 'index'])->name('notifications.get');
+    Route::post('/notifications/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.markRead');
+    Route::post('/notifications/{id}/mark-read', [NotificationController::class, 'markOne'])->name('notifications.markOne');
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+    Route::get('/notifications/{id}', [NotificationController::class, 'readAndRedirect'])->name('notifications.read');
 });
 
 // Theo dõi & đánh giá: yêu cầu user đã xác thực email
@@ -338,4 +340,5 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'isAdmin', 'verified
     Route::get('/messages', [ChatController::class, 'adminIndex'])->name('messages.index');
     Route::get('/messages/{user}', [ChatController::class, 'adminChat'])->name('messages.chat');
     Route::post('/messages/send', [ChatController::class, 'send'])->name('messages.send');
+    Route::get('/admin/chat/search', [ChatController::class, 'searchChatUsers'])->name('messages.search');
 });

@@ -211,10 +211,6 @@
                                 <span class="text-xs">Đang tải...</span>
                             </div>
                         </div>
-
-                        <div class="px-4 py-2 border-t border-gray-100 bg-gray-50 text-center">
-                            <a href="#" class="text-xs text-gray-500 hover:text-blue-600 font-medium">Xem tất cả</a>
-                        </div>
                     </div>
                 </div>
 

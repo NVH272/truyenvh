@@ -4,6 +4,9 @@
 @section('header', 'D-Mail System')
 
 @section('content')
+<script>
+    const currentUserId = {{ isset($user) ? $user->id : 'null' }};
+</script>
 <style>
     /* === STEINS;GATE THEME (TRANSPARENT VERSION) === */
     :root {
@@ -448,71 +451,231 @@
         font-weight: bold;
         text-shadow: 0 0 15px var(--sg-accent);
     }
+
+    /* Search Bar */
+    .messenger-search-box {
+        height: 72px;
+        min-height: 72px;
+        display: flex;
+        align-items: center;
+        padding: 0 1rem;
+        border-bottom: 1px solid var(--sg-border);
+        background: rgba(0, 0, 0, 0.2);
+        box-sizing: border-box;
+    }
+
+    .search-input-wrapper {
+        width: 100%;
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .search-input-wrapper i {
+        position: absolute;
+        left: 10px;
+        color: var(--sg-text-dim);
+        font-size: 0.8rem;
+    }
+
+    .messenger-search-input {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--sg-border);
+        padding: 8px 10px 8px 30px;
+        border-radius: 4px;
+        color: var(--sg-text-main);
+        font-family: 'Share Tech Mono', monospace;
+        outline: none;
+        transition: all 0.2s;
+        font-size: 0.9rem;
+    }
+
+    .messenger-search-input:focus {
+        border-color: var(--sg-accent);
+        box-shadow: 0 0 8px rgba(234, 88, 12, 0.2);
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    /* Group Header (Accordion) */
+    .group-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        background: rgba(255, 255, 255, 0.02);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        cursor: pointer;
+        user-select: none;
+        transition: background 0.2s;
+    }
+
+    .group-header:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .group-title {
+        font-size: 0.75rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .group-count {
+        font-size: 0.7rem;
+        opacity: 0.7;
+        margin-left: 5px;
+    }
+
+    .group-arrow {
+        font-size: 0.8rem;
+        color: var(--sg-text-dim);
+        transition: transform 0.3s ease;
+    }
+
+    /* Xoay mũi tên khi đóng */
+    .group-header.collapsed .group-arrow {
+        transform: rotate(-90deg);
+    }
+
+    .group-list {
+        display: block;
+        /* transition: max-height 0.3s ease-out; */
+    }
+
+    .group-list.hidden {
+        display: none;
+    }
+
+    /* Màu sắc tiêu đề nhóm */
+    .text-admin {
+        color: #ef4444;
+        text-shadow: 0 0 5px rgba(239, 68, 68, 0.3);
+    }
+
+    .text-poster {
+        color: #10b981;
+        text-shadow: 0 0 5px rgba(16, 185, 129, 0.3);
+    }
+
+    .text-user {
+        color: #94a3b8;
+    }
+
+    /* Chấm đỏ báo hiệu tin mới của nhóm */
+    .group-unread-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #ef4444;
+        border-radius: 50%;
+        margin-right: 10px;
+        box-shadow: 0 0 5px #ef4444;
+        animation: pulse-dot 2s infinite;
+    }
+
+    @keyframes pulse-dot {
+        0% { transform: scale(0.95); opacity: 0.8; }
+        50% { transform: scale(1.1); opacity: 1; }
+        100% { transform: scale(0.95); opacity: 0.8; }
+    }
+
+    /* Helper để căn chỉnh mũi tên và chấm đỏ */
+    .group-actions {
+        display: flex;
+        align-items: center;
+    }
 </style>
 
 <div class="messenger-container font-tech">
     <div class="messenger-sidebar">
-        <div class="messenger-header">
-            <i class="fas fa-satellite-dish"></i>
-            <span>Future Gadget Lab</span>
+        {{-- 1. THANH TÌM KIẾM --}}
+        <div class="messenger-search-box">
+            <div class="search-input-wrapper">
+                <i class="fas fa-search"></i>
+                <input type="text"
+                    id="user-search-input"
+                    class="messenger-search-input"
+                    placeholder="Search ID/Name..."
+                    onkeyup="handleSearch(this.value)">
+            </div>
         </div>
 
-        <div class="conversation-list custom-scroll">
-            @if(isset($users) && isset($admins) && ($users->count() > 0 || $admins->count() > 0))
-            @if($users->count() > 0)
-            <div class="section-title">Lab Members</div>
-            @foreach($users as $u)
-            <div class="conversation-item {{ (isset($user) && $u->id == $user->id) ? 'active' : '' }}"
-                onclick="loadChat('{{ $u->id }}', this)">
+        <div class="conversation-list custom-scroll" id="sidebar-content">
 
-                <img src="{{ $u->avatar_url }}" alt="{{ $u->name }}" class="conversation-avatar">
+            {{-- SECTION 1: ADMINS --}}
+            <div class="role-group-wrapper">
+                {{-- Tính toán xem có tin chưa đọc không --}}
+                @php $hasUnreadAdmin = $admins->sum('unread_count') > 0; @endphp
 
-                <div class="conversation-info">
-                    <div class="conversation-name">
-                        <span class="truncate max-w-[120px]">{{ $u->name }}</span>
-
-                        {{-- Hiển thị Badge dựa theo Role --}}
-                        @if($u->role === 'admin')
-                        <span class="role-badge role-admin">AD</span>
-                        @elseif($u->role === 'poster')
-                        <span class="role-badge role-poster">POSTER</span>
-                        @else
-                        {{-- User thường có thể không hiện hoặc hiện chữ nhỏ --}}
-                        {{-- <span class="role-badge role-user">USER</span> --}}
-                        @endif
+                <div class="group-header collapsed" onclick="toggleGroup('list-admin', this)">
+                    <div class="group-title text-admin">
+                        ADMINS <span class="group-count" id="count-admin">({{ $admins->count() }})</span>
                     </div>
-                    <div class="conversation-preview font-term">{{ $u->email }}</div>
+                    
+                    <div class="group-actions">
+                        {{-- Hiển thị chấm đỏ nếu có tin chưa đọc --}}
+                        @if($hasUnreadAdmin)
+                            <span class="group-unread-dot" id="dot-admin"></span>
+                        @endif
+                        <i class="fas fa-chevron-down group-arrow"></i>
+                    </div>
                 </div>
-
-                @if($u->unread_count > 0)
-                <span class="unread-badge">{{ $u->unread_count }}</span>
-                @endif
-            </div>
-            @endforeach
-            @endif
-
-            @if($admins->count() > 0)
-            <div class="section-title">Round Table</div>
-            @foreach($admins as $a)
-            <div class="conversation-item {{ (isset($user) && $a->id == $user->id) ? 'active' : '' }}"
-                onclick="loadChat('{{ $a->id }}', this)">
-                <img src="{{ $a->avatar_url }}" alt="{{ $a->name }}" class="conversation-avatar">
-                <div class="conversation-info">
-                    <div class="conversation-name">{{ $a->name }}</div>
-                    <div class="conversation-preview font-term">{{ $a->email }}</div>
+                
+                <div id="list-admin" class="group-list hidden">
+                    @foreach($admins as $u)
+                        @include('admin.live_chat.partials.user_item', ['u' => $u, 'role' => 'admin'])
+                    @endforeach
                 </div>
-                @if($a->unread_count > 0)
-                <span class="unread-badge">{{ $a->unread_count }}</span>
-                @endif
             </div>
-            @endforeach
-            @endif
-            @else
-            <div class="p-8 text-center text-slate-500">
-                <i class="fas fa-ban mb-2 text-2xl opacity-50"></i>
-                <p>No signals detected.</p>
+
+            {{-- SECTION 2: POSTERS --}}
+            <div class="role-group-wrapper">
+                @php $hasUnreadPoster = $posters->sum('unread_count') > 0; @endphp
+
+                <div class="group-header collapsed" onclick="toggleGroup('list-poster', this)">
+                    <div class="group-title text-poster">
+                        POSTERS <span class="group-count" id="count-poster">({{ $posters->count() }})</span>
+                    </div>
+
+                    <div class="group-actions">
+                        @if($hasUnreadPoster)
+                            <span class="group-unread-dot" id="dot-poster"></span>
+                        @endif
+                        <i class="fas fa-chevron-down group-arrow"></i>
+                    </div>
+                </div>
+                
+                <div id="list-poster" class="group-list hidden">
+                    @foreach($posters as $u)
+                        @include('admin.live_chat.partials.user_item', ['u' => $u, 'role' => 'poster'])
+                    @endforeach
+                </div>
             </div>
-            @endif
+
+            {{-- SECTION 3: USERS --}}
+            <div class="role-group-wrapper">
+                @php $hasUnreadUser = $users->sum('unread_count') > 0; @endphp
+
+                <div class="group-header collapsed" onclick="toggleGroup('list-user', this)">
+                    <div class="group-title text-user">
+                        USERS <span class="group-count" id="count-user">({{ $users->count() }})</span>
+                    </div>
+
+                    <div class="group-actions">
+                        @if($hasUnreadUser)
+                            <span class="group-unread-dot" id="dot-user"></span>
+                        @endif
+                        <i class="fas fa-chevron-down group-arrow"></i>
+                    </div>
+                </div>
+                
+                <div id="list-user" class="group-list hidden">
+                    @foreach($users as $u)
+                        @include('admin.live_chat.partials.user_item', ['u' => $u, 'role' => 'user'])
+                    @endforeach
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -538,6 +701,96 @@
 </div>
 
 <script>
+    // 1. Hàm đóng mở danh sách
+    function toggleGroup(listId, headerElement) {
+        const list = document.getElementById(listId);
+        list.classList.toggle('hidden');
+        headerElement.classList.toggle('collapsed');
+    }
+
+    // 2. Hàm xử lý tìm kiếm (Debounce để tránh spam request)
+    let searchTimeout;
+
+    function handleSearch(query) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            performSearch(query);
+        }, 300); // Đợi 300ms sau khi ngừng gõ mới tìm
+    }
+
+    function performSearch(query) {
+        const url = "{{ route('admin.messages.search') }}";
+        if (!query.trim()) {
+            // Nếu query rỗng, load lại danh sách ban đầu
+            loadChatList();
+            return;
+        }
+        fetch(`${url}?query=${encodeURIComponent(query)}`)
+            .then(res => res.json())
+            .then(data => {
+                // 1. Cập nhật dữ liệu cho 3 nhóm
+                updateGroup('list-admin', 'count-admin', data.admins, 'admin');
+                updateGroup('list-poster', 'count-poster', data.posters, 'poster');
+                updateGroup('list-user', 'count-user', data.users, 'user');
+                
+                // 2. [MỚI] TỰ ĐỘNG MỞ CÁC NHÓM KHI CÓ KẾT QUẢ
+                // Tìm tất cả danh sách đang bị ẩn và hiện nó lên
+                document.querySelectorAll('.group-list').forEach(list => {
+                    list.classList.remove('hidden');
+                });
+
+                // Tìm tất cả header đang đóng (mũi tên ngang) và xoay nó xuống
+                document.querySelectorAll('.group-header').forEach(header => {
+                    header.classList.remove('collapsed');
+                });
+            })
+            .catch(err => console.error("Lỗi tìm kiếm:", err));
+    }
+
+    // Hàm render HTML cho từng user (Tái tạo lại HTML của Blade bằng JS)
+    function updateGroup(listId, countId, users, roleType) {
+        const listContainer = document.getElementById(listId);
+        const countSpan = document.getElementById(countId);
+
+        // Cập nhật số lượng
+        countSpan.innerText = `(${users.length})`;
+
+        // Xóa danh sách cũ
+        listContainer.innerHTML = '';
+
+        if (users.length === 0) {
+            // listContainer.innerHTML = '<div class="p-2 text-xs text-center text-slate-600">No results</div>';
+            return;
+        }
+
+        // Render danh sách mới
+        users.forEach(u => {
+            const isActive = (typeof currentUserId !== 'undefined' && currentUserId == u.id) ? 'active' : '';
+            const badge = u.unread_count > 0 ? `<span class="unread-badge">${u.unread_count}</span>` : '';
+
+            // Avatar fallback
+            const avatarUrl = u.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=random`;
+
+            let roleBadge = '';
+            if (roleType === 'admin') roleBadge = '<span class="role-badge role-admin">AD</span>';
+            if (roleType === 'poster') roleBadge = '<span class="role-badge role-poster">POSTER</span>';
+
+            const html = `
+            <div class="conversation-item ${isActive}" onclick="loadChat('${u.id}', this)">
+                <img src="${avatarUrl}" class="conversation-avatar">
+                <div class="conversation-info">
+                    <div class="conversation-name">
+                        <span class="truncate max-w-[120px]">${u.name}</span>
+                        ${roleBadge}
+                    </div>
+                    <div class="conversation-preview font-term">${u.email}</div>
+                </div>
+                ${badge}
+            </div>
+            `;
+            listContainer.insertAdjacentHTML('beforeend', html);
+        });
+    }
     // --- KHAI BÁO BIẾN TOÀN CỤC ---
     let refreshInterval;
 
@@ -551,6 +804,21 @@
             "'": '&#039;'
         };
         return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    function loadChatList() {
+        // THÊM: ?scope=admin_dashboard
+        fetch("{{ route('chat.list') }}?scope=admin_dashboard")
+            .then(res => res.json())
+            .then(data => {
+                // Dữ liệu trả về sẽ là: { mode: 'admin_dashboard', admins: [...], users: [...] }
+
+                // 1. Render phần Round Table (data.admins)
+                renderAdminSection(data.admins);
+
+                // 2. Render phần Customers (data.users)
+                renderCustomerSection(data.users);
+            });
     }
 
     // Hàm cuộn xuống đáy
@@ -661,6 +929,36 @@
                 container.style.opacity = '1';
                 alert('Không thể tải tin nhắn.');
             });
+            // === [LOGIC MỚI] XỬ LÝ ẨN BADGE VÀ DOT ===
+        
+            // A. Ẩn/Xóa số badge của user hiện tại
+            const badge = element.querySelector('.unread-badge');
+            if (badge) {
+                badge.remove(); // Xóa hẳn khỏi DOM
+            }
+
+            // B. Kiểm tra lại nhóm (Admin/Poster/User) xem còn ai chưa đọc không
+            // Tìm thẻ cha chứa danh sách (ví dụ: id="list-admin")
+            const parentList = element.closest('.group-list');
+            
+            if (parentList) {
+                // Đếm xem trong danh sách này còn bao nhiêu badge chưa bị xóa
+                const remainingBadges = parentList.querySelectorAll('.unread-badge');
+                
+                // Nếu không còn badge nào (length = 0) -> Ẩn chấm đỏ của nhóm
+                if (remainingBadges.length === 0) {
+                    // Lấy ID của nhóm (vd: 'list-admin' -> lấy chữ 'admin')
+                    const listId = parentList.id; 
+                    const roleName = listId.replace('list-', ''); // ra 'admin', 'poster', hoặc 'user'
+                    
+                    // Tìm chấm đỏ tương ứng và ẩn đi
+                    const groupDot = document.getElementById(`dot-${roleName}`);
+                    if (groupDot) {
+                        groupDot.style.display = 'none';
+                    }
+                }
+            }
+            // === [KẾT THÚC LOGIC MỚI] ===
     }
 
     // --- 4. SỰ KIỆN GỬI TIN NHẮN ---
