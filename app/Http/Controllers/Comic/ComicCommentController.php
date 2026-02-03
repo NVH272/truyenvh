@@ -9,6 +9,7 @@ use App\Models\Comment;
 use Illuminate\Support\Facades\Auth;
 use App\Services\ProfanityFilter;
 use Illuminate\Validation\ValidationException;
+use App\Notifications\NewReplyNotification;
 
 class ComicCommentController extends Controller
 {
@@ -46,6 +47,23 @@ class ComicCommentController extends Controller
 
         if ($request->parent_id) {
             Comment::where('id', $request->parent_id)->increment('replies_count');
+        }
+
+        // --- GỬI THÔNG BÁO REPLY (LUÔN CHẠY, KỂ CẢ KHI AJAX) ---
+        if ($comment->parent_id) {
+            // Tìm comment cha
+            $parentComment = Comment::find($comment->parent_id);
+            
+            // Nếu comment cha tồn tại VÀ người trả lời KHÔNG PHẢI là chính chủ comment cha
+            // (Tránh trường hợp tự mình reply mình mà cũng hiện thông báo)
+            if ($parentComment && $parentComment->user_id !== auth()->id()) {
+                $userToNotify = $parentComment->user; // Người cần nhận thông báo
+                $comic = $comment->comic; // Truyện đang bình luận
+                $responder = auth()->user(); // Người vừa trả lời
+                
+                // Gửi thông báo đến cá nhân người đó
+                $userToNotify->notify(new NewReplyNotification($comment, $comic, $responder));
+            }
         }
 
         $comment->load('user');

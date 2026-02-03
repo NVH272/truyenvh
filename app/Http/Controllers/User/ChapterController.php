@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\NewChapterNotification;
 
 class ChapterController extends Controller
 {
@@ -167,6 +169,12 @@ class ChapterController extends Controller
             $comic->chapter_count = $comic->chapters()->count();
             $comic->last_chapter_at = now();
             $comic->save();
+
+            // GỬI THÔNG BÁO CHO NGƯỜI THEO DÕI TRUYỆN
+            $followers = $comic->followers;
+            if ($followers->count() > 0) {
+                Notification::send($followers, new NewChapterNotification($chapter, $comic));
+            }
 
             $redirectTo = $request->input('redirect_to');
 

@@ -9,8 +9,14 @@ use Illuminate\Support\Facades\Auth;
 class NotificationController extends Controller
 {
     // Lấy danh sách thông báo & đếm số lượng chưa đọc
-    public function index()
+    public function index(Request $request)
     {
+        // Nếu không phải request AJAX / JSON (ví dụ gõ URL trực tiếp sau khi đăng nhập)
+        // thì không trả JSON thô mà đưa người dùng về trang chủ.
+        if (!$request->expectsJson() && !$request->ajax()) {
+            return redirect()->route('home');
+        }
+
         $user = Auth::user();
 
         // Lấy 10 thông báo mới nhất

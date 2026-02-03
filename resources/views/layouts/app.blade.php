@@ -416,122 +416,136 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const btn = document.getElementById('userMenuBtn');
-            const menu = document.getElementById('userDropdown');
-            const wrap = document.getElementById('userMenu');
+            // ===== DROPDOWN USER =====
+            const userBtn = document.getElementById('userMenuBtn');
+            const userMenu = document.getElementById('userDropdown');
+            const userWrap = document.getElementById('userMenu');
 
-            if (!btn || !menu || !wrap) return;
+            if (userBtn && userMenu && userWrap) {
+                // CLICK mở/đóng
+                userBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    userMenu.classList.toggle('opacity-100');
+                    userMenu.classList.toggle('visible');
+                    userMenu.classList.toggle('opacity-0');
+                    userMenu.classList.toggle('invisible');
+                });
 
-            // CLICK mở/đóng
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                menu.classList.toggle('opacity-100');
-                menu.classList.toggle('visible');
-                menu.classList.toggle('opacity-0');
-                menu.classList.toggle('invisible');
-            });
+                // CLICK RA NGOÀI → ĐÓNG
+                document.addEventListener('click', () => {
+                    userMenu.classList.add('opacity-0', 'invisible');
+                    userMenu.classList.remove('opacity-100', 'visible');
+                });
 
-            // CLICK RA NGOÀI → ĐÓNG
-            document.addEventListener('click', () => {
-                menu.classList.add('opacity-0', 'invisible');
-                menu.classList.remove('opacity-100', 'visible');
-            });
+                // Ngăn đóng khi click bên trong menu
+                userMenu.addEventListener('click', (e) => e.stopPropagation());
+            }
 
-            // Ngăn đóng khi click bên trong menu
-            menu.addEventListener('click', (e) => e.stopPropagation());
+            // ===== THÔNG BÁO =====
+            const notifyBtn = document.getElementById('notification-btn');
+            const dropdown = document.getElementById('notification-dropdown');
+            const list = document.getElementById('notification-list');
+            const countBadge = document.getElementById('notification-count');
+            let isOpen = false;
 
-            // Thông báo
-            document.addEventListener("DOMContentLoaded", function() {
-                const btn = document.getElementById('notification-btn');
-                const dropdown = document.getElementById('notification-dropdown');
-                const list = document.getElementById('notification-list');
-                const countBadge = document.getElementById('notification-count');
-                let isOpen = false;
-
+            if (notifyBtn && dropdown && list && countBadge) {
                 // 1. Load số lượng thông báo khi vào trang (Chạy ngay lập tức)
                 fetchNotifications(false);
 
                 // 2. Sự kiện Click vào nút chuông
-                if (btn) {
-                    btn.addEventListener('click', function(e) {
-                        e.stopPropagation(); // Ngăn sự kiện lan ra ngoài
-                        isOpen = !isOpen;
+                notifyBtn.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Ngăn sự kiện lan ra ngoài
+                    isOpen = !isOpen;
 
-                        if (isOpen) {
-                            // Hiện dropdown
-                            dropdown.classList.remove('hidden');
-                            // Hiệu ứng animation (optional)
-                            setTimeout(() => {
-                                dropdown.classList.remove('scale-95', 'opacity-0');
-                                dropdown.classList.add('scale-100', 'opacity-100');
-                            }, 10);
+                    if (isOpen) {
+                        // Hiện dropdown
+                        dropdown.classList.remove('hidden');
+                        // Hiệu ứng animation (optional)
+                        setTimeout(() => {
+                            dropdown.classList.remove('scale-95', 'opacity-0');
+                            dropdown.classList.add('scale-100', 'opacity-100');
+                        }, 10);
 
-                            // Load nội dung HTML danh sách
-                            fetchNotifications(true);
-                        } else {
-                            closeDropdown();
-                        }
-                    });
-                }
-
-                // 3. Click ra ngoài thì đóng
-                document.addEventListener('click', function(e) {
-                    if (dropdown && !dropdown.contains(e.target) && !btn.contains(e.target)) {
+                        // Load nội dung HTML danh sách
+                        fetchNotifications(true);
+                    } else {
                         closeDropdown();
                     }
                 });
 
-                function closeDropdown() {
-                    if (!dropdown) return;
-                    isOpen = false;
-                    dropdown.classList.remove('scale-100', 'opacity-100');
-                    dropdown.classList.add('scale-95', 'opacity-0');
-                    setTimeout(() => dropdown.classList.add('hidden'), 200);
-                }
+                // 3. Click ra ngoài thì đóng
+                document.addEventListener('click', function(e) {
+                    if (dropdown && !dropdown.contains(e.target) && !notifyBtn.contains(e.target)) {
+                        closeDropdown();
+                    }
+                });
+            }
 
-                // 4. Hàm gọi API lấy thông báo
-                function fetchNotifications(loadHtml = false) {
-                    fetch("{{ route('notifications.get') }}")
-                        .then(res => {
-                            if (!res.ok) throw new Error('Network response was not ok');
-                            return res.json();
-                        })
-                        .then(data => {
-                            // Cập nhật số lượng
-                            if (data.unread_count > 0) {
-                                countBadge.innerText = data.unread_count > 99 ? '99+' : data.unread_count;
-                                countBadge.classList.remove('hidden');
-                            } else {
-                                countBadge.classList.add('hidden');
-                            }
+            function closeDropdown() {
+                if (!dropdown) return;
+                isOpen = false;
+                dropdown.classList.remove('scale-100', 'opacity-100');
+                dropdown.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => dropdown.classList.add('hidden'), 200);
+            }
 
-                            // Cập nhật danh sách nếu cần (khi mở dropdown)
-                            if (loadHtml && list) {
-                                list.innerHTML = data.html;
-                            }
-                        })
-                        .catch(error => console.error('Error fetching notifications:', error));
-                }
-
-                // 5. Hàm đánh dấu đã đọc (Global để gọi từ onclick trong HTML nếu cần)
-                window.markAllAsRead = function() {
-                    fetch("{{ route('notifications.markRead') }}", {
-                        method: "POST",
+            // 4. Hàm gọi API lấy thông báo
+            function fetchNotifications(loadHtml = false) {
+                fetch("{{ route('notifications.get') }}", {
                         headers: {
-                            "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                            "Content-Type": "application/json"
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
                         }
-                    }).then(() => {
-                        countBadge.classList.add('hidden');
-                        // Làm mờ các item chưa đọc trong list (nếu đang mở)
-                        const unreadItems = list.querySelectorAll('.bg-blue-50\\/60'); // Class nền xanh bạn set ở view
-                        unreadItems.forEach(item => {
-                            item.classList.remove('bg-blue-50/60');
-                            item.classList.add('bg-white', 'opacity-60');
-                        });
+                    })
+                    .then(res => {
+                        if (!res.ok) throw new Error('Network response was not ok');
+                        return res.json();
+                    })
+                    .then(data => {
+                        // Cập nhật số lượng
+                        if (data.unread_count > 0) {
+                            countBadge.innerText = data.unread_count > 99 ? '99+' : data.unread_count;
+                            countBadge.classList.remove('hidden');
+                        } else {
+                            countBadge.classList.add('hidden');
+                        }
+
+                        // Cập nhật danh sách nếu cần (khi mở dropdown)
+                        if (loadHtml && list) {
+                            list.innerHTML = data.html;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching notifications:', error);
+                        if (loadHtml && list) {
+                            list.innerHTML = `
+                                <div class="p-6 text-center text-red-500 text-sm">
+                                    Không tải được thông báo. Vui lòng thử lại sau.
+                                </div>
+                            `;
+                        }
                     });
-                }
-            });
+            }
+
+            // 5. Hàm đánh dấu đã đọc (Global để gọi từ onclick trong HTML nếu cần)
+            window.markAllAsRead = function() {
+                fetch("{{ route('notifications.markRead') }}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                        "Content-Type": "application/json"
+                    }
+                }).then(() => {
+                    if (!countBadge || !list) return;
+                    countBadge.classList.add('hidden');
+                    // Làm mờ các item chưa đọc trong list (nếu đang mở)
+                    const unreadItems = list.querySelectorAll('.bg-blue-50\\/60'); // Class nền xanh bạn set ở view
+                    unreadItems.forEach(item => {
+                        item.classList.remove('bg-blue-50/60');
+                        item.classList.add('bg-white', 'opacity-60');
+                    });
+                });
+            }
         });
     </script>
 </body>
