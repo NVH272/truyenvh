@@ -372,11 +372,11 @@
                     <div class="nav-icon-wrapper"><i class="fas fa-chart-pie text-lg"></i></div>
                     <span class="sidebar-text">Dashboard</span>
                 </a>
-                <a href="#" class="nav-item text-slate-400 rounded-lg" title="Thông báo">
+                <!-- <a href="#" class="nav-item text-slate-400 rounded-lg" title="Thông báo">
                     <div class="nav-icon-wrapper"><i class="fas fa-bell text-lg"></i></div>
                     <span class="sidebar-text">Thông báo</span>
                     <span class="sidebar-text ml-auto bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">3</span>
-                </a>
+                </a> -->
 
                 <p class="section-header text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-6">Quản lý Truyện</p>
 

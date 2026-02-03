@@ -22,35 +22,35 @@ class ChatController extends Controller
      * Dùng chung cho adminIndex, adminChat và API
      */
     private function getSharedChatLists($authId)
-{
-    // 1. LẤY TOÀN BỘ ADMIN (Trừ bản thân)
-    // Bỏ điều kiện whereHas sentMessages/receivedMessages
-    $admins = User::where('role', 'admin')
-        ->where('id', '!=', $authId)
-        ->withCount(['sentMessages as unread_count' => function ($q) use ($authId) {
-            $q->where('receiver_id', $authId)->whereNull('read_at');
-        }])
-        ->orderByDesc('unread_count') // Vẫn ưu tiên người có tin chưa đọc lên đầu
-        ->orderBy('name', 'asc')      // Sau đó xếp theo tên A-Z
-        ->get();
+    {
+        // 1. LẤY TOÀN BỘ ADMIN (Trừ bản thân)
+        // Bỏ điều kiện whereHas sentMessages/receivedMessages
+        $admins = User::where('role', 'admin')
+            ->where('id', '!=', $authId)
+            ->withCount(['sentMessages as unread_count' => function ($q) use ($authId) {
+                $q->where('receiver_id', $authId)->whereNull('read_at');
+            }])
+            ->orderByDesc('unread_count') // Vẫn ưu tiên người có tin chưa đọc lên đầu
+            ->orderBy('name', 'asc')      // Sau đó xếp theo tên A-Z
+            ->get();
 
-    // 2. LẤY TOÀN BỘ USER & POSTER (Đã xác thực email)
-    // Bỏ điều kiện whereHas sentMessages/receivedMessages
-    $allCustomers = User::whereIn('role', ['user', 'poster'])
-        ->whereNotNull('email_verified_at')
-        ->withCount(['sentMessages as unread_count' => function ($q) use ($authId) {
-            $q->where('receiver_id', $authId)->whereNull('read_at');
-        }])
-        ->orderByDesc('unread_count')
-        ->orderBy('name', 'asc')
-        ->get();
+        // 2. LẤY TOÀN BỘ USER & POSTER (Đã xác thực email)
+        // Bỏ điều kiện whereHas sentMessages/receivedMessages
+        $allCustomers = User::whereIn('role', ['user', 'poster'])
+            ->whereNotNull('email_verified_at')
+            ->withCount(['sentMessages as unread_count' => function ($q) use ($authId) {
+                $q->where('receiver_id', $authId)->whereNull('read_at');
+            }])
+            ->orderByDesc('unread_count')
+            ->orderBy('name', 'asc')
+            ->get();
 
-    // 3. Tách nhóm
-    $posters = $allCustomers->where('role', 'poster');
-    $users = $allCustomers->where('role', 'user');
+        // 3. Tách nhóm
+        $posters = $allCustomers->where('role', 'poster');
+        $users = $allCustomers->where('role', 'user');
 
-    return [$admins, $posters, $users];
-}
+        return [$admins, $posters, $users];
+    }
 
     // ============================================
     // CÁC FUNCTION CHÍNH
@@ -105,7 +105,7 @@ class ChatController extends Controller
 
         // LOGIC 1: Admin ở Dashboard
         if ($user->role === 'admin' && $scope === 'admin_dashboard') {
-            
+
             [$admins, $posters, $users] = $this->getSharedChatLists($user->id);
 
             return response()->json([
@@ -142,7 +142,7 @@ class ChatController extends Controller
             // Trả về key 'users' chung chung (vì JS bên public đang dùng key này)
             return response()->json([
                 'mode' => 'public',
-                'users' => $listAdmins 
+                'users' => $listAdmins
             ]);
         }
     }
@@ -160,13 +160,13 @@ class ChatController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
-                  ->orWhere('email', 'LIKE', "%{$search}%");
+                    ->orWhere('email', 'LIKE', "%{$search}%");
             });
         }
 
         $allResults = $query->withCount(['sentMessages as unread_count' => function ($q) use ($authId) {
-                $q->where('receiver_id', $authId)->whereNull('read_at');
-            }])
+            $q->where('receiver_id', $authId)->whereNull('read_at');
+        }])
             ->orderByDesc('unread_count')
             ->orderBy('name', 'asc')
             ->get();
@@ -352,45 +352,115 @@ PHONG CÁCH:
 
         // Từ khóa truyện - BỔ SUNG THÊM
         $comicKeywords = [
+            // Từ khóa chung
             'truyện',
             'manga',
+            'manhua',
+            'manhwa',
+            'comic',
             'chap',
             'chapter',
+            'tập',
+            'vol',
             'thể loại',
             'genre',
+            'tag',
             'tác giả',
             'author',
+            'mangaka',
             'đọc',
             'xem',
+            'coi',
             'gợi ý',
             'recommend',
+            'review',
+            'giới thiệu',
             'tìm',
             'search',
+            'kiếm',
             'hay',
             'hot',
+            'top',
+            'bxh',
             'mới',
             'update',
-            'hành động',
-            'tình cảm',
-            'hài',
-            'kinh dị',
-            'fantasy',
-            'romance',
-            'action',
-            'drama',
-            'comedy',
-            'horror',
-            'adventure',
-            'hoàn thành',
-            'đang tiến hành',
-            'ongoing',
-            'completed',
             'thú vị',
             'hấp dẫn',
             'cuốn',
             'xuất sắc',
             'đỉnh',
-            'ngon'
+            'ngon',
+
+            // Thể loại (Tiếng Việt & Anh)
+            'hành động',
+            'action',
+            'tình cảm',
+            'romance',
+            'love',
+            'hài',
+            'comedy',
+            'funny',
+            'kinh dị',
+            'horror',
+            'ma',
+            'fantasy',
+            'giả tưởng',
+            'huyền huyễn',
+            'drama',
+            'kịch tính',
+            'adventure',
+            'phiêu lưu',
+            'mạo hiểm',
+            'school',
+            'học đường',
+            'trường học',
+            'slice of life',
+            'đời thường',
+            'mystery',
+            'bí ẩn',
+            'trinh thám',
+            'supernatural',
+            'siêu nhiên',
+            'sci-fi',
+            'viễn tưởng',
+            'khoa học',
+            'sport',
+            'thể thao',
+            'bóng đá',
+            'historical',
+            'lịch sử',
+            'cổ trang',
+            'xuyên không',
+
+            // Các thể loại chuyên biệt (Nguyên nhân lỗi của bạn nằm ở đây)
+            'shoujo ai',
+            'shounen ai',
+            'yuri',
+            'yaoi',
+            'bl',
+            'gl',
+            'bách hợp',
+            'đam mỹ',
+            'boylove',
+            'girllove',
+            'harem',
+            'ecchi',
+            'seinen',
+            'shounen',
+            'shoujo',
+            'josei',
+            'mecha',
+            'robot',
+            'webtoon',
+            'doujinshi',
+            'oneshot',
+            'hoàn thành',
+            'full',
+            'end',
+            'completed',
+            'đang tiến hành',
+            'ongoing',
+            'drop'
         ];
 
         // Blacklist - BỔ SUNG
@@ -442,7 +512,7 @@ PHONG CÁCH:
 
         // Câu ngắn (<5 ký tự) hoặc chỉ chào hỏi
         if (
-            mb_strlen($message) < 5 ||
+            mb_strlen($message) < 4 ||
             preg_match('/^(hi|hello|hey|alo|chào|xin chào)$/i', $message)
         ) {
             return 'unclear';
@@ -475,14 +545,88 @@ PHONG CÁCH:
 
         // Map thể loại
         $genreMap = [
-            'hành động' => ['Action', 'Hành Động', 'Võ Thuật'],
-            'tình cảm' => ['Romance', 'Tình Cảm'],
-            'hài' => ['Comedy', 'Hài Hước'],
-            'kinh dị' => ['Horror', 'Kinh Dị'],
-            'phiêu lưu' => ['Adventure', 'Phiêu Lưu'],
-            'học đường' => ['School Life', 'Học Đường'],
-            'fantasy' => ['Fantasy', 'Huyền Huyễn'],
-            'drama' => ['Drama', 'Kịch'],
+            // --- NHÓM HÀNH ĐỘNG & KHÁM PHÁ ---
+            'hành động' => ['Action', 'Martial Arts', 'Adventure'],
+            'đánh nhau' => ['Action', 'Martial Arts'],
+            'võ thuật' => ['Martial Arts', 'Action'],
+            'kiếm hiệp' => ['Martial Arts', 'Historical'],
+            'phiêu lưu' => ['Adventure', 'Fantasy'],
+            'mạo hiểm' => ['Adventure'],
+
+            // --- NHÓM TÌNH CẢM ---
+            'tình cảm' => ['Romance', 'Shoujo', 'Josei', 'School Life'],
+            'lãng mạn' => ['Romance', 'Shoujo'],
+            'ngôn tình' => ['Romance', 'Shoujo', 'Josei'],
+            'yêu đương' => ['Romance'],
+
+            // --- NHÓM HÀI HƯỚC & ĐỜI THƯỜNG ---
+            'hài' => ['Comedy'],
+            'hài hước' => ['Comedy'],
+            'vui' => ['Comedy', 'Slice of Life'],
+            'đời thường' => ['Slice of Life', 'School Life'],
+            'cuộc sống' => ['Slice of Life'],
+            'học đường' => ['School Life', 'Romance', 'Shoujo'],
+            'trường học' => ['School Life'],
+
+            // --- NHÓM GIẢ TƯỞNG & SIÊU NHIÊN ---
+            'giả tưởng' => ['Fantasy', 'Supernatural', 'Sci-fi'],
+            'phép thuật' => ['Fantasy', 'Supernatural'],
+            'siêu nhiên' => ['Supernatural', 'Fantasy'],
+            'thần thoại' => ['Fantasy', 'Historical'],
+            'dị giới' => ['Fantasy', 'Adventure'],
+            'xuyên không' => ['Fantasy', 'Historical'], // Thường kết hợp Historical
+            'khoa học' => ['Sci-fi', 'Mecha'],
+            'viễn tưởng' => ['Sci-fi'],
+            'robot' => ['Mecha', 'Sci-fi'],
+            'máy móc' => ['Mecha'],
+
+            // --- NHÓM KINH DỊ & TÂM LÝ ---
+            'kinh dị' => ['Horror', 'Supernatural', 'Mystery'],
+            'ma' => ['Horror', 'Supernatural'],
+            'bí ẩn' => ['Mystery', 'Supernatural'],
+            'trinh thám' => ['Mystery', 'Psychological'],
+            'tâm lý' => ['Psychological', 'Drama'],
+            'kịch tính' => ['Drama', 'Tragedy'],
+            'bi kịch' => ['Tragedy', 'Drama'],
+            'buồn' => ['Tragedy'],
+
+            // --- NHÓM ĐỘ TUỔI & ĐỐI TƯỢNG ---
+            'thiếu niên' => ['Shounen', 'Shoujo'],
+            'con trai' => ['Shounen', 'Seinen'],
+            'nam' => ['Shounen', 'Seinen'],
+            'con gái' => ['Shoujo', 'Josei'],
+            'nữ' => ['Shoujo', 'Josei'],
+            'trưởng thành' => ['Seinen', 'Josei', 'Mature', 'Adult'],
+            'người lớn' => ['Adult', 'Mature', 'Smut', 'Ecchi'],
+            '18+' => ['Adult', 'Mature', 'Smut', 'Ecchi'],
+            'nhạy cảm' => ['Ecchi', 'Smut', 'Mature'],
+            'gợi cảm' => ['Ecchi'],
+
+            // --- NHÓM BL / GL (NAM-NAM / NỮ-NỮ) ---
+            'đam mỹ' => ['Yaoi', 'Shounen Ai'],
+            'boylove' => ['Yaoi', 'Shounen Ai'],
+            'bl' => ['Yaoi', 'Shounen Ai'],
+            'nam nam' => ['Yaoi', 'Shounen Ai'],
+            'bách hợp' => ['Yuri', 'Shoujo Ai'],
+            'gl' => ['Yuri', 'Shoujo Ai'],
+            'nữ nữ' => ['Yuri', 'Shoujo Ai'],
+
+            // --- CÁC THỂ LOẠI KHÁC ---
+            'thể thao' => ['Sports'],
+            'bóng đá' => ['Sports'], // Ví dụ cụ thể
+            'lịch sử' => ['Historical'],
+            'cổ đại' => ['Historical'],
+            'cổ trang' => ['Historical'],
+            'harem' => ['Harem'], // Nhiều người yêu 1
+            'đa thê' => ['Harem'],
+            'ngược' => ['Drama', 'Tragedy'],
+            'chuyển giới' => ['Gender Bender'],
+            'hoán đổi' => ['Gender Bender'],
+            'màu' => ['Webtoons'], // Webtoon thường có màu
+            'webtoon' => ['Webtoons'],
+            'truyện ngắn' => ['One Shot'],
+            'fan' => ['Doujinshi'],
+            'chế' => ['Doujinshi'],
         ];
 
         // Tìm theo thể loại
