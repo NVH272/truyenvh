@@ -602,7 +602,7 @@
             viewList.classList.add("active");
             viewChat.classList.remove("active");
             backBtn.style.display = "none";
-            title.innerText = "Đoạn chat";
+            title.innerText = "Hỗ trợ";
             title.style.color = "#050505"; // Màu đen cho title danh sách
             if (pollInterval) clearInterval(pollInterval);
             isAIConversation = false;
@@ -694,7 +694,7 @@
                                         <img src="${avatar}" class="admin-avatar">
                                     </div>
                                     <div class="admin-info">
-                                        <div class="admin-name">${u.name}</div>
+                                        <div class="admin-name">${u.name}</div>                                        
                                         <div class="admin-role">${u.email}</div>
                                     </div>
                                     ${badge}
