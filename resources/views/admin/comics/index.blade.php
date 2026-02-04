@@ -208,7 +208,9 @@
 
                         {{-- Actions --}}
                         <td class="px-6 py-4 text-center">
-                            <div class="flex items-center justify-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                            <div class="relative z-10 flex items-center justify-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity"
+                                onclick="event.stopPropagation()">
+
                                 <a href="{{ route('admin.comics.edit', $comic) }}"
                                     class="p-2 rounded-lg bg-slate-700/50 text-blue-400 hover:bg-blue-500 hover:text-white transition-all shadow hover:shadow-blue-500/30"
                                     title="Chỉnh sửa">

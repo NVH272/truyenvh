@@ -112,7 +112,7 @@
                     <tr class="hover:bg-slate-800/50 transition">
                         <td class="px-6">
                             <div class="flex items-center gap-3">
-                                <div class="w-8 h-10 bg-slate-700 rounded overflow-hidden flex-shrink-0">
+                                <div class="w-9 h-12 bg-slate-700 rounded overflow-hidden flex-shrink-0">
                                     <img src="{{ $comic->cover_url }}" class="w-full h-full object-cover" alt="Cover">
                                 </div>
                                 <span class="font-bold text-white truncate max-w-[150px]" title="{{ $comic->title }}">{{ $comic->title }}</span>
