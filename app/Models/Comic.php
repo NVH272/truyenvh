@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Models\User;
+use App\Models\Author;
 
 class Comic extends Model
 {
@@ -94,5 +95,26 @@ class Comic extends Model
     {
         // Giả sử khóa ngoại trong bảng reading_histories là 'comic_id'
         return $this->hasMany(ReadingHistory::class, 'comic_id', 'id');
+    }
+
+    /**
+     * Quan hệ N-N: một truyện có thể có nhiều tác giả.
+     */
+    public function authors(): BelongsToMany
+    {
+        return $this->belongsToMany(Author::class, 'author_comic', 'comic_id', 'author_id');
+    }
+
+    /**
+     * Helper hiển thị danh sách tác giả dạng chuỗi, ưu tiên lấy từ quan hệ.
+     */
+    public function getAuthorsListAttribute(): ?string
+    {
+        if ($this->relationLoaded('authors') && $this->authors->isNotEmpty()) {
+            return $this->authors->pluck('name')->implode(', ');
+        }
+
+        // Fallback: dùng cột author cũ nếu còn
+        return $this->author ?? null;
     }
 }

@@ -82,7 +82,7 @@
                             <h4 class="font-bold text-xl text-slate-800 leading-tight">{{ $comic->title }}</h4>
                             <div class="flex items-center gap-2 text-sm text-slate-500">
                                 <i class="fas fa-pen-nib text-slate-400"></i>
-                                <span>{{ $comic->author ?? 'Tác giả chưa cập nhật' }}</span>
+                                <span>{{ $comic->authors_list ?? 'Tác giả chưa cập nhật' }}</span>
                             </div>
                             <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
                                 {{ $comic->chapters_count ?? 0 }} chương hiện có

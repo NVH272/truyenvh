@@ -168,7 +168,7 @@
 
                         {{-- Author --}}
                         <td class="px-6 py-4">
-                            <span class="text-slate-300 font-medium">{{ $comic->author ?? 'Đang cập nhật' }}</span>
+                            <span class="text-slate-300 font-medium">{{ $comic->authors_list ?? 'Đang cập nhật' }}</span>
                         </td>
 
                         {{-- Status --}}

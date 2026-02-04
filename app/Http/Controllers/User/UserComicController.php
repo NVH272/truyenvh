@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\Comic;
 use App\Models\Category;
+use App\Models\Author;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -37,11 +38,19 @@ class UserComicController extends Controller
     {
         $data = $this->validateData($request);
 
+        // Chuẩn hoá danh sách tác giả (nhiều tác giả cách nhau bởi dấu phẩy)
+        $authorInput = (string) ($data['author'] ?? '');
+        $authorNames = collect(explode(',', $authorInput))
+            ->map(fn ($name) => trim($name))
+            ->filter()
+            ->unique();
+
         $comic = new Comic();
         $comic->title         = $data['title'];
         $comic->slug          = $this->generateUniqueSlug($data['slug'] ?: $data['title']);
         $comic->description   = $data['description'] ?? null;
-        $comic->author        = $data['author'] ?? null;
+        // Lưu chuỗi tác giả chuẩn hoá (phục vụ hiển thị nhanh / tương thích cũ)
+        $comic->author        = $authorNames->isNotEmpty() ? $authorNames->implode(', ') : null;
         $comic->status        = $data['status'];
         // $comic->chapter_count = isset($data['chapter_count'])
         //     ? (int) $data['chapter_count']
@@ -72,7 +81,19 @@ class UserComicController extends Controller
 
         $comic->save();
 
+        // Quan hệ thể loại
         $comic->categories()->sync($data['category_ids']);
+
+        // Quan hệ tác giả (N-N)
+        if ($authorNames->isNotEmpty()) {
+            $authorIds = $authorNames->map(function ($name) {
+                return Author::firstOrCreate(['name' => $name])->id;
+            })->all();
+
+            $comic->authors()->sync($authorIds);
+        } else {
+            $comic->authors()->sync([]);
+        }
 
         $redirectTo = $request->input('redirect_to');
 
@@ -101,10 +122,16 @@ class UserComicController extends Controller
 
         $data = $this->validateData($request, $comic->id);
 
+        $authorInput = (string) ($data['author'] ?? '');
+        $authorNames = collect(explode(',', $authorInput))
+            ->map(fn ($name) => trim($name))
+            ->filter()
+            ->unique();
+
         $comic->title         = $data['title'];
         $comic->slug          = $this->generateUniqueSlug($data['slug'] ?: $data['title'], $comic->id);
         $comic->description   = $data['description'] ?? null;
-        $comic->author        = $data['author'] ?? null;
+        $comic->author        = $authorNames->isNotEmpty() ? $authorNames->implode(', ') : null;
         $comic->status        = $data['status'];
         // $comic->chapter_count = isset($data['chapter_count'])
         //     ? (int) $data['chapter_count']
@@ -115,7 +142,20 @@ class UserComicController extends Controller
         $comic->cover_image = $this->uploadCoverImage($request, $comic->cover_image);
 
         $comic->save();
+
+        // Quan hệ thể loại
         $comic->categories()->sync($data['category_ids']);
+
+        // Quan hệ tác giả (N-N)
+        if ($authorNames->isNotEmpty()) {
+            $authorIds = $authorNames->map(function ($name) {
+                return Author::firstOrCreate(['name' => $name])->id;
+            })->all();
+
+            $comic->authors()->sync($authorIds);
+        } else {
+            $comic->authors()->sync([]);
+        }
 
         $redirectTo = $request->input('redirect_to');
 

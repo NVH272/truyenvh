@@ -63,15 +63,20 @@
                             </div>
 
                             <div class="space-y-1.5">
-                                <label class="block text-sm font-semibold text-slate-300">Tác giả <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-semibold text-slate-300">
+                                    Tác giả <span class="text-red-500">*</span>
+                                </label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i class="fas fa-pen-nib text-slate-500"></i>
                                     </div>
                                     <input type="text" name="author" id="input-author" value="{{ old('author', $comic->author) }}"
                                         class="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-slate-100 text-sm placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
-                                        placeholder="Tên tác giả">
+                                        placeholder="Ví dụ: Tác giả A, Tác giả B">
                                 </div>
+                                <p class="text-xs text-slate-400">
+                                    Có thể nhập <strong>nhiều tác giả</strong>, cách nhau bởi dấu phẩy ( , ).
+                                </p>
                             </div>
                         </div>
 

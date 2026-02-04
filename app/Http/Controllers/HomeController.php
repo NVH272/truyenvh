@@ -104,10 +104,12 @@ class HomeController extends Controller
 
             $comics = $category
                 ? $category->comics()
-                ->where('approval_status', 'approved')
-                ->latest('updated_at')
-                ->take(12)
-                ->get()
+                    ->where('approval_status', 'approved')
+                    // Ưu tiên truyện có chapter mới cập nhật (last_chapter_at mới nhất)
+                    ->orderByDesc('last_chapter_at')
+                    ->orderByDesc('updated_at')
+                    ->take(12)
+                    ->get()
                 : collect();
 
             $genreSections[] = [

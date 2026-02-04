@@ -323,21 +323,21 @@ PHONG CÁCH:
         foreach ($comics as $comic) {
             $categories = $comic->categories->pluck('name')->join(', ');
 
-            $context .= sprintf(
-                "• %s\n" .
+                $context .= sprintf(
+                    "• %s\n" .
                     "  Thể loại: %s | Tác giả: %s | %s\n" .
                     "  👁️ %s lượt xem | ❤️ %s theo dõi | ⭐ %.1f/5\n" .
                     "  Mô tả: %s\n\n",
-                $comic->title,
-                $comic->slug,
-                $categories ?: 'Đa dạng',
-                $comic->author ?: 'Đang cập nhật',
-                $this->getStatusText($comic->status),
-                number_format($comic->views ?? 0),
-                number_format($comic->follows ?? 0),
-                $comic->rating ?? 0,
-                $this->truncate($comic->description, 80)
-            );
+                    $comic->title,
+                    $comic->slug,
+                    $categories ?: 'Đa dạng',
+                    $comic->authors_list ?: 'Đang cập nhật',
+                    $this->getStatusText($comic->status),
+                    number_format($comic->views ?? 0),
+                    number_format($comic->follows ?? 0),
+                    $comic->rating ?? 0,
+                    $this->truncate($comic->description, 80)
+                );
         }
 
         return $context;

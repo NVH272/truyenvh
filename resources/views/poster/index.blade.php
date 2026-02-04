@@ -76,7 +76,7 @@
                                     <div class="text-xs text-slate-500 flex items-center gap-1.5 mb-1.5">
                                         <i class="fas fa-pen-nib text-slate-400 text-[10px]"></i>
                                         <span class="font-medium text-slate-600 truncate max-w-[200px]">
-                                            {{ $comic->author ?? 'Đang cập nhật' }}
+                                            {{ $comic->authors_list ?? 'Đang cập nhật' }}
                                         </span>
                                     </div>
 

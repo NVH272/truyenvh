@@ -26,6 +26,9 @@ class ComicReadController extends Controller
             }
         }
 
+        // Load sẵn quan hệ tác giả để dùng cho liên quan
+        $comic->load('authors');
+
         $userRating  = null;
         $isFollowing = false;
 
@@ -100,21 +103,32 @@ class ComicReadController extends Controller
         // Lấy danh sách category id của truyện hiện tại
         $categoryIds = $comic->categories()->pluck('categories.id')->all(); // comic phải có relation categories()
 
-        // 1) Ưu tiên: cùng tác giả
-        $relatedComics = Comic::query()
-            ->where('approval_status', 'approved')
-            ->where('id', '!=', $comic->id)
-            ->when(!empty($comic->author), function ($q) use ($comic) {
-                $q->where('author', $comic->author);
-            })
-            ->with('categories')
-            ->withAvg('ratings', 'rating')
-            ->withCount('ratings')
-            ->orderByRaw('ratings_avg_rating IS NULL, ratings_avg_rating DESC')
-            ->limit($limit)
-            ->get();
+        // 1) Ưu tiên: 5 truyện cùng ít nhất 1 tác giả (dựa trên quan hệ authors N-N)
+        //    Sắp xếp: lượt xem giảm dần, rồi rating giảm dần
+        $relatedComics = collect();
 
-        // 2) Fallback: cùng thể loại nếu không có cùng tác giả
+        if ($comic->authors->isNotEmpty()) {
+            $authorIds = $comic->authors->pluck('id')->all();
+
+            $relatedComics = Comic::query()
+                ->where('approval_status', 'approved')
+                ->where('id', '!=', $comic->id)
+                ->whereHas('authors', function ($q) use ($authorIds) {
+                    $q->whereIn('authors.id', $authorIds);
+                })
+                ->with(['categories', 'authors'])
+                ->withAvg('ratings', 'rating')
+                ->withCount('ratings')
+                ->orderByDesc('views')
+                ->orderByRaw('ratings_avg_rating IS NULL, ratings_avg_rating DESC')
+                ->orderByDesc('ratings_count')
+                ->limit($limit)
+                ->get();
+        }
+
+        // 2) Fallback: 5 truyện cùng thể loại nếu không có cùng tác giả
+        //    - Cùng càng nhiều thể loại thì đứng trên (matched_categories_count)
+        //    - Sắp xếp tiếp theo: views, rating giảm dần
         if ($relatedComics->isEmpty() && !empty($categoryIds)) {
             $relatedComics = Comic::query()
                 ->where('approval_status', 'approved')
@@ -122,10 +136,18 @@ class ComicReadController extends Controller
                 ->whereHas('categories', function ($q) use ($categoryIds) {
                     $q->whereIn('categories.id', $categoryIds);
                 })
-                ->with('categories')
+                ->with(['categories', 'authors'])
+                ->withCount([
+                    'categories as matched_categories_count' => function ($q) use ($categoryIds) {
+                        $q->whereIn('categories.id', $categoryIds);
+                    },
+                ])
                 ->withAvg('ratings', 'rating')
                 ->withCount('ratings')
+                ->orderByDesc('matched_categories_count')
+                ->orderByDesc('views')
                 ->orderByRaw('ratings_avg_rating IS NULL, ratings_avg_rating DESC')
+                ->orderByDesc('ratings_count')
                 ->limit($limit)
                 ->get();
         }

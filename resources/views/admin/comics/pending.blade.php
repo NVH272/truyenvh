@@ -96,7 +96,7 @@
                                     </div>
                                     <div>
                                         <p class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Tác giả</p>
-                                        <p class="text-sm text-slate-200 font-medium truncate">{{ $comic->author ?? 'Chưa cập nhật' }}</p>
+                                        <p class="text-sm text-slate-200 font-medium truncate">{{ $comic->authors_list ?? 'Chưa cập nhật' }}</p>
                                     </div>
                                 </div>
 

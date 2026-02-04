@@ -132,7 +132,7 @@
                 {{-- Author --}}
                 <div class="text-[11px] text-slate-500 truncate pt-1" title="Tác giả">
                     <i class="fas fa-user-edit text-[9px] mr-1 text-slate-400"></i>
-                    {{ $comic->author ?? 'Đang cập nhật' }}
+                    {{ $comic->authors_list ?? 'Đang cập nhật' }}
                 </div>
             </div>
         </div>

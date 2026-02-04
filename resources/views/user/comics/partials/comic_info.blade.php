@@ -73,21 +73,34 @@
                 {{-- Grid Thông tin --}}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm mb-6">
                     <div class="flex items-center gap-2">
-                        <span class="text-gray-500 w-24 flex-shrink-0"><i class="fas fa-user mr-1.5"></i> Tác giả:</span>
-                        <span class="font-medium text-gray-800">{{ $comic->author ?? 'Đang cập nhật' }}</span>
-                    </div>
-                    <div class="flex items-center gap-2">
                         <span class="text-gray-500 w-24 flex-shrink-0">
                             <i class="fas fa-user mr-1.5"></i> Tác giả:
                         </span>
+                        <div class="flex flex-wrap items-center gap-x-1 gap-y-1">
+                            @php
+                                $authorRelations = $comic->relationLoaded('authors') ? $comic->authors : $comic->authors;
+                            @endphp
 
-                        <a href="{{ route('user.comics.author.show', $comic->author) }}"
-                            class="font-medium text-blue-600 hover:underline hover:text-blue-400 transition">
-                            {{ $comic->author }}
-                        </a>
+                            @forelse($authorRelations as $author)
+                                <a href="{{ route('user.comics.author.show', $author->name) }}"
+                                    class="font-medium text-blue-600 hover:underline hover:text-blue-400 transition">
+                                    {{ $author->name }}
+                                </a>
+                                @if(!$loop->last)
+                                    <span class="text-gray-400">,</span>
+                                @endif
+                            @empty
+                                <span class="text-gray-400">Đang cập nhật</span>
+                            @endforelse
+                        </div>
                     </div>
 
                     <div class="flex items-center gap-2">
+                        <span class="text-gray-500 w-24 flex-shrink-0"><i class="fas fa-eye mr-1.5"></i> Lượt xem:</span>
+                        <span class="font-medium text-gray-800">{{ number_format($comic->views ?? 0) }}</span>
+                    </div>
+
+                    <div class="flex items-center gap-2 col-span-2">
                         <span class="text-gray-500 w-24 flex-shrink-0"><i class="fas fa-tags mr-1.5"></i> Thể loại:</span>
                         <div class="flex flex-wrap gap-1">
                             @forelse ($comic->categories as $category)
@@ -102,11 +115,7 @@
                             <span class="text-gray-400">Đang cập nhật</span>
                             @endforelse
                         </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-gray-500 w-24 flex-shrink-0"><i class="fas fa-eye mr-1.5"></i> Lượt xem:</span>
-                        <span class="font-medium text-gray-800">{{ number_format($comic->views ?? 0) }}</span>
-                    </div>
+                    </div>                    
                 </div>
 
                 {{-- Mô tả ngắn --}}

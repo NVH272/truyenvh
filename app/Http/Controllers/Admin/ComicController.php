@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Comic;
 use App\Models\Category;
+use App\Models\Author;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
@@ -148,6 +149,13 @@ class ComicController extends Controller
 
         $data = $request->validate($this->getValidationRules());
 
+        // Chuẩn hoá danh sách tác giả (nhiều tác giả cách nhau bởi dấu phẩy)
+        $authorInput = (string) ($data['author'] ?? '');
+        $authorNames = collect(explode(',', $authorInput))
+            ->map(fn ($name) => trim($name))
+            ->filter()
+            ->unique();
+
         $comic = new Comic();
         $comic->title = $data['title'];
 
@@ -155,7 +163,7 @@ class ComicController extends Controller
         $baseSlug = $data['slug'] ?: $data['title'];
         $comic->slug = $this->generateUniqueSlug($baseSlug, null);
         $comic->description   = $data['description'] ?? null;
-        $comic->author        = $data['author'] ?? null;
+        $comic->author        = $authorNames->isNotEmpty() ? $authorNames->implode(', ') : null;
         $comic->status        = $data['status'];
 
         // $comic->chapter_count = isset($data['chapter_count'])
@@ -179,6 +187,15 @@ class ComicController extends Controller
 
         // sync categories (many-to-many)
         $comic->categories()->sync($data['category_ids']);
+
+        // sync authors (many-to-many)
+        if ($authorNames->isNotEmpty()) {
+            $authorIds = $authorNames->map(function ($name) {
+                return Author::firstOrCreate(['name' => $name])->id;
+            })->all();
+
+            $comic->authors()->sync($authorIds);
+        }
 
         return redirect()->route('admin.comics.index')
             ->with('success', 'Truyện đã được tạo thành công.');
@@ -213,6 +230,13 @@ class ComicController extends Controller
 
         $validated = $request->validate($this->getValidationRules($comic));
 
+        // Chuẩn hoá danh sách tác giả (nhiều tác giả cách nhau bởi dấu phẩy)
+        $authorInput = (string) ($validated['author'] ?? '');
+        $authorNames = collect(explode(',', $authorInput))
+            ->map(fn ($name) => trim($name))
+            ->filter()
+            ->unique();
+
         // update các field cơ bản
         $comic->title = $validated['title'];
 
@@ -220,7 +244,7 @@ class ComicController extends Controller
         $baseSlug = $validated['slug'] ?: ($comic->slug ?: $validated['title']);
         $comic->slug = $this->generateUniqueSlug($baseSlug, $comic->id);
         $comic->description   = $validated['description'] ?? null;
-        $comic->author        = $validated['author'] ?? null;
+        $comic->author        = $authorNames->isNotEmpty() ? $authorNames->implode(', ') : null;
         $comic->status        = $validated['status'];
         // $comic->chapter_count = isset($validated['chapter_count'])
         //     ? (int) $validated['chapter_count']
@@ -234,6 +258,17 @@ class ComicController extends Controller
 
         // Sync lại categories
         $comic->categories()->sync($validated['category_ids']);
+
+        // Sync lại authors
+        if ($authorNames->isNotEmpty()) {
+            $authorIds = $authorNames->map(function ($name) {
+                return Author::firstOrCreate(['name' => $name])->id;
+            })->all();
+
+            $comic->authors()->sync($authorIds);
+        } else {
+            $comic->authors()->sync([]);
+        }
 
         return redirect()->route('admin.comics.index')
             ->with('success', 'Truyện đã được cập nhật thành công.');

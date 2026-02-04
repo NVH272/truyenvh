@@ -79,7 +79,7 @@
                     </div>
                     {{-- Author --}}
                     <div class="text-[11px] text-slate-500 truncate" title="Tác giả">
-                        <i class="fas fa-user-edit text-[9px] mr-1"></i> {{ $comic->author ?? 'Đang cập nhật' }}
+                        <i class="fas fa-user-edit text-[9px] mr-1"></i> {{ $comic->authors_list ?? 'Đang cập nhật' }}
                     </div>
                 </div>
             </div>
@@ -136,7 +136,7 @@
                             </div>
                         </div>
                         <div class="text-[11px] text-slate-500 truncate">
-                            <i class="fas fa-user-edit text-[9px] mr-1"></i> {{ $comic->author ?? 'N/A' }}
+                            <i class="fas fa-user-edit text-[9px] mr-1"></i> {{ $comic->authors_list ?? 'N/A' }}
                         </div>
                     </div>
                 </div>
@@ -303,7 +303,7 @@
 
                     {{-- Author --}}
                     <div class="text-[11px] text-slate-500 truncate" title="Tác giả">
-                        <i class="fas fa-user-edit text-[9px] mr-1"></i> {{ $comic->author ?? 'Đang cập nhật' }}
+                        <i class="fas fa-user-edit text-[9px] mr-1"></i> {{ $comic->authors_list ?? 'Đang cập nhật' }}
                     </div>
                 </div>
             </div>
