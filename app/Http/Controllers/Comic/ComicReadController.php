@@ -16,6 +16,16 @@ class ComicReadController extends Controller
         $user = Auth::user();
         $filter = $request->input('filter', 'latest'); // latest | oldest | popular
 
+        // Chỉ cho phép hiển thị truyện:
+        // - Nếu truyện đã được duyệt (approval_status = approved)
+        // - Hoặc user hiện tại chính là người đăng truyện (created_by)
+        if ($comic->approval_status !== 'approved') {
+            if (!$user || $user->id !== $comic->created_by) {
+                // Ẩn truyện với người không có quyền xem
+                abort(404);
+            }
+        }
+
         $userRating  = null;
         $isFollowing = false;
 
@@ -138,7 +148,9 @@ class ComicReadController extends Controller
             ->orderByDesc('chapter_number')
             ->first();
 
+        // Top lượt xem: chỉ tính truyện đã được duyệt
         $topViewedComics = Comic::query()
+            ->where('approval_status', 'approved')
             ->withMax('chapters', 'chapter_number') // lấy chapter mới nhất
             ->orderByDesc('views')
             ->limit(5)

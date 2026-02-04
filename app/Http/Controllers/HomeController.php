@@ -12,7 +12,10 @@ class HomeController extends Controller
     {
 
         // 1. TOP THỊNH HÀNH (Sắp xếp theo View giảm dần, lấy 10)
-        $trendingComics = Comic::orderBy('views', 'desc')->take(10)->get();
+        $trendingComics = Comic::where('approval_status', 'approved')
+            ->orderBy('views', 'desc')
+            ->take(10)
+            ->get();
 
         // 2. MỚI CẬP NHẬT (Lấy 30 truyện để vừa đẹp lưới 5 cột x 6 hàng)
         $newUpdateComics = Comic::where('approval_status', 'approved') // Chỉ lấy truyện đã duyệt
@@ -21,10 +24,15 @@ class HomeController extends Controller
             ->take(30) // Lấy 30 truyện (5 cột x 6 hàng)
             ->get();
 
-        // 3. TOP THEO DÕI (Lấy 5 truyện)
-        $topFollowComics = Comic::orderBy('follows', 'desc')->take(5)->get();
+        // 3. TOP THEO DÕI (Lấy 5 truyện) - chỉ truyện đã duyệt
+        $topFollowComics = Comic::where('approval_status', 'approved')
+            ->orderBy('follows', 'desc')
+            ->take(5)
+            ->get();
 
+        // 4. TOP LƯỢT XEM (sidebar / section khác) - chỉ truyện đã duyệt
         $topViewedComics = Comic::query()
+            ->where('approval_status', 'approved')
             ->withMax('chapters', 'chapter_number') // lấy chapter mới nhất
             ->orderByDesc('views')
             ->limit(5)

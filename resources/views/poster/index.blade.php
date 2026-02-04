@@ -164,7 +164,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" class="px-6 py-20 text-center">
+                        <td colspan="5" class="px-6 py-20 text-center">
                             <div class="flex flex-col items-center justify-center">
                                 <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4 border border-slate-100">
                                     <i class="fas fa-layer-group text-4xl text-slate-300"></i>
