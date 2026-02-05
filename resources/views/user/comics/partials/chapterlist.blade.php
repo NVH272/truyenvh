@@ -35,7 +35,7 @@
                     <td class="px-6 py-3">
                         <a href="{{ route('user.comics.chapters.read', ['comic' => $comic->id,'chapter_number' => $chapter->chapter_number]) }}"
                             class="font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
-                            Chapter {{ $chapter->chapter_number }}
+                            {{ $chapter->title }}
                         </a>
                     </td>
 

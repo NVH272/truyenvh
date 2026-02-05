@@ -5,23 +5,165 @@
 @section('content')
 <div class="space-y-10">
 
-    {{-- SECTION 1: HERO SLIDER --}}
-    <section class="relative group rounded-2xl overflow-hidden shadow-2xl h-[200px] md:h-[360px]">
-        <div id="hero-slider" class="w-full h-full relative"></div>
+    {{-- SECTION 1: HERO SLIDER (LIGHT MODE - MIMI STYLE) --}}
+    <section class="relative group rounded-3xl overflow-hidden shadow-xl border border-slate-200 bg-white h-[400px] md:h-[450px]">
 
+        {{-- Container chứa các slides --}}
+        <div id="hero-slider" class="w-full h-full relative">
+            {{-- Slides sẽ được Javascript render vào đây --}}
+        </div>
+
+        {{-- Nút điều hướng (Style Light Mode: Trắng, bóng đổ) --}}
         <button type="button" onclick="changeSlide(-1)"
-            class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 backdrop-blur-md hover:bg-white/40 rounded-full flex items-center justify-center text-white transition z-20">
-            <i class="fas fa-chevron-left"></i>
+            class="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/80 backdrop-blur-sm hover:bg-white text-slate-700 hover:text-blue-600 rounded-full flex items-center justify-center shadow-lg border border-slate-100 transition-all z-30 opacity-0 group-hover:opacity-100 duration-300 hover:scale-110">
+            <i class="fas fa-chevron-left text-lg"></i>
         </button>
         <button type="button" onclick="changeSlide(1)"
-            class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/20 backdrop-blur-md hover:bg-white/40 rounded-full flex items-center justify-center text-white transition z-20">
-            <i class="fas fa-chevron-right"></i>
+            class="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/80 backdrop-blur-sm hover:bg-white text-slate-700 hover:text-blue-600 rounded-full flex items-center justify-center shadow-lg border border-slate-100 transition-all z-30 opacity-0 group-hover:opacity-100 duration-300 hover:scale-110">
+            <i class="fas fa-chevron-right text-lg"></i>
         </button>
 
-        <div id="slider-dots"
-            class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-        </div>
+        {{-- Dots navigation --}}
+        <div id="slider-dots" class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-30"></div>
     </section>
+
+    {{-- SCRIPT XỬ LÝ SLIDER --}}
+    <script>
+        const sliderData = @json($sliderData);
+        let currentIndex = 0;
+        const sliderContainer = document.getElementById('hero-slider');
+        const dotsContainer = document.getElementById('slider-dots');
+        let autoPlayInterval;
+
+        function renderSlider() {
+            if (!sliderData || sliderData.length === 0) return;
+
+            sliderContainer.innerHTML = '';
+            dotsContainer.innerHTML = '';
+
+            sliderData.forEach((item, index) => {
+                // A. Tạo Slide Item
+                const slide = document.createElement('div');
+                // Transition effect: Fade in/out
+                slide.className = `absolute inset-0 transition-opacity duration-700 ease-in-out ${index === 0 ? 'opacity-100 z-20' : 'opacity-0 z-10 pointer-events-none'}`;
+                slide.id = `slide-${index}`;
+
+                // Tạo danh sách HTML cho Genres (Thể loại)
+                const genresHtml = item.genres && item.genres.length > 0 ?
+                    item.genres.map(g => `<span class="px-2.5 py-1 rounded-md bg-white/60 border border-slate-200 text-slate-600 text-xs font-semibold shadow-sm">${g}</span>`).join('') :
+                    '';
+
+                slide.innerHTML = `
+                <div class="absolute inset-0 z-0">
+                    <img src="${item.img}" class="w-full h-full object-cover opacity-90">
+                </div>
+
+                <div class="absolute inset-0 z-10 bg-gradient-to-r from-white/80 via-white/50 to-transparent/10"></div>
+
+                <div class="absolute inset-0 z-20 flex items-center p-6 md:p-12 gap-8 md:gap-12">
+                    
+                    <div class="hidden md:block flex-shrink-0 w-[240px] h-[340px] relative group/poster">
+                        <div class="absolute inset-0 bg-blue-600 rounded-xl rotate-3 opacity-20 group-hover/poster:rotate-6 transition-transform duration-500"></div>
+                        <img src="${item.img}" alt="${item.title}" 
+                             class="w-full h-full object-cover rounded-xl shadow-2xl relative z-10 transform group-hover/poster:-translate-y-2 transition-transform duration-500 border border-slate-100">
+                        
+                        <div class="absolute -top-3 -left-3 z-20 bg-red-600 text-white text-sm font-extrabold px-3 py-1.5 rounded-lg shadow-lg rotate-[-10deg]">
+                            #${index + 1}
+                        </div>
+                    </div>
+
+                    <div class="flex-1 flex flex-col justify-center max-w-2xl space-y-4">
+                        
+                        <h2 class="text-3xl md:text-5xl font-extrabold text-slate-800 leading-tight drop-shadow-sm line-clamp-2">
+                            <a href="${item.url}" class="hover:text-blue-600 transition-colors">
+                                ${item.title}
+                            </a>
+                        </h2>
+
+                        <div class="flex flex-wrap gap-2">
+                            ${genresHtml}
+                        </div>
+
+                        <p class="text-slate-600 text-sm md:text-base leading-relaxed line-clamp-3 md:line-clamp-4 bg-white/50 p-3 rounded-lg border border-slate-100/50 backdrop-blur-sm">
+                            ${item.desc}
+                        </p>
+
+                        <div class="pt-2">
+                            <a href="${item.url}" 
+                               class="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-1 hover:shadow-blue-500/50">
+                                <i class="fas fa-book-open"></i>
+                                <span>Đọc Ngay</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+                sliderContainer.appendChild(slide);
+
+                // B. Tạo Dot
+                const dot = document.createElement('button');
+                // Dot style: Thanh dài khi active, tròn khi inactive
+                dot.className = `h-2 rounded-full transition-all duration-500 ${index === 0 ? 'w-8 bg-blue-600' : 'w-2 bg-slate-300 hover:bg-slate-400'}`;
+                dot.onclick = () => goToSlide(index);
+                dotsContainer.appendChild(dot);
+            });
+        }
+
+        function showSlide(index) {
+            const slides = sliderContainer.children;
+            const dots = dotsContainer.children;
+
+            for (let i = 0; i < slides.length; i++) {
+                // Xử lý Slide
+                if (i === index) {
+                    slides[i].classList.remove('opacity-0', 'pointer-events-none');
+                    slides[i].classList.add('opacity-100');
+                } else {
+                    slides[i].classList.remove('opacity-100');
+                    slides[i].classList.add('opacity-0', 'pointer-events-none');
+                }
+
+                // Xử lý Dot (Active là thanh dài, Inactive là chấm tròn)
+                if (i === index) {
+                    dots[i].classList.remove('w-2', 'bg-slate-300', 'hover:bg-slate-400');
+                    dots[i].classList.add('w-8', 'bg-blue-600');
+                } else {
+                    dots[i].classList.remove('w-8', 'bg-blue-600');
+                    dots[i].classList.add('w-2', 'bg-slate-300', 'hover:bg-slate-400');
+                }
+            }
+        }
+
+        function changeSlide(direction) {
+            currentIndex += direction;
+            if (currentIndex >= sliderData.length) currentIndex = 0;
+            if (currentIndex < 0) currentIndex = sliderData.length - 1;
+            showSlide(currentIndex);
+            resetAutoPlay();
+        }
+
+        function goToSlide(index) {
+            currentIndex = index;
+            showSlide(currentIndex);
+            resetAutoPlay();
+        }
+
+        function startAutoPlay() {
+            autoPlayInterval = setInterval(() => {
+                changeSlide(1);
+            }, 7500); // 5 giây
+        }
+
+        function resetAutoPlay() {
+            clearInterval(autoPlayInterval);
+            startAutoPlay();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderSlider();
+            startAutoPlay();
+        });
+    </script>
 
     {{-- SECTION 2: TOP THỊNH HÀNH (DESIGN Y HỆT GENRE CARD) --}}
     <section>

@@ -39,29 +39,29 @@ class HomeController extends Controller
             ->get();
 
         // Lấy 5 truyện view cao nhất cho slider
-        $sliderComics = Comic::orderBy('views', 'desc')
-            ->take(5)
+        $sliderComics = Comic::where('approval_status', 'approved')
+            ->with('categories') // Eager load thể loại
+            ->orderByDesc('views')
+            ->take(10)
             ->get();
 
-        // JS của bạn đang cần các trường: img, title, desc, url, badge
-        $sliderData = $sliderComics->map(function ($comic) {
+        $sliderData = $sliderComics->map(function ($comic, $key) {
             return [
-                'img'   => $comic->cover_url, // Đường dẫn ảnh bìa
-                'title' => $comic->title,
-                'desc'  => \Str::limit($comic->description, 100), // Cắt ngắn mô tả
-                'url'   => route('user.comics.show', $comic->slug), // Link truyện
-                'badge' => $comic->status === 'ongoing' ? 'Hot' : 'Full', // Badge hiển thị
+                'id'          => $comic->id,
+                'title'       => $comic->title,
+                'desc'        => Str::limit($comic->description ?? 'Chưa có mô tả...', 150),
+                'img'         => $comic->cover_url,
+                'author'      => $comic->author ?? 'Đang cập nhật',
+                'views'       => number_format($comic->views ?? 0),
+                // Lấy 3 thể loại đầu tiên
+                'genres'      => $comic->categories->take(3)->map(fn($c) => $c->name)->toArray(),
+                'url'         => route('user.comics.show', $comic->slug),
+                'badge'       => 'Top ' . ($key + 1 ?? 1), // Ví dụ: Top 1, Top 2
             ];
-        });
+        })->values();
 
         // Chỉ lấy truyện đã được duyệt
         $baseQuery = Comic::where('approval_status', 'approved');
-
-        // 1. Slider: top view
-        $sliderComics = (clone $baseQuery)
-            ->orderByDesc('views')
-            ->take(3)
-            ->get();
 
         // 2. Top Thịnh Hành: theo follows
         $trendingComics = (clone $baseQuery)
@@ -104,12 +104,12 @@ class HomeController extends Controller
 
             $comics = $category
                 ? $category->comics()
-                    ->where('approval_status', 'approved')
-                    // Ưu tiên truyện có chapter mới cập nhật (last_chapter_at mới nhất)
-                    ->orderByDesc('last_chapter_at')
-                    ->orderByDesc('updated_at')
-                    ->take(12)
-                    ->get()
+                ->where('approval_status', 'approved')
+                // Ưu tiên truyện có chapter mới cập nhật (last_chapter_at mới nhất)
+                ->orderByDesc('last_chapter_at')
+                ->orderByDesc('updated_at')
+                ->take(12)
+                ->get()
                 : collect();
 
             $genreSections[] = [
