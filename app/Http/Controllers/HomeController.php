@@ -14,7 +14,7 @@ class HomeController extends Controller
         // 1. TOP THỊNH HÀNH (Sắp xếp theo View giảm dần, lấy 10)
         $trendingComics = Comic::where('approval_status', 'approved')
             ->orderBy('views', 'desc')
-            ->take(10)
+            ->take(20)
             ->get();
 
         // 2. MỚI CẬP NHẬT (Lấy 30 truyện để vừa đẹp lưới 5 cột x 6 hàng)
@@ -42,7 +42,7 @@ class HomeController extends Controller
         $sliderComics = Comic::where('approval_status', 'approved')
             ->with('categories') // Eager load thể loại
             ->orderByDesc('views')
-            ->take(10)
+            ->take(15)
             ->get();
 
         $sliderData = $sliderComics->map(function ($comic, $key) {
@@ -63,11 +63,7 @@ class HomeController extends Controller
         // Chỉ lấy truyện đã được duyệt
         $baseQuery = Comic::where('approval_status', 'approved');
 
-        // 2. Top Thịnh Hành: theo follows
-        $trendingComics = (clone $baseQuery)
-            ->orderByDesc('follows')
-            ->take(10)
-            ->get();
+        
 
         // 3. Mới cập nhật
         $recentUpdates = (clone $baseQuery)
@@ -85,16 +81,16 @@ class HomeController extends Controller
         // Dùng đúng slug trong bảng `categories` (xem file dump db_truyenvh.sql)
         // Ví dụ: action, adventure, comedy, drama, fantasy, romance, horror, sports, ...
         $genreSlugs = [
-            'action'      => 'Truyện hành động',
-            'adventure'   => 'Truyện phiêu lưu',
-            'comedy'      => 'Truyện hài hước',
-            'drama'       => 'Truyện kịch tính',
-            'fantasy'     => 'Truyện giả tưởng',
-            'romance'     => 'Truyện tình cảm',
-            'horror'      => 'Truyện kinh dị',
-            'sports'      => 'Truyện thể thao',
-            'school-life' => 'Đời sống học đường',
-            'sci-fi'      => 'Khoa học viễn tưởng',
+            'action'      => 'Truyện Action',
+            'adventure'   => 'Truyện Adventure',
+            'comedy'      => 'Truyện Comedy',
+            'drama'       => 'Truyện Drama',
+            'fantasy'     => 'Truyện Fantasy',
+            'romance'     => 'Truyện Romance',
+            'horror'      => 'Truyện Horror',
+            'sports'      => 'Truyện Sports',
+            'school-life' => 'Truyện School Life',
+            'sci-fi'      => 'Truyện Sci-Fi',
         ];
 
         $genreSections = [];

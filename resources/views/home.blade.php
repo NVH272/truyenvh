@@ -288,6 +288,11 @@
 
         {{-- RIGHT SIDEBAR --}}
         <aside class="col-span-12 lg:col-span-3 space-y-6">
+
+            {{-- TOP LƯỢT XEM --}}
+            @include('user.comics.partials.topview')
+
+            {{-- TOP THEO DÕI --}}
             <div class="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100">
                 {{-- HEADER --}}
                 <div class="px-5 py-3 border-b border-gray-100 flex justify-between items-center">
@@ -318,8 +323,8 @@
 
                         {{-- Thứ hạng --}}
                         <span class="w-6 h-6 flex-shrink-0 flex items-center justify-center rounded-full
-                {{ $index < 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600' }}
-                text-xs font-bold">
+                        {{ $index < 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600' }}
+                        text-xs font-bold">
                             {{ $index + 1 }}
                         </span>
 
@@ -357,9 +362,6 @@
                     @endforeach
                 </div>
             </div>
-
-            {{-- TOP LƯỢT XEM --}}
-            @include('user.comics.partials.topview')
         </aside>
     </div>
 
@@ -467,61 +469,6 @@
     const trendingData = @json($trendingData);
     const updatesData = @json($updatesData);
     const sidebarData = @json($sidebarData);
-
-    // ====== SLIDER ======
-    const sliderContainer = document.getElementById('hero-slider');
-    const dotsContainer = document.getElementById('slider-dots');
-    let currentSlideIndex = 0;
-
-    function renderSlider() {
-        if (!sliderContainer) return;
-
-        sliderContainer.innerHTML = '';
-        dotsContainer.innerHTML = '';
-
-        sliderData.forEach((slide, index) => {
-            const slideEl = document.createElement('div');
-            slideEl.className =
-                'absolute inset-0 transition-opacity duration-700 ease-in-out ' +
-                (index === currentSlideIndex ? 'opacity-100 z-10' : 'opacity-0 z-0');
-
-            slideEl.innerHTML = `
-                <a href="${slide.url}" class="block w-full h-full">
-                <img src="${slide.img}" class="w-full h-full object-cover object-top" alt="${slide.title}">
-                <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
-                <div class="absolute bottom-0 left-0 p-6 md:p-12 w-full md:w-2/3 text-white">
-                    <span class="bg-red-600 text-xs font-bold px-2 py-1 rounded mb-2 inline-block shadow-sm">${slide.badge ?? ''}</span>
-                    <h2 class="text-3xl md:text-5xl font-extrabold mb-3 leading-tight drop-shadow-lg">${slide.title}</h2>
-                    <p class="text-gray-200 line-clamp-2 drop-shadow-md text-sm md:text-base">${slide.desc ?? ''}</p>
-                </div>
-                </a>
-            `;
-            sliderContainer.appendChild(slideEl);
-
-            const dot = document.createElement('button');
-            dot.className =
-                'w-3 h-3 rounded-full transition-all ' +
-                (index === currentSlideIndex ? 'bg-blue-500 w-8' : 'bg-white/50 hover:bg-white');
-            dot.onclick = function() {
-                currentSlideIndex = index;
-                renderSlider();
-            };
-            dotsContainer.appendChild(dot);
-        });
-    }
-
-    function changeSlide(direction) {
-        if (!sliderData.length) return;
-        currentSlideIndex = (currentSlideIndex + direction + sliderData.length) % sliderData.length;
-        renderSlider();
-    }
-
-    if (sliderData.length) {
-        renderSlider();
-        setInterval(function() {
-            changeSlide(1);
-        }, 5000);
-    }
 
     // ====== TOP THỊNH HÀNH ======
     const trendingContainer = document.getElementById('trending-list');

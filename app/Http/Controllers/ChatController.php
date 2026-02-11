@@ -432,7 +432,9 @@ PHONG CÁCH:
             'cổ trang',
             'xuyên không',
 
-            // Các thể loại chuyên biệt (Nguyên nhân lỗi của bạn nằm ở đây)
+            // Các thể loại chuyên biệt
+            'romcom',
+            'romance comedy',
             'shoujo ai',
             'shounen ai',
             'yuri',

@@ -170,14 +170,14 @@
                     <form method="GET" action="{{ route('user.comics.filter') }}" id="filter-search-form">
                         {{-- Preserve existing query parameters --}}
                         @if(request('categories'))
-                            @foreach((array)request('categories') as $category)
-                                <input type="hidden" name="categories[]" value="{{ $category }}">
-                            @endforeach
+                        @foreach((array)request('categories') as $category)
+                        <input type="hidden" name="categories[]" value="{{ $category }}">
+                        @endforeach
                         @endif
                         @if(request('sort'))
-                            <input type="hidden" name="sort" value="{{ request('sort') }}">
+                        <input type="hidden" name="sort" value="{{ request('sort') }}">
                         @endif
-                        
+
                         <div class="group relative mb-4">
                             <div class="relative">
                                 <input
@@ -192,7 +192,7 @@
 
                                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2
                                 text-slate-400 text-xs group-focus-within:text-brand-blue transition-colors pointer-events-none"></i>
-                                
+
                                 <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2
                                 text-slate-400 hover:text-brand-blue transition-colors focus:outline-none">
                                     <i class="fas fa-arrow-right text-xs"></i>
@@ -303,8 +303,8 @@
                                 class="relative px-2.5 py-1.5 rounded-md text-[11px] font-semibold border transition-all duration-200 select-none
                                 {{-- Logic CSS: Active chỉ highlight viền và chữ --}}
                                 {{ $active 
-                                        ? 'bg-brand-blue/5 border-brand-blue text-brand-blue' 
-                                        : 'bg-white border-slate-200 text-slate-500 hover:border-brand-blue/50 hover:text-brand-blue' 
+                                        ? 'bg-blue-50 border-blue-600 text-blue-600 shadow-sm ring-1 ring-blue-600/10' 
+                                        : 'bg-white border-slate-200 text-slate-500 hover:border-blue-400 hover:text-blue-600'
                                 }}">
 
                                 {{ $category->name }}

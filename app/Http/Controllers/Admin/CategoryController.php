@@ -13,6 +13,7 @@ class CategoryController extends Controller
     {
         // 1. Loại bỏ khoảng trắng thừa ở đầu/cuối
         $search = trim($request->input('q'));
+        $sort = $request->input('sort', 'name_asc');
 
         $query = Category::query();
 
@@ -31,11 +32,29 @@ class CategoryController extends Controller
             });
         }
 
-        $categories = $query->orderBy('id', 'asc')
+        switch ($sort) {
+        case 'latest':
+            $query->orderBy('id', 'desc');
+            break;
+        case 'name_asc':
+            $query->orderBy('name', 'asc');
+            break;
+        case 'name_desc':
+            $query->orderBy('name', 'desc');
+            break;
+        case 'oldest':
+            $query->orderBy('created_at', 'asc');
+            break;
+        default:
+            $query->orderBy('name', 'asc');
+            break;
+    }
+
+        $categories = $query
             ->paginate(10)
             ->withQueryString();
 
-        return view('admin.categories.index', compact('categories', 'search'));
+        return view('admin.categories.index', compact('categories', 'search', 'sort'));
     }
 
     public function create()

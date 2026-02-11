@@ -7,24 +7,45 @@
 <div class="space-y-6">
     <!-- Toolbar -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <!-- Search Box -->
-        <form action="{{ route('admin.categories.index') }}" method="GET" class="relative w-full md:w-72 group">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i class="fas fa-search text-slate-500 group-focus-within:text-orange-500 transition-colors"></i>
+                
+        <form action="{{ route('admin.categories.index') }}" method="GET" class="flex flex-col md:flex-row gap-3 w-full md:w-auto" onsubmit="this.form.submit()">
+        
+        {{-- TÌM KIẾM --}}
+        <div class="relative w-full md:w-72 group">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-slate-500 group-focus-within:text-orange-500 transition-colors"></i>
+                </div>
+
+                <input
+                    type="text"
+                    name="q"
+                    value="{{ request('q') }}"
+                    placeholder="Tìm kiếm thể loại..."
+                    class="admin-input w-full pl-10 pr-4 py-2 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 block bg-slate-800 border-slate-700 text-white placeholder-slate-500 transition-all" 
+                />
             </div>
 
-            <input
-                type="text"
-                name="q"
-                value="{{ request('q') }}" {{-- giữ lại từ khóa sau khi search --}}
-                placeholder="Tìm kiếm thể loại..."
-                class="admin-input w-full pl-10 pr-4 py-2 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 block bg-slate-800 border-slate-700 text-white placeholder-slate-500 transition-all" />
+            {{-- SẮP XẾP --}}
+            <div class="relative">
+                <select 
+                    name="sort" 
+                    onchange="this.form.submit();" 
+                    class="appearance-none bg-slate-800 border border-slate-700 text-white text-sm rounded-lg focus:ring-orange-500 focus:border-orange-500 block w-full pl-3 pr-8 py-2 cursor-pointer transition-all hover:bg-slate-700">
+                    <option value="name_asc" {{ request('sort') == 'name_asc' ? 'selected' : '' }}>Tên (A - Z)</option>
+                    <option value="name_desc" {{ request('sort') == 'name_desc' ? 'selected' : '' }}>Tên (Z - A)</option>
+                    <option value="latest" {{ request('sort') == 'latest' ? 'selected' : '' }}>Mới nhất (ID giảm dần)</option>
+                    <option value="oldest" {{ request('sort') == 'oldest' ? 'selected' : '' }}>Cũ nhất (ID tăng dần)</option>          
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
+                    <i class="fas fa-chevron-down text-xs"></i>
+                </div>
+            </div>
         </form>
 
-        <!-- Add Button -->
+        {{-- NÚT THÊM THỂ LOẠI MỚI --}}
         <a href="{{ route('admin.categories.create') }}" class="bg-orange-600 hover:bg-orange-700 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-lg shadow-orange-900/20 transition flex items-center gap-2 transform active:scale-95">
             <i class="fas fa-plus"></i>
-            <span>Thêm Thể loại</span>
+            <span class="whitespace-nowrap">Thêm Thể loại</span>
         </a>
     </div>
 

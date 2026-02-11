@@ -1,6 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'Quản lý Chapter')
+@section('header', 'Quản lý Chapter')
 
 @section('content')
 <div class="max-w-7xl mx-auto p-6 space-y-8">

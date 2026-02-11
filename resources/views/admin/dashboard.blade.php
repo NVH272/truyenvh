@@ -15,7 +15,7 @@
             <i class="fas fa-chart-column mr-2"></i> Báo cáo
         </a>
         <a href="{{ route('admin.comics.create') }}" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-orange-900/20 transition">
-            <i class="fas fa-plus mr-2"></i> Thêm mới
+            <i class="fas fa-plus mr-2"></i> Thêm truyện mới
         </a>
     </div>
 </div>
@@ -72,20 +72,22 @@
     </div>
 
     <!-- Stat Card 4: Báo cáo lỗi -->
-    <div class="dashboard-card p-5 border-red-900/50 bg-red-900/10">
-        <div class="flex justify-between items-start mb-4">
-            <div>
-                <p class="text-red-400 text-xs font-bold uppercase tracking-wider">Báo cáo lỗi</p>
-                <h3 class="text-3xl font-bold text-white mt-1 brand-font">{{ $pendingReports }}</h3>
+    <a href="{{ route('admin.violation.index') }}" class="block">
+        <div class="dashboard-card p-5 border-red-900/50 bg-red-900/10">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <p class="text-red-400 text-xs font-bold uppercase tracking-wider">Báo cáo lỗi</p>
+                    <h3 class="text-3xl font-bold text-white mt-1 brand-font">{{ $pendingReports }}</h3>
+                </div>
+                <div class="p-2 bg-red-500/10 rounded-lg text-red-500">
+                    <i class="fas fa-exclamation-triangle text-xl"></i>
+                </div>
             </div>
-            <div class="p-2 bg-red-500/10 rounded-lg text-red-500">
-                <i class="fas fa-exclamation-triangle text-xl"></i>
+            <div class="flex items-center text-xs text-red-400 font-bold">
+                {{ $pendingReports > 0 ? 'Cần xử lý ngay' : 'Hệ thống ổn định' }}
             </div>
         </div>
-        <div class="flex items-center text-xs text-red-400 font-bold">
-            {{ $pendingReports > 0 ? 'Cần xử lý ngay' : 'Hệ thống ổn định' }}
-        </div>
-    </div>
+    </a>
 </div>
 
 <!-- Main Content Area -->

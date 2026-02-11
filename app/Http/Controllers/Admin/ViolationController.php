@@ -23,7 +23,9 @@ class ViolationController extends Controller
             ->withQueryString();
 
         $bannedWordsCount = BannedWord::count();
+        $pendingCount = CommentReport::where('status', 'pending')->count();
+        $resolvedCount = CommentReport::where('status', 'resolved')->count();
 
-        return view('admin.violations.index', compact('reports', 'bannedWordsCount'));
+        return view('admin.violations.index', compact('reports', 'bannedWordsCount', 'pendingCount', 'resolvedCount'));
     }
 }

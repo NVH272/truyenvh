@@ -28,7 +28,7 @@
             <div class="relative z-10 flex justify-between items-start">
                 <div>
                     <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Chờ xử lý</p>
-                    <h3 class="text-3xl font-black text-white brand-font tracking-wide">--</h3>
+                    <h3 class="text-3xl font-black text-white brand-font tracking-wide">{{ $pendingCount }}</h3>
                 </div>
                 <div class="p-3 bg-slate-700/50 rounded-xl text-yellow-400">
                     <i class="fas fa-hourglass-half text-xl"></i>
@@ -42,7 +42,7 @@
             <div class="relative z-10 flex justify-between items-start">
                 <div>
                     <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Đã xử lý</p>
-                    <h3 class="text-3xl font-black text-white brand-font tracking-wide">--</h3>
+                    <h3 class="text-3xl font-black text-white brand-font tracking-wide">{{ $resolvedCount }}</h3>
                 </div>
                 <div class="p-3 bg-slate-700/50 rounded-xl text-emerald-400">
                     <i class="fas fa-check-circle text-xl"></i>

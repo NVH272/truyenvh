@@ -1,16 +1,10 @@
 @extends('layouts.admin')
 
 @section('title', 'Thống kê & Báo cáo')
+@section ('header', 'Thống kê & Báo cáo')
 
 @section('content')
 <div class="space-y-6">
-
-    {{-- HEADER --}}
-    <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-bold text-slate-100">
-            📊 Thống kê & Báo cáo
-        </h1>
-    </div>
 
     {{-- KPI TỔNG QUAN --}}
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -85,19 +79,19 @@
     {{-- BIỂU ĐỒ THEO THỜI GIAN (7 ngày) --}}
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5 shadow-lg">
-            <h2 class="font-semibold text-slate-200 mb-4">📈 Lượt đọc 7 ngày</h2>
+            <h2 class="font-semibold text-slate-200 mb-4">Lượt đọc 7 ngày</h2>
             <div class="relative h-56">
                 <canvas id="viewsByDayChart"></canvas>
             </div>
         </div>
         <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5 shadow-lg">
-            <h2 class="font-semibold text-slate-200 mb-4">👤 Người dùng mới</h2>
+            <h2 class="font-semibold text-slate-200 mb-4">Người dùng mới</h2>
             <div class="relative h-56">
                 <canvas id="usersByDayChart"></canvas>
             </div>
         </div>
         <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5 shadow-lg">
-            <h2 class="font-semibold text-slate-200 mb-4">💬 Bình luận mới</h2>
+            <h2 class="font-semibold text-slate-200 mb-4">Bình luận mới</h2>
             <div class="relative h-56">
                 <canvas id="commentsByDayChart"></canvas>
             </div>
@@ -107,25 +101,25 @@
     {{-- TOP TRUYỆN & TRẠNG THÁI --}}
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5 shadow-lg">
-            <h2 class="font-semibold text-slate-200 mb-4">📚 Top truyện theo lượt đọc (phiên đọc)</h2>
+            <h2 class="font-semibold text-slate-200 mb-4">Top truyện theo lượt đọc (phiên đọc)</h2>
             <div class="relative h-64">
                 <canvas id="topComicsChart"></canvas>
             </div>
         </div>
         <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5 shadow-lg">
-            <h2 class="font-semibold text-slate-200 mb-4">🔥 Top truyện theo lượt xem</h2>
+            <h2 class="font-semibold text-slate-200 mb-4">Top truyện theo lượt xem</h2>
             <div class="relative h-64">
                 <canvas id="topComicsByViewsChart"></canvas>
             </div>
         </div>
         <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5 shadow-lg">
-            <h2 class="font-semibold text-slate-200 mb-4">❤️ Top truyện theo theo dõi</h2>
+            <h2 class="font-semibold text-slate-200 mb-4">Top truyện theo theo dõi</h2>
             <div class="relative h-64">
                 <canvas id="topComicsByFollowsChart"></canvas>
             </div>
         </div>
         <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5 shadow-lg">
-            <h2 class="font-semibold text-slate-200 mb-4">📂 Truyện theo trạng thái</h2>
+            <h2 class="font-semibold text-slate-200 mb-4">Truyện theo trạng thái</h2>
             <div class="relative h-64 flex items-center justify-center">
                 <canvas id="comicsByStatusChart"></canvas>
             </div>

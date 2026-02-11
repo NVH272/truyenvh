@@ -468,7 +468,7 @@
                         <div class="online-status" style="background: #0ea5e9;"></div>
                     </div>
                     <div class="admin-info">
-                        <div class="admin-name" style="color: #0284c7;">Trợ lý ảo AI</div>
+                        <div class="admin-name" style="color: #0284c7;">VH Assistant</div>
                         <div class="admin-role">Hỗ trợ tự động 24/7</div>
                     </div>
                 </div>
@@ -659,7 +659,7 @@
             viewList.classList.remove("active");
             viewChat.classList.add("active");
             backBtn.style.display = "flex";
-            title.innerText = "Trợ lý ảo AI";
+            title.innerText = "VH Assistant";
             title.style.color = "#0ea5e9";
 
             // Dừng polling tin nhắn DB
@@ -667,7 +667,7 @@
 
             // Xóa tin nhắn cũ và hiển thị lời chào
             messages.innerHTML = '';
-            appendMessage("Xin chào! Tôi là trợ lý ảo Gemini. Bạn cần giúp gì không?", "received");
+            appendMessage("Xin chào! Tôi là VH Assistant. Bạn cần giúp gì không?", "received");
         }
 
 

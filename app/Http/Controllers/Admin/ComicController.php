@@ -135,7 +135,8 @@ class ComicController extends Controller
      */
     public function create()
     {
-        $categories = Category::all();
+        // Luôn hiển thị thể loại theo thứ tự alphabet
+        $categories = Category::orderBy('name')->get();
         return view('admin.comics.create', compact('categories'));
     }
 
@@ -215,7 +216,8 @@ class ComicController extends Controller
      */
     public function edit(Comic $comic)
     {
-        $categories = Category::all();
+        // Luôn hiển thị thể loại theo thứ tự alphabet
+        $categories = Category::orderBy('name')->get();
         $selectedCategoryIds = $comic->categories()->pluck('categories.id')->toArray();
 
         return view('admin.comics.edit', compact('comic', 'categories', 'selectedCategoryIds'));
