@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\Comic;
 use App\Models\Chapter;
 use App\Models\ReadingHistory;
+use App\Models\Comment;
 
 class ReadChapterController extends Controller
 {
@@ -57,7 +58,14 @@ class ReadChapterController extends Controller
             }
         }
 
-        return view('user.comics.chapters.read', compact('comic', 'chapter', 'prevChapter', 'nextChapter', 'firstChapter', 'latestChapter', 'currentProgress'));
+        $comments = Comment::with(['user', 'replies.user', 'replies.reactions']) // Eager load user và replies
+            ->where('comic_id', $comic->id)
+            ->where('chapter_id', $chapter->id)
+            ->whereNull('parent_id')
+            ->orderByDesc('created_at')
+            ->paginate(10);
+
+        return view('user.comics.chapters.read', compact('comic', 'chapter', 'prevChapter', 'nextChapter', 'firstChapter', 'latestChapter', 'currentProgress', 'comments'));
     }
 
     private function countChapterView($chapter)

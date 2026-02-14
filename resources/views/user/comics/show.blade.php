@@ -21,7 +21,7 @@
                 @include('user.comics.partials.chapterlist', ['comic' => $comic])
 
                 {{-- 2. BÌNH LUẬN --}}
-                @include('user.comics.partials.comments', ['comic' => $comic])
+                @include('user.comics.partials.comments.index', ['comic' => $comic])
 
             </div>
 

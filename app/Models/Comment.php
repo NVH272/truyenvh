@@ -13,6 +13,7 @@ class Comment extends Model
         'user_id',
         'parent_id',
         'content',
+        'chapter_id',
         'is_deleted',
         'likes_count',
         'dislikes_count',
@@ -34,6 +35,12 @@ class Comment extends Model
     public function comic()
     {
         return $this->belongsTo(Comic::class);
+    }
+
+    // Chapter
+    public function chapter()
+    {
+        return $this->belongsTo(Chapter::class);
     }
 
     // Reply

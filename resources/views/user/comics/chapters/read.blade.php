@@ -377,5 +377,14 @@ window.addEventListener('beforeunload', function() {
 @endif
 </script>
 @endpush
-
+{{-- KHUNG BÌNH LUẬN --}}
+    <div class="max-w-4xl mx-auto mt-12 pb-20 px-4">
+        {{-- Truyền biến $chapter vào component comment --}}
+        @include('user.comics.partials.comments.index', [
+            'comic' => $comic,
+            'comments' => $comments, // Biến này lấy từ ReadChapterController
+            'chapter' => $chapter,    // <--- QUAN TRỌNG: Truyền biến này để form biết ID chapter
+            'theme' => 'dark'  // <--- Kích hoạt giao diện tối
+        ])
+    </div>
 @endsection

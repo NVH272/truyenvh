@@ -28,6 +28,7 @@ class ComicCommentController extends Controller
         $validated = $request->validate([
             'content' => 'required|string|max:2000',
             'parent_id' => 'nullable|exists:comments,id',
+            'chapter_id' => 'nullable|exists:chapters,id',
         ]);
 
         $hits = ProfanityFilter::findHits($content);
@@ -43,6 +44,7 @@ class ComicCommentController extends Controller
             'user_id'   => auth()->id(),
             'parent_id' => $validated['parent_id'] ?? null,
             'content'   => $validated['content'],
+            'chapter_id' => $validated['chapter_id'] ?? null,
         ]);
 
         if ($request->parent_id) {
@@ -53,14 +55,14 @@ class ComicCommentController extends Controller
         if ($comment->parent_id) {
             // Tìm comment cha
             $parentComment = Comment::find($comment->parent_id);
-            
+
             // Nếu comment cha tồn tại VÀ người trả lời KHÔNG PHẢI là chính chủ comment cha
             // (Tránh trường hợp tự mình reply mình mà cũng hiện thông báo)
             if ($parentComment && $parentComment->user_id !== auth()->id()) {
                 $userToNotify = $parentComment->user; // Người cần nhận thông báo
                 $comic = $comment->comic; // Truyện đang bình luận
                 $responder = auth()->user(); // Người vừa trả lời
-                
+
                 // Gửi thông báo đến cá nhân người đó
                 $userToNotify->notify(new NewReplyNotification($comment, $comic, $responder));
             }

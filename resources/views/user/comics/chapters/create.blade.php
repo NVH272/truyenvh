@@ -84,7 +84,7 @@
                                 <span>{{ $comic->authors_list ?? 'Tác giả chưa cập nhật' }}</span>
                             </div>
                             <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                                {{ $comic->chapters_count ?? 0 }} chương hiện có
+                                {{ $comic->chapter_count ?? 0 }} chương hiện có
                             </div>
                         </div>
                     </div>
