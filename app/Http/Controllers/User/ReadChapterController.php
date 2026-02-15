@@ -12,7 +12,7 @@ use App\Models\Comment;
 
 class ReadChapterController extends Controller
 {
-    public function show($comic, $chapter_number)
+    public function show(Request $request, $comic, $chapter_number)
     {
         $comic = Comic::findOrFail($comic);
 
@@ -65,7 +65,62 @@ class ReadChapterController extends Controller
             ->orderByDesc('created_at')
             ->paginate(10);
 
-        return view('user.comics.chapters.read', compact('comic', 'chapter', 'prevChapter', 'nextChapter', 'firstChapter', 'latestChapter', 'currentProgress', 'comments'));
+        $filter = $request->input('filter', 'latest'); // latest | oldest | popular
+
+        // 1. Tạo Query Builder
+        $commentsQuery = Comment::where('chapter_id', $chapter->id) // Quan trọng: Chỉ lấy của chapter này
+            ->whereNull('parent_id')
+            ->with([
+                'user',
+                'chapter', // Load chapter để hiển thị badge (như yêu cầu trước)
+                'replies' => function ($q) {
+                    $q->with(['user', 'chapter'])
+                        ->withCount([
+                            'reactions as likes_count' => fn($q2) => $q2->where('type', 'like'),
+                            'reactions as dislikes_count' => fn($q2) => $q2->where('type', 'dislike'),
+                        ])
+                        ->orderBy('created_at', 'asc');
+                },
+            ])
+            ->withCount([
+                'reactions as likes_count' => fn($q) => $q->where('type', 'like'),
+                'reactions as dislikes_count' => fn($q) => $q->where('type', 'dislike'),
+            ]);
+
+        // 2. Áp dụng bộ lọc
+        switch ($filter) {
+            case 'oldest':
+                $commentsQuery->orderBy('created_at', 'asc');
+                break;
+            case 'popular':
+                $commentsQuery->orderByDesc('likes_count')
+                    ->orderByDesc('created_at');
+                break;
+            case 'latest':
+            default:
+                $commentsQuery->orderByDesc('created_at');
+                break;
+        }
+
+        // 3. Phân trang
+        $comments = $commentsQuery->paginate(10)->appends(['filter' => $filter]);
+
+        // 4. Đếm tổng số bình luận (bao gồm cả reply) trong chapter này
+        $totalCommentsCount = Comment::where('chapter_id', $chapter->id)->count();
+
+        // 5. Xử lý AJAX (Khi người dùng chọn dropdown filter)
+        if ($request->ajax()) {
+            return view('user.comics.partials.comments.index', [
+                'comic'              => $comic,
+                'chapter'            => $chapter,
+                'comments'           => $comments,
+                'commentFilter'      => $filter,
+                'totalCommentsCount' => $totalCommentsCount,
+                'theme'              => 'dark'
+            ]);
+        }
+
+        return view('user.comics.chapters.read', compact('comic', 'chapter', 'prevChapter', 'nextChapter', 'firstChapter', 'latestChapter', 'currentProgress', 'comments', 'totalCommentsCount', 'filter'));
     }
 
     private function countChapterView($chapter)

@@ -81,6 +81,27 @@
             if (!comment) return;
             var isReply = !!comment.parent_id;
 
+            // --- 1. XỬ LÝ LOGIC BADGE CHAPTER (MỚI THÊM) ---
+            // Kiểm tra dark mode dựa trên class background hiện tại
+            var isDark = theme.bubbleBg.includes('#252525') || theme.bubbleBg.includes('bg-[#252525]');
+
+            // Định nghĩa class màu sắc cho badge tương ứng với theme
+            var badgeClass = isDark ?
+                'bg-blue-900/30 text-blue-400 border-blue-800' :
+                'bg-blue-50 text-blue-600 border-blue-100';
+
+            // Tạo HTML cho badge (nếu có thông tin chapter từ controller)
+            var chapterBadgeHtml = '';
+            if (comment.chapter) {
+                // Lưu ý: Nếu controller trả về url thì dùng thẻ <a>, không thì dùng <span>
+                // Ở đây dùng thẻ <span> để an toàn và đơn giản về giao diện
+                chapterBadgeHtml =
+                    '<span class="text-[10px] font-normal px-1.5 py-0.5 rounded border transition-colors ' + badgeClass + '">' +
+                    'Chapter ' + comment.chapter.number +
+                    '</span>';
+            }
+            // ------------------------------------------------
+
             // --- XỬ LÝ COMMENT CHA ---
             if (!isReply) {
                 var container = document.getElementById('comments-container');
@@ -96,7 +117,6 @@
                 var likeUrl = '/comments/' + comment.id + '/reaction/like';
                 var storeUrl = form.action;
 
-                // SỬA: Thay class cứng bằng biến theme
                 wrapper.innerHTML = '' +
                     '<img src="' + (comment.user.avatar_url || '') + '" ' +
                     'class="w-10 h-10 rounded-full object-cover flex-shrink-0" ' +
@@ -104,8 +124,14 @@
                     '<div class="flex-1 min-w-0">' +
                     // Bubble Background
                     '<div class="' + theme.bubbleBg + ' rounded-2xl px-4 py-2.5 inline-block max-w-md js-bubble">' +
-                    // Name Color
-                    '<div class="font-semibold ' + theme.nameText + ' text-sm mb-0.5">' + (comment.user.name || '') + '</div>' +
+
+                    // --- SỬA ĐOẠN HIỂN THỊ TÊN ---
+                    '<div class="font-semibold ' + theme.nameText + ' text-sm mb-0.5 flex items-center gap-2 flex-wrap">' +
+                    '<span>' + (comment.user.name || '') + '</span>' +
+                    chapterBadgeHtml + // Chèn badge vào đây
+                    '</div>' +
+                    // -----------------------------
+
                     // Content Color
                     '<p class="' + theme.contentText + ' text-sm leading-relaxed whitespace-normal break-words js-comment-content"></p>' +
                     '</div>' +
@@ -203,8 +229,14 @@
                 '<div class="flex-1 min-w-0">' +
                 // Bubble Background
                 '<div class="' + theme.bubbleBg + ' rounded-2xl px-4 py-2.5 inline-block max-w-md js-bubble">' +
-                // Name Color
-                '<div class="font-semibold ' + theme.nameText + ' text-sm mb-0.5">' + (comment.user.name || '') + '</div>' +
+
+                // --- SỬA ĐOẠN HIỂN THỊ TÊN (REPLY) ---
+                '<div class="font-semibold ' + theme.nameText + ' text-sm mb-0.5 flex items-center gap-2 flex-wrap">' +
+                '<span>' + (comment.user.name || '') + '</span>' +
+                chapterBadgeHtml + // Chèn badge vào đây
+                '</div>' +
+                // -------------------------------------
+
                 // Content Color
                 '<p class="' + theme.contentText + ' text-sm leading-relaxed whitespace-normal break-words js-comment-content"></p>' +
                 '</div>' +
@@ -537,7 +569,6 @@
                 icon.style.transition = 'transform 0.3s ease';
             }
         }
-
     });
 
     function getBannedWords() {
@@ -665,110 +696,177 @@
         }, 300);
     }
 
-    // ============================================================
-    // BỔ SUNG: XỬ LÝ SỰ KIỆN CLICK CHO DROPDOWN VÀ LIKE
-    // ============================================================
+    function scrollToReplyForm(commentId, replyAuthorName) {
+        const formContainer = document.getElementById('reply-' + commentId);
+        if (formContainer) {
+            formContainer.classList.remove('hidden');
+            formContainer.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
 
-    document.addEventListener('click', function(e) {
-
-        // --- 1. XỬ LÝ DROPDOWN MENU (...) ---
-        const menuBtn = e.target.closest('[data-comment-menu-btn]');
-        if (menuBtn) {
-            e.preventDefault();
-            e.stopPropagation();
-
-            const wrapper = menuBtn.closest('.relative');
-            const menu = wrapper.querySelector('[data-comment-menu]');
-
-            if (menu) {
-                // Đóng tất cả menu khác đang mở để tránh rối mắt
-                document.querySelectorAll('[data-comment-menu]').forEach(m => {
-                    if (m !== menu) m.classList.add('hidden');
-                });
-                // Toggle menu hiện tại
-                menu.classList.toggle('hidden');
+            const textarea = formContainer.querySelector('textarea');
+            if (textarea) {
+                textarea.focus();
+                // Thêm mention tên tác giả (optional)
+                textarea.value = '@' + replyAuthorName + ' ';
             }
-            return;
         }
+    }
 
-        // Click ra ngoài thì đóng tất cả menu
-        if (!e.target.closest('[data-comment-menu]')) {
-            document.querySelectorAll('[data-comment-menu]').forEach(menu => {
-                menu.classList.add('hidden');
+    document.addEventListener('DOMContentLoaded', function() {
+        const stars = document.querySelectorAll('.rating-star');
+        const input = document.getElementById('rating-input');
+        const form = document.getElementById('rating-form');
+
+        if (stars && input && form) {
+            stars.forEach(star => {
+                star.addEventListener('click', function() {
+                    const value = this.dataset.value;
+                    input.value = value;
+                    form.submit(); // click lại star để đổi rating bất cứ lúc nào
+                });
             });
         }
 
-        // --- 2. XỬ LÝ LIKE COMMENT ---
-        const likeBtn = e.target.closest('[data-comment-reaction="like"]');
-        if (likeBtn) {
-            e.preventDefault();
-            // Chặn click liên tục
-            if (likeBtn.dataset.processing === 'true') return;
-            likeBtn.dataset.processing = 'true';
+        // === Comment like / dislike AJAX (giữ nguyên chức năng) ===
+        const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+        const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : null;
 
-            const actionUrl = likeBtn.dataset.action;
-            const icon = likeBtn.querySelector('i');
-            // Tìm span đếm số like trong cùng container
-            const container = likeBtn.closest('.flex.items-center');
-            const countSpan = container ? container.querySelector('.js-comment-like-count') : null;
-            const isLiked = likeBtn.classList.contains('text-blue-600');
+        function updateCommentUI(commentId, data) {
+            const root = document.getElementById('comment-' + commentId);
+            if (!root) return;
 
-            // --- Hiệu ứng UI tức thì (Optimistic UI) ---
-            if (isLiked) {
-                // Đang like -> Bỏ like
+            const likeBtn = root.querySelector('.js-comment-like-btn');
+
+            const likes = data.likes_count ?? 0;
+            const userReaction = data.user_reaction; // 'like' | null
+
+            if (likeBtn) {
                 likeBtn.classList.remove('text-blue-600');
-                likeBtn.classList.add('text-gray-500', 'hover:text-blue-600');
-                if (countSpan) {
-                    let count = parseInt(countSpan.textContent.trim()) || 0;
-                    count = Math.max(0, count - 1);
-                    countSpan.textContent = count;
-                    if (count === 0) countSpan.classList.add('hidden');
-                }
-            } else {
-                // Chưa like -> Like
-                likeBtn.classList.remove('text-gray-500', 'hover:text-blue-600');
-                likeBtn.classList.add('text-blue-600');
-                // Animation nảy icon
-                if (icon) {
-                    icon.style.transform = 'scale(1.2)';
-                    setTimeout(() => icon.style.transform = 'scale(1)', 200);
-                }
-                if (countSpan) {
-                    let count = parseInt(countSpan.textContent.trim()) || 0;
-                    count++;
-                    countSpan.textContent = count;
-                    countSpan.classList.remove('hidden');
+                likeBtn.classList.add('text-gray-500');
+                if (userReaction === 'like') {
+                    likeBtn.classList.remove('text-gray-500');
+                    likeBtn.classList.add('text-blue-600');
                 }
             }
 
-            // --- Gửi AJAX ---
-            fetch(actionUrl, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({})
-                })
-                .then(res => {
-                    if (!res.ok) throw new Error('Network error');
-                    return res.json();
-                })
-                .then(data => {
-                    // Cập nhật lại số liệu chính xác từ server
-                    if (data && typeof data.likes_count !== 'undefined' && countSpan) {
-                        countSpan.textContent = data.likes_count;
-                        if (data.likes_count > 0) countSpan.classList.remove('hidden');
-                        else countSpan.classList.add('hidden');
-                    }
-                })
-                .catch(err => {
-                    console.error('Lỗi like:', err);
-                    // Có thể hoàn tác UI tại đây nếu muốn
-                })
-                .finally(() => delete likeBtn.dataset.processing);
+            const likeCountEl = root.querySelector('.js-comment-like-count');
+
+            if (likeCountEl) {
+                if (likes > 0) {
+                    likeCountEl.textContent = likes;
+                    likeCountEl.classList.remove('hidden');
+                } else {
+                    likeCountEl.textContent = '';
+                    likeCountEl.classList.add('hidden');
+                }
+            }
         }
+
+        if (csrfToken) {
+            document.querySelectorAll('[data-comment-reaction]').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    const commentId = btn.getAttribute('data-comment-id');
+                    const action = btn.getAttribute('data-action');
+
+                    if (!action || !commentId) return;
+
+                    fetch(action, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                        })
+                        .then(function(res) {
+                            if (!res.ok) throw new Error('Network response was not ok');
+                            return res.json();
+                        })
+                        .then(function(data) {
+                            updateCommentUI(commentId, data);
+                        })
+                        .catch(function(err) {
+                            console.error('Comment reaction error:', err);
+                        });
+                });
+            });
+        }
+
+        // === Comment Filtering ===
+        const filterSelect = document.getElementById('comment-filter');
+        const commentsContainer = document.getElementById('comments-container');
+
+        if (filterSelect && commentsContainer) {
+            filterSelect.addEventListener('change', function() {
+                sortComments(this.value);
+            });
+        }
+
+        function sortComments(filterType) {
+            if (!commentsContainer) return;
+
+            // Lấy tất cả comment elements
+            const commentElements = Array.from(commentsContainer.querySelectorAll(':scope > div[id^="comment-"]'));
+
+            // Sắp xếp comments dựa trên filter type
+            commentElements.sort(function(a, b) {
+                if (filterType === 'latest') {
+                    // Mới nhất: so sánh data-timestamp (newer first)
+                    const timestampA = parseInt(a.dataset.timestamp) || 0;
+                    const timestampB = parseInt(b.dataset.timestamp) || 0;
+                    return timestampB - timestampA;
+                } else if (filterType === 'oldest') {
+                    // Cũ nhất: so sánh data-timestamp (older first)
+                    const timestampA = parseInt(a.dataset.timestamp) || 0;
+                    const timestampB = parseInt(b.dataset.timestamp) || 0;
+                    return timestampA - timestampB;
+                } else if (filterType === 'popular') {
+                    // Nổi bật: so sánh likes (more likes first)
+                    const likesA = parseInt(a.dataset.likes) || 0;
+                    const likesB = parseInt(b.dataset.likes) || 0;
+                    return likesB - likesA;
+                }
+            });
+
+            // Xóa tất cả comments từ container
+            commentsContainer.innerHTML = '';
+
+            // Thêm lại comments theo thứ tự mới
+            commentElements.forEach(function(element) {
+                commentsContainer.appendChild(element);
+            });
+        }
+    });
+
+    // === Comment menu toggle ===
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('[data-comment-menu-btn]');
+        const menus = document.querySelectorAll('[data-comment-menu]');
+
+        // Click nút ...
+        if (btn) {
+            const wrap = btn.parentElement; // div.relative
+            const menu = wrap.querySelector('[data-comment-menu]');
+
+            // đóng tất cả menu khác
+            menus.forEach(m => {
+                if (m !== menu) m.classList.add('hidden');
+            });
+
+            // toggle menu hiện tại
+            menu.classList.toggle('hidden');
+            return;
+        }
+
+        // Click bên trong menu -> không đóng (để bấm item)
+        if (e.target.closest('[data-comment-menu]')) return;
+
+        // Click ngoài -> đóng hết
+        menus.forEach(m => m.classList.add('hidden'));
     });
 </script>
 @endpush

@@ -89,6 +89,11 @@ class ComicCommentController extends Controller
                             . urlencode($comment->user->name)
                             . '&background=random',
                     ],
+                    'chapter' => $comment->chapter ? [
+                    'number' => $comment->chapter->chapter_number,
+                    // URL để redirect nếu cần thiết (optional)
+                    // 'url' => route('user.comics.chapters.read', [...]) 
+                    ] : null,
                 ],
             ]);
         }
@@ -174,8 +179,9 @@ class ComicCommentController extends Controller
 
         $isAdmin = ($user->role ?? null) === 'admin' || ($user->is_admin ?? false);
         $isComicOwner = $comicOwnerId && ((int)$comicOwnerId === (int)$user->id);
+        $isCommentOwner = (int)$comment->user_id === (int)$user->id;
 
-        if (!$isAdmin && !$isComicOwner) {
+        if (!$isAdmin && !$isComicOwner && !$isCommentOwner) {
             abort(403);
         }
 

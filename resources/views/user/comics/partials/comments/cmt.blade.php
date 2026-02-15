@@ -1,18 +1,18 @@
 @php
-    // Mặc định là light theme nếu không truyền vào
-    $isDark = isset($theme) && $theme === 'dark';
-    
-    // Định nghĩa các class CSS động
-    $bgClass = $isDark ? 'bg-[#1a1a1a]' : 'bg-white';
-    $textClass = $isDark ? 'text-gray-300' : 'text-gray-700';
-    $borderClass = $isDark ? 'border-gray-800' : 'border-gray-100';
-    $headingClass = $isDark ? 'text-blue-400' : 'text-blue-600';
-    $subTextClass = $isDark ? 'text-gray-500' : 'text-gray-500';
-    $inputBgClass = $isDark ? 'bg-[#252525] focus-within:bg-[#2a2a2a] focus-within:ring-blue-900' : 'bg-gray-100 focus-within:bg-white focus-within:ring-blue-100';
-    $inputTextClass = $isDark ? 'text-gray-200 placeholder-gray-500' : 'text-gray-800 placeholder-gray-500';
-    $bubbleBgClass = $isDark ? 'bg-[#252525]' : 'bg-gray-100';
-    $nameClass = $isDark ? 'text-gray-200' : 'text-gray-800';
-    $selectBgClass = $isDark ? 'bg-[#1a1a1a] border-gray-700 text-gray-300' : 'bg-white border-gray-300';
+// Mặc định là light theme nếu không truyền vào
+$isDark = isset($theme) && $theme === 'dark';
+
+// Định nghĩa các class CSS động
+$bgClass = $isDark ? 'bg-[#1a1a1a]' : 'bg-white';
+$textClass = $isDark ? 'text-gray-300' : 'text-gray-700';
+$borderClass = $isDark ? 'border-gray-800' : 'border-gray-100';
+$headingClass = $isDark ? 'text-blue-400' : 'text-blue-600';
+$subTextClass = $isDark ? 'text-gray-500' : 'text-gray-500';
+$inputBgClass = $isDark ? 'bg-[#252525] focus-within:bg-[#2a2a2a] focus-within:ring-blue-900' : 'bg-gray-100 focus-within:bg-white focus-within:ring-blue-100';
+$inputTextClass = $isDark ? 'text-gray-200 placeholder-gray-500' : 'text-gray-800 placeholder-gray-500';
+$bubbleBgClass = $isDark ? 'bg-[#252525]' : 'bg-gray-100';
+$nameClass = $isDark ? 'text-gray-200' : 'text-gray-800';
+$selectBgClass = $isDark ? 'bg-[#1a1a1a] border-gray-700 text-gray-300' : 'bg-white border-gray-300';
 @endphp
 
 {{-- 2. BÌNH LUẬN --}}
@@ -58,7 +58,7 @@
 
                 {{-- THÊM ĐOẠN NÀY --}}
                 @if(isset($chapter))
-                    <input type="hidden" name="chapter_id" value="{{ $chapter->id }}">
+                <input type="hidden" name="chapter_id" value="{{ $chapter->id }}">
                 @endif
                 {{-- HẾT --}}
 
@@ -260,7 +260,7 @@
 
                                 {{-- THÊM ĐOẠN NÀY --}}
                                 @if(isset($chapter))
-                                    <input type="hidden" name="chapter_id" value="{{ $chapter->id }}">
+                                <input type="hidden" name="chapter_id" value="{{ $chapter->id }}">
                                 @endif
                                 {{-- HẾT --}}
 
@@ -318,7 +318,7 @@
 
                                         {{-- Bubble reply --}}
                                         <div class="{{ $bubbleBgClass }} rounded-2xl px-4 py-2.5 inline-block max-w-md js-bubble">
-                                            
+
                                             {{-- Bình luận bình thường --}}
                                             <div class="font-semibold {{ $nameClass }} text-sm mb-0.5">
                                                 {{ $reply->user->name }}

@@ -119,8 +119,17 @@ $selectBgClass = $isDark ? 'bg-[#1a1a1a] border-gray-700 text-gray-300' : 'bg-wh
 
                         {{-- Bubble comment --}}
                         <div class="{{ $bubbleBgClass }} rounded-2xl px-4 py-2.5 inline-block max-w-md js-bubble">
-                            <div class="font-semibold {{ $nameClass }} text-sm mb-0.5">
-                                {{ $comment->user->name }}
+                            <div class="font-semibold {{ $nameClass }} text-sm mb-0.5 flex items-center gap-2 flex-wrap">
+                                <span>{{ $comment->user->name }}</span>
+                                @if($comment->chapter)
+                                    <a href="{{ route('user.comics.chapters.read', ['comic' => $comic->id, 'chapter_number' => $comment->chapter->chapter_number]) }}" 
+                                    class="text-[10px] font-normal px-1.5 py-0.5 rounded border transition-colors
+                                    {{ $isDark 
+                                        ? 'bg-blue-900/30 text-blue-400 border-blue-800 hover:bg-blue-900/50' 
+                                        : 'bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100' }}">
+                                        Chapter {{ $comment->chapter->chapter_number }}
+                                    </a>
+                                @endif
                             </div>
 
                             <p class="{{ $textClass }} text-sm leading-relaxed whitespace-normal break-words js-comment-content">
@@ -132,8 +141,9 @@ $selectBgClass = $isDark ? 'bg-[#1a1a1a] border-gray-700 text-gray-300' : 'bg-wh
                         $user = auth()->user();
                         $isAdmin = $user && (($user->role ?? null) === 'admin' || ($user->is_admin ?? false));
                         $isComicOwner = $user && ((int)($comic->created_by ?? 0) === (int)$user->id);
+                        $isCommentOwner = $user && ((int)$comment->user_id === (int)$user->id);
 
-                        $canDelete = $isAdmin || $isComicOwner;
+                        $canDelete = $isAdmin || $isComicOwner || $isCommentOwner;
                         @endphp
 
                         <div class="relative flex-shrink-0">
@@ -320,8 +330,17 @@ $selectBgClass = $isDark ? 'bg-[#1a1a1a] border-gray-700 text-gray-300' : 'bg-wh
                                         <div class="{{ $bubbleBgClass }} rounded-2xl px-4 py-2.5 inline-block max-w-md js-bubble">
 
                                             {{-- Bình luận bình thường --}}
-                                            <div class="font-semibold {{ $nameClass }} text-sm mb-0.5">
-                                                {{ $reply->user->name }}
+                                            <div class="font-semibold {{ $nameClass }} text-sm mb-0.5 flex items-center gap-2 flex-wrap">
+                                                <span>{{ $reply->user->name }}</span>
+                                                @if($reply->chapter)
+                                                    <a href="{{ route('user.comics.chapters.read', ['comic' => $comic->id, 'chapter_number' => $reply->chapter->chapter_number]) }}" 
+                                                    class="text-[10px] font-normal px-1.5 py-0.5 rounded border transition-colors
+                                                    {{ $isDark 
+                                                        ? 'bg-blue-900/30 text-blue-400 border-blue-800 hover:bg-blue-900/50' 
+                                                        : 'bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100' }}">
+                                                        Chapter {{ $reply->chapter->chapter_number }}
+                                                    </a>
+                                                @endif
                                             </div>
 
                                             <p class="{{ $textClass }} text-sm leading-relaxed whitespace-normal break-words js-comment-content">
@@ -335,7 +354,9 @@ $selectBgClass = $isDark ? 'bg-[#1a1a1a] border-gray-700 text-gray-300' : 'bg-wh
                                         $user = auth()->user();
                                         $isAdmin = $user && (($user->role ?? null) === 'admin' || ($user->is_admin ?? false));
                                         $isComicOwner = $user && ((int)($comic->created_by ?? 0) === (int)$user->id);
-                                        $canDelete = $isAdmin || $isComicOwner;
+                                        $isReplyOwner = $user && ((int)$reply->user_id === (int)$user->id);
+
+                                        $canDelete = $isAdmin || $isComicOwner || $isReplyOwner;
                                         @endphp
 
                                         <div class="relative flex-shrink-0">
