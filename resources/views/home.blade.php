@@ -3,6 +3,70 @@
 @section('title', 'TruyenVH - Đọc Truyện Tranh Online')
 
 @section('content')
+
+<style>
+    /* Tùy chỉnh thanh cuộn ngang */
+    .scrolling-wrapper {
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: transparent transparent;
+        transition: scrollbar-color 0.3s ease;
+
+        cursor: grab;
+        /* Ngăn người dùng bôi đen text khi đang kéo */
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    /* Khi đang nhấn giữ chuột để kéo */
+    .scrolling-wrapper.active {
+        cursor: grabbing;
+    }
+
+    /* Tắt con trỏ cho các thành phần con khi đang kéo để tránh lỗi hover/click nhầm */
+    .scrolling-wrapper.active * {
+        pointer-events: none;
+    }
+
+    /* QUAN TRỌNG: Ngăn trình duyệt hiểu nhầm việc nhấp vào truyện là đang muốn "kéo thả file/link" */
+    .scrolling-wrapper a,
+    .scrolling-wrapper img {
+        -webkit-user-drag: none;
+        -khtml-user-drag: none;
+        -moz-user-drag: none;
+        -o-user-drag: none;
+        user-drag: none;
+    }
+
+    /* Hover hiện scrollbar (như cũ) */
+    .scrolling-wrapper:hover {
+        scrollbar-color: #cbd5e1 transparent;
+    }
+
+    .scrolling-wrapper::-webkit-scrollbar {
+        height: 6px;
+        width: 6px;
+    }
+
+    .scrolling-wrapper::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .scrolling-wrapper::-webkit-scrollbar-thumb {
+        background-color: transparent;
+        border-radius: 10px;
+        transition: background-color 0.3s ease;
+    }
+
+    .scrolling-wrapper:hover::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1;
+    }
+
+    .scrolling-wrapper::-webkit-scrollbar-thumb:hover {
+        background-color: #94a3b8;
+    }
+</style>
+
 <div class="space-y-10">
 
     {{-- SECTION 1: HERO SLIDER (LIGHT MODE - MIMI STYLE) --}}
@@ -177,7 +241,7 @@
             </div>
         </div>
 
-        <div id="trending-list" class="flex gap-4 overflow-x-auto hide-scrollbar scrolling-wrapper pb-4">
+        <div id="trending-list" class="flex gap-4 overflow-x-auto scrolling-wrapper pb-4">
             @foreach($trendingComics as $index => $comic)
             {{-- Card giống hệt Genre: w-[140px] --}}
             <div class="flex-none w-[140px] group relative bg-transparent rounded-md overflow-hidden transition-all duration-300 hover:-translate-y-1">
@@ -387,7 +451,7 @@
         </div>
 
         <div id="genre-{{ $section['slug'] }}"
-            class="flex gap-4 overflow-x-auto hide-scrollbar scrolling-wrapper pb-2">
+            class="flex gap-4 overflow-x-auto scrolling-wrapper pb-2">
             @forelse($section['comics'] as $comic)
             <div class="flex-none w-[140px] group relative bg-transparent rounded-md overflow-hidden transition-all duration-300 hover:-translate-y-1">
 
@@ -597,5 +661,67 @@
 
     // expose slider controls
     window.changeSlide = changeSlide;
+
+    // ========================================================
+    // TÍNH NĂNG KÉO THẢ (DRAG) CHO CÁC HÀNG TRUYỆN
+    // ========================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        const sliders = document.querySelectorAll('.scrolling-wrapper');
+
+        sliders.forEach(slider => {
+            let isDown = false;
+            let isDragging = false;
+            let startX;
+            let scrollLeft;
+
+            // 1. NHẤN CHUỘT XUỐNG (BẮT ĐẦU KÉO)
+            slider.addEventListener('mousedown', (e) => {
+                isDown = true;
+                isDragging = false; // Reset trạng thái kéo
+                slider.classList.add('active');
+
+                // e.pageX là tọa độ X của chuột so với toàn bộ trang
+                // offsetLeft là khoảng cách từ viền trái màn hình đến cái slider
+                startX = e.pageX - slider.offsetLeft;
+                scrollLeft = slider.scrollLeft;
+            });
+
+            // 2. RỜI CHUỘT KHỎI KHUNG HOẶC NHẢ CHUỘT (DỪNG KÉO)
+            const stopDragging = () => {
+                isDown = false;
+                slider.classList.remove('active');
+            };
+
+            slider.addEventListener('mouseleave', stopDragging);
+            slider.addEventListener('mouseup', stopDragging);
+
+            // 3. DI CHUYỂN CHUỘT (THỰC HIỆN CUỘN)
+            slider.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+
+                e.preventDefault(); // Rất quan trọng để kéo mượt
+
+                const x = e.pageX - slider.offsetLeft;
+                const walk = (x - startX); // Khoảng cách di chuyển của chuột
+
+                // Nếu chuột di chuyển quá 5px thì mới được coi là đang "kéo" (Drag)
+                // Còn dưới 5px thì được coi là hơi run tay khi "click"
+                if (Math.abs(walk) > 5) {
+                    isDragging = true;
+                    // Tốc độ cuộn: nhân với 1 (chuẩn), hoặc 1.5/2 để cuộn lướt nhanh hơn
+                    slider.scrollLeft = scrollLeft - (walk * 1.5);
+                }
+            });
+
+            // 4. CHẶN CLICK NHẦM KHI VỪA KÉO XONG
+            // Bắt sự kiện click ở phase 'capture' (chạy trước khi thẻ <a> kịp nhận sự kiện)
+            slider.addEventListener('click', (e) => {
+                if (isDragging) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }, true);
+        });
+    });
 </script>
 @endsection

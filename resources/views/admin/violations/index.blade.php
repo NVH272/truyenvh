@@ -195,10 +195,11 @@
                     @endif
 
                     <!-- Ban User Button -->
-                    @if($r->comment?->user)
+                    <!-- @if($r->comment?->user)
                     <form method="POST" action="{{ route('admin.users.toggle-active', $r->comment->user->id) }}"
                         onsubmit="return confirm('Xác nhận khoá tài khoản người dùng này?');" class="w-full">
                         @csrf
+                        @method('PATCH')
                         <button type="submit" class="group w-full flex items-center justify-between px-4 py-3 rounded-lg bg-slate-800 hover:bg-amber-900/30 text-slate-400 hover:text-amber-400 border border-slate-600 hover:border-amber-500/50 transition-all duration-200">
                             <div class="flex flex-col items-start">
                                 <span class="text-xs font-bold uppercase tracking-wide">Khoá tài khoản</span>
@@ -206,6 +207,26 @@
                             </div>
                             <div class="w-8 h-8 rounded-full bg-slate-700/50 group-hover:bg-amber-500/20 flex items-center justify-center transition-colors">
                                 <i class="fas fa-user-slash text-sm group-hover:scale-110 transition-transform"></i>
+                            </div>
+                        </button>
+                    </form>
+                    @endif -->
+
+                    <!-- Ban & Delete Button -->
+                    @if($r->comment && $r->comment->user)
+                    <form method="POST" action="{{ route('admin.violations.ban-and-delete', $r->id) }}"
+                        onsubmit="return confirm('CẢNH BÁO: Hành động này sẽ:\n1. Xoá bình luận này vĩnh viễn.\n2. Khoá tài khoản người đăng.\n\nBạn có chắc chắn không?');" class="w-full">
+                        @csrf
+                        {{-- Sử dụng POST hoặc DELETE tùy bạn định nghĩa route, ở đây dùng POST cho xử lý phức hợp --}}
+
+                        <button type="submit" class="group w-full flex items-center justify-between px-4 py-3 rounded-lg bg-slate-800 hover:bg-red-900/30 text-slate-400 hover:text-red-400 border border-slate-600 hover:border-red-500/50 transition-all duration-200">
+                            <div class="flex flex-col items-start">
+                                <span class="text-xs font-bold uppercase tracking-wide">Xử lý mạnh tay</span>
+                                <span class="text-[10px] opacity-60 font-normal">Xoá nội dung & Khoá TK</span>
+                            </div>
+                            <div class="w-8 h-8 rounded-full bg-slate-700/50 group-hover:bg-red-500/20 flex items-center justify-center transition-colors">
+                                {{-- Icon kết hợp --}}
+                                <i class="fas fa-gavel text-sm group-hover:scale-110 transition-transform"></i>
                             </div>
                         </button>
                     </form>

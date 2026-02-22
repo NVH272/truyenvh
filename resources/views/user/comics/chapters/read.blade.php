@@ -136,7 +136,8 @@
 
             {{-- CHAPTER TRƯỚC --}}
             @if($prevChapter)
-            <a href="{{ route('user.comics.chapters.read', ['comic' => $comic->id, 'chapter_number' => $prevChapter->chapter_number]) }}"
+            <a id="btn-prev-chapter"
+                href="{{ route('user.comics.chapters.read', ['comic' => $comic->id, 'chapter_number' => $prevChapter->chapter_number]) }}"
                 class="group flex items-center justify-center gap-2 p-4 rounded-2xl
                     bg-[#1a1a1a] border border-gray-700
                     hover:border-blue-500 hover:bg-gray-800
@@ -155,7 +156,8 @@
 
             {{-- CHAPTER SAU --}}
             @if($nextChapter)
-            <a href="{{ route('user.comics.chapters.read', ['comic' => $comic->id, 'chapter_number' => $nextChapter->chapter_number]) }}"
+            <a id="btn-next-chapter"
+                href="{{ route('user.comics.chapters.read', ['comic' => $comic->id, 'chapter_number' => $nextChapter->chapter_number]) }}"
                 class="group flex items-center justify-center gap-2 p-4 rounded-2xl
                     bg-[#1a1a1a] border border-gray-700
                     hover:border-blue-500 hover:bg-gray-800
@@ -375,6 +377,34 @@
         }
     });
     @endif
+
+    // 4. THÊM PHÍM TẮT CHUYỂN CHAPTER
+    document.addEventListener('keydown', function(e) {
+        // 1. Kiểm tra xem người dùng có đang gõ văn bản không (trong khung bình luận, tìm kiếm...)
+        // Nếu đang gõ phím trong form thì không kích hoạt chuyển trang
+        const activeElement = document.activeElement.tagName.toLowerCase();
+        if (activeElement === 'input' || activeElement === 'textarea' || activeElement === 'select') {
+            return;
+        }
+
+        // 2. Xử lý khi nhấn mũi tên trái (<-)
+        if (e.key === 'ArrowLeft') {
+            const prevBtn = document.getElementById('btn-prev-chapter');
+            if (prevBtn) {
+                e.preventDefault(); // Ngăn trình duyệt cuộn ngang
+                prevBtn.click();    // Kích hoạt sự kiện click giả lập
+            }
+        } 
+        
+        // 3. Xử lý khi nhấn mũi tên phải (->)
+        else if (e.key === 'ArrowRight') {
+            const nextBtn = document.getElementById('btn-next-chapter');
+            if (nextBtn) {
+                e.preventDefault(); // Ngăn trình duyệt cuộn ngang
+                nextBtn.click();    // Kích hoạt sự kiện click giả lập
+            }
+        }
+    });
 </script>
 @endpush
 {{-- KHUNG BÌNH LUẬN --}}

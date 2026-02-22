@@ -325,6 +325,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'isAdmin', 'verified
 
     Route::patch('users/{user}/toggle-active', [UserController::class, 'toggleActive'])->name('users.toggle-active');
     Route::get('violation', [ViolationController::class, 'index'])->name('violation.index');
+    Route::post('violations/{report}/ban-and-delete', [ViolationController::class, 'banUserAndDeleteComment'])->name('violations.ban-and-delete');
 
     Route::get('/banned-words', [BannedWordController::class, 'index'])->name('banned_words.index');
     Route::post('/banned-words', [BannedWordController::class, 'store'])->name('banned_words.store');
