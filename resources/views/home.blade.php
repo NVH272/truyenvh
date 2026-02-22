@@ -5,27 +5,12 @@
 @section('content')
 
 <style>
-    /* Tùy chỉnh thanh cuộn ngang */
+    /* Tùy chỉnh thanh cuộn ngang cho các hàng truyện */
     .scrolling-wrapper {
         -webkit-overflow-scrolling: touch;
         scrollbar-width: thin;
         scrollbar-color: transparent transparent;
         transition: scrollbar-color 0.3s ease;
-
-        cursor: grab;
-        /* Ngăn người dùng bôi đen text khi đang kéo */
-        user-select: none;
-        -webkit-user-select: none;
-    }
-
-    /* Khi đang nhấn giữ chuột để kéo */
-    .scrolling-wrapper.active {
-        cursor: grabbing;
-    }
-
-    /* Tắt con trỏ cho các thành phần con khi đang kéo để tránh lỗi hover/click nhầm */
-    .scrolling-wrapper.active * {
-        pointer-events: none;
     }
 
     /* QUAN TRỌNG: Ngăn trình duyệt hiểu nhầm việc nhấp vào truyện là đang muốn "kéo thả file/link" */
@@ -38,8 +23,8 @@
         user-drag: none;
     }
 
-    /* Hover hiện scrollbar (như cũ) */
-    .scrolling-wrapper:hover {
+    /* Scrollbar ngang: luôn hiện mờ, khi hover thì đậm hơn để dễ nhìn */
+    .scrolling-wrapper {
         scrollbar-color: #cbd5e1 transparent;
     }
 
@@ -53,16 +38,12 @@
     }
 
     .scrolling-wrapper::-webkit-scrollbar-thumb {
-        background-color: transparent;
+        background-color: #cbd5e1;
         border-radius: 10px;
         transition: background-color 0.3s ease;
     }
 
     .scrolling-wrapper:hover::-webkit-scrollbar-thumb {
-        background-color: #cbd5e1;
-    }
-
-    .scrolling-wrapper::-webkit-scrollbar-thumb:hover {
         background-color: #94a3b8;
     }
 </style>
@@ -271,7 +252,7 @@
                 </div>
 
                 {{-- Content Below --}}
-                <div class="mt-2 space-y-1 relative z-20 pointer-events-none">
+                <div class="mt-2 space-y-1 relative z-20">
                     <h3 class="text-[13px] font-bold text-slate-800 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors" title="{{ $comic->title }}">{{ $comic->title }}</h3>
                     <div class="text-[11px] text-slate-500">{{ $comic->chapter_count }} chương</div>
                     {{-- Rating (read-only) --}}
@@ -330,7 +311,7 @@
                     </div>
 
                     {{-- Thông tin --}}
-                    <div class="mt-2 space-y-1 relative z-20 pointer-events-none">
+                    <div class="mt-2 space-y-1 relative z-20">
                         <h3 class="text-[13px] font-bold text-slate-800 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors" title="{{ $comic->title }}">
                             {{ $comic->title }}
                         </h3>
@@ -437,16 +418,9 @@
                 {{ $section['label'] }}
             </h2>
             <div class="flex gap-2">
-                <button type="button"
-                    onclick="scrollSection('genre-{{ $section['slug'] }}', -300)"
-                    class="w-6 h-6 rounded border hover:bg-blue-50 text-xs flex items-center justify-center">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <button type="button"
-                    onclick="scrollSection('genre-{{ $section['slug'] }}', 300)"
-                    class="w-6 h-6 rounded border hover:bg-blue-50 text-xs flex items-center justify-center">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
+                <a href="{{ route('user.comics.filter', ['categories[0]' => $section['slug']]) }}" class="text-xs font-semibold text-gray-400 hover:text-blue-600">
+                    Xem tất cả <i class="fas fa-angle-double-right"></i>
+                </a>
             </div>
         </div>
 
@@ -488,7 +462,7 @@
                 </div>
 
                 {{-- Content Below Image --}}
-                <div class="mt-2 space-y-1 relative z-20 pointer-events-none">
+                <div class="mt-2 space-y-1 relative z-20">
                     <h3 class="text-[13px] font-bold text-slate-800 dark:text-slate-200 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors"
                         title="{{ $comic->title }}">
                         {{ $comic->title }}
@@ -526,108 +500,8 @@
 </div>
 @endsection
 
-@section('scripts')
+@push('scripts')
 <script>
-    // ====== DỮ LIỆU TỪ LARAVEL ======
-    const sliderData = @json($sliderData);
-    const trendingData = @json($trendingData);
-    const updatesData = @json($updatesData);
-    const sidebarData = @json($sidebarData);
-
-    // ====== TOP THỊNH HÀNH ======
-    const trendingContainer = document.getElementById('trending-list');
-    if (trendingContainer) {
-        trendingData.forEach(function(item, index) {
-            const rankClass =
-                index === 0 ? 'rank-1' :
-                index === 1 ? 'rank-2' :
-                index === 2 ? 'rank-3' : 'rank-other';
-
-            const wrapper = document.createElement('div');
-            wrapper.className = 'flex-none w-[160px] md:w-[180px] group cursor-pointer relative';
-
-            wrapper.innerHTML = `
-                <a href="${item.url}" class="block">
-                <div class="aspect-[2/3] rounded-lg overflow-hidden shadow-md relative mb-3">
-                    <img src="${item.img}" class="w-full h-full object-cover" alt="${item.title}">
-                    <span class="rank-text ${rankClass}">${index + 1}</span>
-                </div>
-                <h3 class="font-bold text-sm text-gray-800 line-clamp-1 group-hover:text-blue-600 transition">${item.title}</h3>
-                <div class="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>Chap ${item.chap}</span>
-                    <span><i class="fas fa-eye"></i> ${item.view}</span>
-                </div>
-                </a>
-            `;
-            trendingContainer.appendChild(wrapper);
-        });
-    }
-
-    // ====== MỚI CẬP NHẬT ======
-    const updatesContainer = document.getElementById('updates-grid');
-    if (updatesContainer) {
-        updatesData.forEach(function(item) {
-            const card = document.createElement('div');
-            card.className = 'group';
-
-            let chapsHtml = '';
-            item.chaps.forEach(function(chap) {
-                chapsHtml += `
-                    <div class="flex justify-between items-center text-xs">
-                        <a href="${item.url}" class="bg-gray-100 hover:bg-blue-100 px-2 py-0.5 rounded text-gray-600 font-semibold transition">Chap ${chap.num}</a>
-                        <span class="text-gray-400 italic text-[10px]">${chap.time}</span>
-                    </div>
-                `;
-            });
-
-            card.innerHTML = `
-                <a href="${item.url}" class="block">
-                <div class="relative rounded-lg overflow-hidden shadow-sm aspect-[2/3] mb-2 cursor-pointer">
-                    ${item.isHot ? '<span class="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-sm z-10">HOT</span>' : ''}
-                    <img src="${item.img}" class="w-full h-full object-cover" alt="${item.title}">
-                    <div class="absolute bottom-0 w-full p-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex justify-between text-white/90 text-[10px]">
-                        <span><i class="fas fa-eye"></i> 15K</span>
-                        <span><i class="fas fa-heart"></i> 200</span>
-                    </div>
-                </div>
-                <h4 class="font-bold text-sm text-slate-800 line-clamp-1 group-hover:text-blue-600 transition cursor-pointer">${item.title}</h4>
-                </a>
-                <div class="mt-2 space-y-1">
-                    ${chapsHtml}
-                </div>
-            `;
-            updatesContainer.appendChild(card);
-        });
-    }
-
-    // ====== SIDEBAR TOP THEO DÕI ======
-    const sidebarContainer = document.getElementById('sidebar-list');
-    if (sidebarContainer) {
-        sidebarData.forEach(function(item, index) {
-            const numColor = index < 3 ? 'text-blue-600' : 'text-gray-300';
-            const row = document.createElement('div');
-            row.className =
-                'flex gap-3 items-center border-b border-gray-50 last:border-0 pb-2 cursor-pointer group';
-
-            row.innerHTML = `
-                <a href="${item.url}" class="flex gap-3 items-center w-full">
-                <span class="text-xl font-black ${numColor} w-6 text-center italic">0${index + 1}</span>
-                <div class="w-12 h-16 rounded overflow-hidden flex-shrink-0 shadow-sm">
-                    <img src="${item.img}" class="w-full h-full object-cover" alt="${item.title}">
-                </div>
-                <div class="flex-1">
-                    <h5 class="text-xs font-bold text-gray-700 line-clamp-1 group-hover:text-blue-600 transition">${item.title}</h5>
-                    <div class="flex justify-between items-center mt-1">
-                        <span class="text-[10px] text-gray-500">Chap ${item.chap}</span>
-                        <span class="text-[10px] text-gray-400"><i class="fas fa-eye"></i> ${item.view}</span>
-                    </div>
-                </div>
-                </a>
-            `;
-            sidebarContainer.appendChild(row);
-        });
-    }
-
     // ====== HÀM SCROLL CHUNG ======
     function scrollSection(id, distance) {
         const container = document.getElementById(id);
@@ -651,10 +525,11 @@
                 'flex-1 py-1 text-[11px] font-bold rounded text-center bg-white shadow-sm text-blue-600 tab-btn transition';
         }
 
-        if (!sidebarContainer) return;
-        sidebarContainer.style.opacity = '0.5';
+        var sidebarList = document.getElementById('sidebar-list');
+        if (!sidebarList) return;
+        sidebarList.style.opacity = '0.5';
         setTimeout(function() {
-            sidebarContainer.style.opacity = '1';
+            if (sidebarList) sidebarList.style.opacity = '1';
         }, 200);
     }
     window.switchTab = switchTab;
@@ -663,65 +538,21 @@
     window.changeSlide = changeSlide;
 
     // ========================================================
-    // TÍNH NĂNG KÉO THẢ (DRAG) CHO CÁC HÀNG TRUYỆN
+    // CUỘN CHUỘT NGANG CHO CÁC HÀNG TRUYỆN (chỉ khi có overflow + chuột đang ở trong hàng)
+    // - Chuột ngoài hàng truyện hoặc hàng không dài → cuộn trang lên/xuống bình thường.
+    // - Chuột đưa vào hàng truyện và hàng có scrollbar ngang → lăn wheel = cuộn ngang hàng đó.
     // ========================================================
-    document.addEventListener('DOMContentLoaded', function() {
-        const sliders = document.querySelectorAll('.scrolling-wrapper');
-
-        sliders.forEach(slider => {
-            let isDown = false;
-            let isDragging = false;
-            let startX;
-            let scrollLeft;
-
-            // 1. NHẤN CHUỘT XUỐNG (BẮT ĐẦU KÉO)
-            slider.addEventListener('mousedown', (e) => {
-                isDown = true;
-                isDragging = false; // Reset trạng thái kéo
-                slider.classList.add('active');
-
-                // e.pageX là tọa độ X của chuột so với toàn bộ trang
-                // offsetLeft là khoảng cách từ viền trái màn hình đến cái slider
-                startX = e.pageX - slider.offsetLeft;
-                scrollLeft = slider.scrollLeft;
-            });
-
-            // 2. RỜI CHUỘT KHỎI KHUNG HOẶC NHẢ CHUỘT (DỪNG KÉO)
-            const stopDragging = () => {
-                isDown = false;
-                slider.classList.remove('active');
-            };
-
-            slider.addEventListener('mouseleave', stopDragging);
-            slider.addEventListener('mouseup', stopDragging);
-
-            // 3. DI CHUYỂN CHUỘT (THỰC HIỆN CUỘN)
-            slider.addEventListener('mousemove', (e) => {
-                if (!isDown) return;
-
-                e.preventDefault(); // Rất quan trọng để kéo mượt
-
-                const x = e.pageX - slider.offsetLeft;
-                const walk = (x - startX); // Khoảng cách di chuyển của chuột
-
-                // Nếu chuột di chuyển quá 5px thì mới được coi là đang "kéo" (Drag)
-                // Còn dưới 5px thì được coi là hơi run tay khi "click"
-                if (Math.abs(walk) > 5) {
-                    isDragging = true;
-                    // Tốc độ cuộn: nhân với 1 (chuẩn), hoặc 1.5/2 để cuộn lướt nhanh hơn
-                    slider.scrollLeft = scrollLeft - (walk * 1.5);
-                }
-            });
-
-            // 4. CHẶN CLICK NHẦM KHI VỪA KÉO XONG
-            // Bắt sự kiện click ở phase 'capture' (chạy trước khi thẻ <a> kịp nhận sự kiện)
-            slider.addEventListener('click', (e) => {
-                if (isDragging) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-            }, true);
-        });
-    });
+    (function initHorizontalWheelScroll() {
+        document.addEventListener('wheel', function(e) {
+            var slider = e.target && e.target.closest && e.target.closest('.scrolling-wrapper');
+            if (!slider) return;
+            if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+            var canScrollH = slider.scrollWidth > slider.clientWidth;
+            if (!canScrollH) return;
+            e.preventDefault();
+            e.stopPropagation();
+            slider.scrollLeft += e.deltaY;
+        }, { passive: false, capture: true });
+    })();
 </script>
-@endsection
+@endpush

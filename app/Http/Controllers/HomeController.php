@@ -60,24 +60,7 @@ class HomeController extends Controller
             ];
         })->values();
 
-        // Chỉ lấy truyện đã được duyệt
-        $baseQuery = Comic::where('approval_status', 'approved');
-
-        
-
-        // 3. Mới cập nhật
-        $recentUpdates = (clone $baseQuery)
-            ->orderByDesc('updated_at')
-            ->take(20)
-            ->get();
-
-        // 4. Top theo dõi (sidebar)
-        $topFollow = (clone $baseQuery)
-            ->orderByDesc('follows')
-            ->take(5)
-            ->get();
-
-        // 5. Các section theo thể loại (lọc qua bảng categories + category_comic)
+        // 3. Các section theo thể loại (lọc qua bảng categories + category_comic)
         // Dùng đúng slug trong bảng `categories` (xem file dump db_truyenvh.sql)
         // Ví dụ: action, adventure, comedy, drama, fantasy, romance, horror, sports, ...
         $genreSlugs = [
@@ -128,50 +111,8 @@ class HomeController extends Controller
             ];
         })->values();
 
-        $trendingData = $trendingComics->map(function ($comic) {
-            return [
-                'id'    => $comic->id,
-                'title' => $comic->title,
-                'chap'  => $comic->chapter_count ?? 0,
-                'view'  => $comic->views ?? 0,
-                'img'   => $comic->cover_url,
-                'url'   => route('user.comics.show', $comic->slug),
-                'slug'  => $comic->slug,
-            ];
-        })->values();
-
-        $updatesData = $recentUpdates->map(function ($comic) {
-            return [
-                'title' => $comic->title,
-                'img'   => $comic->cover_url,
-                'isHot' => ($comic->views ?? 0) > 10000,
-                'chaps' => [
-                    [
-                        'num'  => $comic->chapter_count ?? 1,
-                        'time' => optional($comic->updated_at)->diffForHumans() ?? 'Mới cập nhật',
-                    ],
-                ],
-                'url'   => route('user.comics.show', $comic->slug),
-                'slug'  => $comic->slug,
-            ];
-        })->values();
-
-        $sidebarData = $topFollow->map(function ($comic) {
-            return [
-                'title' => $comic->title,
-                'chap'  => $comic->chapter_count ?? 0,
-                'view'  => $comic->follows ?? 0,
-                'img'   => $comic->cover_url,
-                'url'   => route('user.comics.show', $comic->slug),
-                'slug'  => $comic->slug,
-            ];
-        })->values();
-
         return view('home', [
             'sliderData'    => $sliderData,
-            'trendingData'  => $trendingData,
-            'updatesData'   => $updatesData,
-            'sidebarData'   => $sidebarData,
             'genreSections' => $genreSections,
             'trendingComics' => $trendingComics,
             'newUpdateComics' => $newUpdateComics,
