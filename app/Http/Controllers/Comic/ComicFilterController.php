@@ -79,7 +79,7 @@ class ComicFilterController extends Controller
                 break;
         }
 
-        $comics = $comicsQuery->paginate(20)->withQueryString();
+        $comics = $comicsQuery->paginate(50)->withQueryString();
 
         return view('user.comics.filter.filter', compact(
             'categories',

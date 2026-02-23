@@ -78,19 +78,19 @@
                         </span>
                         <div class="flex flex-wrap items-center gap-x-1 gap-y-1">
                             @php
-                                $authorRelations = $comic->relationLoaded('authors') ? $comic->authors : $comic->authors;
+                            $authorRelations = $comic->relationLoaded('authors') ? $comic->authors : $comic->authors;
                             @endphp
 
                             @forelse($authorRelations as $author)
-                                <a href="{{ route('user.comics.author.show', $author->name) }}"
-                                    class="font-medium text-blue-600 hover:underline hover:text-blue-400 transition">
-                                    {{ $author->name }}
-                                </a>
-                                @if(!$loop->last)
-                                    <span class="text-gray-400">,</span>
-                                @endif
+                            <a href="{{ route('user.comics.author.show', $author->name) }}"
+                                class="font-medium text-blue-600 hover:underline hover:text-blue-400 transition">
+                                {{ $author->name }}
+                            </a>
+                            @if(!$loop->last)
+                            <span class="text-gray-400">,</span>
+                            @endif
                             @empty
-                                <span class="text-gray-400">Đang cập nhật</span>
+                            <span class="text-gray-400">Đang cập nhật</span>
                             @endforelse
                         </div>
                     </div>
@@ -115,7 +115,7 @@
                             <span class="text-gray-400">Đang cập nhật</span>
                             @endforelse
                         </div>
-                    </div>                    
+                    </div>
                 </div>
 
                 {{-- Mô tả ngắn --}}
@@ -127,8 +127,7 @@
                         {{ $comic->description ?? 
                             'Chào mừng các độc giả thân mến của TruyenVH, hãy cùng thưởng thức bộ truyện tranh ' 
                             . $comic->title . 
-                            ' đầy cuốn hút trên website của chúng tôi. Để có trải nghiệm đọc truyện tốt nhất, bạn nên đăng ký tài khoản tại TruyenVH. Khi đăng ký, bạn có thể theo dõi những bộ truyện yêu thích,
-                            bình luận và giao lưu cùng cộng đồng độc giả sôi nổi. TruyenVH tự hào mang đến kho truyện tranh đa dạng và phong phú với nhiều thể loại hấp dẫn. Hãy đăng ký ngay hôm nay để không bỏ lỡ những chương mới nhất của ' . $comic->title . '!'
+                            ' đầy cuốn hút trên website của chúng tôi. Để có trải nghiệm đọc truyện tốt nhất, bạn nên đăng ký tài khoản tại TruyenVH. Khi đăng ký, bạn có thể theo dõi những bộ truyện yêu thích, bình luận và giao lưu cùng cộng đồng độc giả sôi nổi. TruyenVH tự hào mang đến kho truyện tranh đa dạng và phong phú với nhiều thể loại hấp dẫn. Hãy đăng ký ngay hôm nay để không bỏ lỡ những chương mới nhất của ' . $comic->title . '!'
                         }}
                     </p>
 

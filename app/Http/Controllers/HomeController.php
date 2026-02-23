@@ -11,26 +11,26 @@ class HomeController extends Controller
     public function index()
     {
 
-        // 1. TOP THỊNH HÀNH (Sắp xếp theo View giảm dần, lấy 10)
+        // 1. TOP THỊNH HÀNH
         $trendingComics = Comic::where('approval_status', 'approved')
             ->orderBy('views', 'desc')
             ->take(20)
             ->get();
 
-        // 2. MỚI CẬP NHẬT (Lấy 30 truyện để vừa đẹp lưới 5 cột x 6 hàng)
-        $newUpdateComics = Comic::where('approval_status', 'approved') // Chỉ lấy truyện đã duyệt
+        // 2. MỚI CẬP NHẬT
+        $newUpdateComics = Comic::where('approval_status', 'approved')
             ->whereNotNull('last_chapter_at') // Bắt buộc phải có chương mới tính
-            ->orderBy('last_chapter_at', 'desc') // Mới nhất lên đầu
-            ->take(30) // Lấy 30 truyện (5 cột x 6 hàng)
+            ->orderBy('last_chapter_at', 'desc')
+            ->take(15)
             ->get();
 
-        // 3. TOP THEO DÕI (Lấy 5 truyện) - chỉ truyện đã duyệt
+        // 3. TOP THEO DÕI
         $topFollowComics = Comic::where('approval_status', 'approved')
             ->orderBy('follows', 'desc')
             ->take(5)
             ->get();
 
-        // 4. TOP LƯỢT XEM (sidebar / section khác) - chỉ truyện đã duyệt
+        // 4. TOP LƯỢT XEM
         $topViewedComics = Comic::query()
             ->where('approval_status', 'approved')
             ->withMax('chapters', 'chapter_number') // lấy chapter mới nhất
@@ -38,9 +38,9 @@ class HomeController extends Controller
             ->limit(5)
             ->get();
 
-        // Lấy 5 truyện view cao nhất cho slider
+        // Lấy truyện view cao nhất cho slider
         $sliderComics = Comic::where('approval_status', 'approved')
-            ->with('categories') // Eager load thể loại
+            ->with('categories')
             ->orderByDesc('views')
             ->take(15)
             ->get();
@@ -62,7 +62,6 @@ class HomeController extends Controller
 
         // 3. Các section theo thể loại (lọc qua bảng categories + category_comic)
         // Dùng đúng slug trong bảng `categories` (xem file dump db_truyenvh.sql)
-        // Ví dụ: action, adventure, comedy, drama, fantasy, romance, horror, sports, ...
         $genreSlugs = [
             'action'      => 'Truyện Action',
             'adventure'   => 'Truyện Adventure',
@@ -84,7 +83,7 @@ class HomeController extends Controller
             $comics = $category
                 ? $category->comics()
                 ->where('approval_status', 'approved')
-                // Ưu tiên truyện có chapter mới cập nhật (last_chapter_at mới nhất)
+                // Ưu tiên truyện có chapter mới cập nhật
                 ->orderByDesc('last_chapter_at')
                 ->orderByDesc('updated_at')
                 ->take(12)
@@ -98,7 +97,7 @@ class HomeController extends Controller
             ];
         }
 
-        // ===== Chuẩn hoá cho JS slider / carousel =====
+        // Chuẩn hoá cho JS slider / carousel
 
         $sliderData = $sliderComics->map(function ($comic) {
             return [
