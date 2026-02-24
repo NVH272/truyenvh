@@ -70,6 +70,9 @@ Route::get('/comics/filter', [ComicFilterController::class, 'index'])
 Route::get('/author/{author}', [ComicAuthorController::class, 'show'])
     ->name('user.comics.author.show');
 
+Route::get('/comics/recently-updated', [ComicReadController::class, 'recentlyUpdated'])
+    ->name('user.comics.recently-updated');
+
 // Nhóm các trang thông tin (Policies & Info)
 Route::controller(PolicyController::class)->group(function () {
     Route::get('/lien-he', 'contact')->name('contact');
@@ -273,6 +276,7 @@ Route::prefix('my-comics')->name('user.my-comics.')->middleware(['auth', 'verifi
     Route::get('/{comic}/edit', [UserComicController::class, 'edit'])->name('edit');
     Route::put('/{comic}', [UserComicController::class, 'update'])->name('update');
     Route::delete('/{comic}', [UserComicController::class, 'destroy'])->name('destroy');
+    Route::patch('{comic}/transfer', [UserComicController::class, 'transfer'])->name('transfer');
 });
 
 /*

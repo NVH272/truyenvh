@@ -20,7 +20,7 @@
             </span>
 
             {{-- Ảnh bìa --}}
-            <div class="w-16 h-24 flex-shrink-0 rounded overflow-hidden">
+            <div class="w-18 h-24 flex-shrink-0 rounded overflow-hidden">
                 <a href="{{ route('user.comics.show', $comic->slug) }}">
                     <img src="{{ $comic->cover_url }}"
                         class="w-full h-full object-cover"

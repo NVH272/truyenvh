@@ -64,8 +64,8 @@
                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
                     </div>
 
-                {{-- Badge: Status (Top Left) --}}
-                <div class="absolute top-1.5 left-1.5 pointer-events-none z-20">
+                    {{-- Badge: Status (Top Left) --}}
+                    <div class="absolute top-1.5 left-1.5 pointer-events-none z-20">
                         @if($comic->status === 'ongoing')
                         <span class="px-1.5 py-0.5 text-[9px] font-bold bg-blue-600/90 text-white rounded shadow-sm">Đang tiến hành</span>
                         @elseif($comic->status === 'completed')
@@ -93,6 +93,11 @@
                         <a href="{{ route('user.my-comics.edit', $comic->id) }}" class="w-8 h-8 rounded-full bg-white text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition shadow-lg relative z-40" title="Sửa">
                             <i class="fas fa-pen text-xs"></i>
                         </a>
+
+                        <button type="button" onclick="openTransferModal({{ $comic->id }}, '{{ addslashes($comic->title) }}')" class="w-8 h-8 rounded-full bg-white text-emerald-600 flex items-center justify-center hover:bg-emerald-600 hover:text-white transition shadow-lg relative z-40" title="Chuyển quyền quản lý">
+                            <i class="fas fa-exchange-alt text-xs"></i>
+                        </button>
+
                         <form action="{{ route('user.my-comics.destroy', $comic->id) }}" method="POST"
                             onsubmit="return confirm('Xóa truyện này?');" class="relative z-40">
                             @csrf
@@ -154,12 +159,125 @@
     </div>
 
     {{-- Pagination (Thiết kế mới: Căn giữa, padding rộng) --}}
-    <div class="mt-12 flex justify-center border-t border-slate-200 pt-8">
-        {{ $comics->links() }}
+    <div class="mt-12 flex justify-center border-t border-slate-200 pt-8 pb-8">
+        {{-- Truyền tên file custom vào hàm links() --}}
+        {{ $comics->links('vendor.pagination.custom') }}
     </div>
 
     @endif
-
 </div>
+@push('modals')
+{{-- ============================================= --}}
+{{-- MODAL CHUYỂN NHƯỢNG QUYỀN QUẢN LÝ (ĐẶT Ở ĐÂY) --}}
+{{-- ============================================= --}}
+<div id="transferModal" class="fixed top-0 left-0 w-full h-full z-[9999] hidden items-center justify-center bg-slate-900/40 backdrop-blur-[3px] opacity-0 transition-opacity duration-300 pointer-events-none">
+
+    {{-- pointer-events-auto để phần nội dung bên trong vẫn click được --}}
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 transform scale-95 transition-transform duration-300 relative overflow-y-auto max-h-[90vh] pointer-events-auto" id="transferModalContent">
+
+        {{-- Header --}}
+        <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <h3 class="text-lg font-extrabold text-slate-800 flex items-center gap-2">
+                <i class="fas fa-exchange-alt text-emerald-500"></i>
+                Chuyển Nhượng Truyện
+            </h3>
+            <button type="button" onclick="closeTransferModal()" class="text-slate-400 hover:text-rose-500 transition-colors focus:outline-none">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+
+        {{-- Form --}}
+        <form id="transferForm" method="POST" action="">
+            @csrf
+            @method('PATCH')
+            <div class="p-6 space-y-4">
+                <div class="p-3 bg-blue-50 text-blue-800 text-sm rounded-lg border border-blue-100">
+                    Bạn đang chuyển nhượng tác phẩm: <br>
+                    <strong id="transferComicTitle" class="text-blue-900 text-base mt-1 block"></strong>
+                </div>
+
+                <div class="space-y-2">
+                    <label for="new_owner_id" class="block text-sm font-bold text-slate-700">
+                        Chọn người đăng mới <span class="text-rose-500">*</span>
+                    </label>
+                    <select name="new_owner_id" id="new_owner_id" required
+                        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm outline-none transition-all bg-slate-50 focus:bg-white cursor-pointer">
+                        <option value="" hidden>-- Chọn Admin / Poster khác --</option>
+                        @foreach($eligibleUsers as $u)
+                        <option value="{{ $u->id }}">
+                            {{ $u->name }} - ({{ $u->role === 'admin' ? 'Admin' : 'Poster' }})
+                        </option>
+                        @endforeach
+                    </select>
+                    <p class="text-xs text-slate-500 italic mt-1">
+                        <i class="fas fa-info-circle mr-1"></i> Sau khi chuyển, bạn sẽ mất quyền đăng bộ truyện này.
+                    </p>
+                </div>
+            </div>
+
+            {{-- Footer --}}
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+                <button type="button" onclick="closeTransferModal()" class="px-4 py-2 rounded-xl text-sm font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition-colors">
+                    Hủy bỏ
+                </button>
+                <button type="submit" onclick="return confirm('Bạn có chắc chắn muốn mất quyền quản lý bộ truyện này không?')" class="px-5 py-2 rounded-xl text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-0.5">
+                    Xác nhận chuyển
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+@endpush
+
+{{-- Javascript điều khiển Modal --}}
+@push('scripts')
+<script>
+    function openTransferModal(comicId, comicTitle) {
+        const modal = document.getElementById('transferModal');
+        const modalContent = document.getElementById('transferModalContent');
+        const form = document.getElementById('transferForm');
+        const titleSpan = document.getElementById('transferComicTitle');
+
+        // Set tên truyện vào modal
+        titleSpan.innerText = comicTitle;
+
+        // Set URL action cho form
+        const baseUrl = "{{ route('user.my-comics.transfer', ':id') }}";
+        form.action = baseUrl.replace(':id', comicId);
+
+        // Bật pointer-events để modal chặn click xuống dưới khi mở
+        modal.classList.remove('pointer-events-none');
+
+        // Hiệu ứng mở
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            modalContent.classList.remove('scale-95');
+            modalContent.classList.add('scale-100');
+        }, 10);
+    }
+
+    function closeTransferModal() {
+        const modal = document.getElementById('transferModal');
+        const modalContent = document.getElementById('transferModalContent');
+
+        // Tắt pointer-events
+        modal.classList.add('pointer-events-none');
+
+        // Hiệu ứng đóng
+        modal.classList.add('opacity-0');
+        modalContent.classList.remove('scale-100');
+        modalContent.classList.add('scale-95');
+
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.getElementById('transferForm').reset(); // reset form
+        }, 300);
+    }
+</script>
+@endpush
 
 @endsection

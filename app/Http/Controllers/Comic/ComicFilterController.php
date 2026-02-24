@@ -45,9 +45,18 @@ class ComicFilterController extends Controller
             });
         }
 
-        $sort = $request->input('sort', 'rating_desc');
+        // $sort = $request->input('sort', 'rating_desc');
+        $sort = $request->input('sort', 'name_asc');
 
         switch ($sort) {
+            case 'name_asc':
+                $comicsQuery->orderBy('title', 'asc');
+                break;
+
+            case 'name_desc':
+                $comicsQuery->orderBy('title', 'desc');
+                break;
+
             case 'views_desc':
                 $comicsQuery->orderByDesc('views');
                 break;
@@ -75,7 +84,8 @@ class ComicFilterController extends Controller
                 break;
 
             default:
-                $comicsQuery->orderByDesc('updated_at');
+                $comicsQuery->orderBy('title', 'asc');
+                // $comicsQuery->orderByDesc('updated_at');
                 break;
         }
 
@@ -117,6 +127,14 @@ class ComicFilterController extends Controller
 
         $sort = $request->input('sort', 'rating_desc');
         switch ($sort) {
+            case 'name_asc':
+                $query->orderByAsc('title');
+                break;
+
+            case 'name_desc':
+                $query->orderByDesc('title');
+                break;
+
             case 'views_desc':
                 $query->orderByDesc('views');
                 break;
@@ -142,7 +160,8 @@ class ComicFilterController extends Controller
                 break;
 
             default:
-                $query->orderByDesc('updated_at');
+                $query->orderBy('title', 'asc');
+                // $query->orderByDesc('updated_at');
                 break;
         }
 

@@ -282,7 +282,7 @@
                 <h3 class="text-xl font-extrabold text-blue-700 uppercase flex items-center gap-2">
                     <i class="fas fa-clock text-blue-500"></i> Mới cập nhật
                 </h3>
-                <a href="{{ route('home') }}" class="text-xs font-semibold text-gray-400 hover:text-blue-600">
+                <a href="{{ route('user.comics.recently-updated') }}" class="text-xs font-semibold text-gray-400 hover:text-blue-600">
                     Xem tất cả <i class="fas fa-angle-double-right"></i>
                 </a>
             </div>

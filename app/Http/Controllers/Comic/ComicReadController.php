@@ -198,6 +198,30 @@ class ComicReadController extends Controller
         ]);
     }
 
+    public function recentlyUpdated(Request $request)
+    {
+        $statusFilter = $request->input('status', 'all');
+
+        $query = Comic::query()
+            ->where('approval_status', 'approved')
+            ->whereNotNull('last_chapter_at') // Chỉ lấy những truyện đã có chapter
+            ->with(['categories', 'authors'])
+            ->withAvg('ratings', 'rating')
+            ->withCount('ratings');
+
+        // Lọc theo trạng thái nếu có
+        if (in_array($statusFilter, ['ongoing', 'completed', 'dropped'])) {
+            $query->where('status', $statusFilter);
+        }
+
+        // Sắp xếp theo thời gian cập nhật chapter mới nhất giảm dần
+        $comics = $query->orderByDesc('last_chapter_at')
+            ->paginate(24) // 24 truyện / trang
+            ->withQueryString(); // Giữ lại tham số ?status=... khi chuyển trang
+
+        return view('user.comics.recently_updated', compact('comics', 'statusFilter'));
+    }
+
     private function countComicView($comic)
     {
         $sessionKey = 'viewed_comic_' . $comic->id;

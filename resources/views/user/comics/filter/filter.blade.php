@@ -139,17 +139,10 @@
                 @endforelse
             </div>
 
-            {{-- Pagination --}}
-            <div class="flex justify-center mt-10">
-                <!-- <div class="flex items-center bg-white rounded-full px-2 py-1.5 border border-slate-200 shadow-sm gap-1">
-                    <a href="#" class="w-7 h-7 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 transition-all"><i class="fas fa-chevron-left text-[10px]"></i></a>
-                    <a href="#" class="w-7 h-7 flex items-center justify-center rounded-full bg-brand-blue text-white font-bold text-xs shadow-sm">1</a>
-                    <a href="#" class="w-7 h-7 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-brand-blue transition-all text-xs font-medium">2</a>
-                    <a href="#" class="w-7 h-7 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-brand-blue transition-all text-xs font-medium">3</a>
-                    <span class="w-7 h-7 flex items-center justify-center text-slate-300 font-bold text-[10px]">...</span>
-                    <a href="#" class="w-7 h-7 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 transition-all"><i class="fas fa-chevron-right text-[10px]"></i></a>
-                </div> -->
-                {{ $comics->links() }}
+            {{-- Pagination (Thiết kế mới: Căn giữa, padding rộng) --}}
+            <div class="mt-12 flex justify-center border-t border-slate-200 pt-8 pb-8">
+                {{-- Truyền tên file custom vào hàm links() --}}
+                {{ $comics->links('vendor.pagination.custom') }}
             </div>
         </div>
 
@@ -209,10 +202,16 @@
                                 focus:bg-white focus:border-brand-blue focus:ring-1 focus:ring-brand-blue outline-none appearance-none
                                 cursor-pointer transition-all hover:border-slate-300">
 
-                                {{-- Lượt xem --}}
                                 <option value="views_desc" {{ request('sort') == 'views_desc' ? 'selected' : '' }} hidden>
                                     Sắp xếp
                                 </option>
+                                <option value="name_asc" {{ request('sort') == 'name_asc' ? 'selected' : '' }}>
+                                    Tên truyện (A → Z)
+                                </option>
+                                <option value="name_desc" {{ request('sort') == 'name_desc' ? 'selected' : '' }}>
+                                    Tên truyện (Z → A)
+                                </option>
+
                                 <option value="views_desc" {{ request('sort') == 'views_desc' ? 'selected' : '' }}>
                                     Lượt xem (Cao → Thấp)
                                 </option>
@@ -220,7 +219,6 @@
                                     Lượt xem (Thấp → Cao)
                                 </option>
 
-                                {{-- Đánh giá --}}
                                 <option value="rating_desc" {{ request('sort') == 'rating_desc' ? 'selected' : '' }}>
                                     Đánh giá (Cao → Thấp)
                                 </option>
@@ -228,7 +226,6 @@
                                     Đánh giá (Thấp → Cao)
                                 </option>
 
-                                {{-- Số chương --}}
                                 <option value="chapters_desc" {{ request('sort') == 'chapters_desc' ? 'selected' : '' }}>
                                     Số chương (Nhiều → Ít)
                                 </option>

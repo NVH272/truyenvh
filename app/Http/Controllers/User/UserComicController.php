@@ -22,7 +22,14 @@ class UserComicController extends Controller
             ->latest()
             ->paginate(24);
 
-        return view('user.my-comics.index', compact('comics'));
+        $eligibleUsers = \App\Models\User::whereIn('role', ['admin', 'poster'])
+            ->where('id', '!=', $user->id) // Không lấy chính mình
+            ->select('id', 'name', 'role')
+            ->orderBy('role')
+            ->orderBy('name')
+            ->get();
+
+        return view('user.my-comics.index', compact('comics', 'eligibleUsers'));
     }
 
     // Form thêm truyện (user)
@@ -162,6 +169,34 @@ class UserComicController extends Controller
         return redirect()
             ->to($redirectTo ?: route('user.my-comics.index'))
             ->with('success', 'Truyện của bạn đã được cập nhật.');
+    }
+
+    // Chuyển quyền quản lý truyện cho admin/poster khác
+    public function transfer(Request $request, Comic $comic)
+    {
+        // Kiểm tra quyền (chắc chắn người đang thao tác là chủ truyện)
+        $this->authorizeComic($comic);
+
+        // Validate dữ liệu đầu vào
+        $request->validate([
+            'new_owner_id' => 'required|exists:users,id',
+        ], [
+            'new_owner_id.required' => 'Vui lòng chọn người nhận.',
+            'new_owner_id.exists' => 'Người nhận không hợp lệ.',
+        ]);
+
+        $newOwner = \App\Models\User::findOrFail($request->new_owner_id);
+
+        // Kiểm tra bảo mật lớp 2: Người nhận bắt buộc phải là admin hoặc poster
+        if (!in_array($newOwner->role, ['admin', 'poster'])) {
+            return back()->with('error', 'Chỉ có thể chuyển nhượng cho Admin hoặc Poster khác.');
+        }
+
+        // Thực hiện đổi chủ
+        $comic->created_by = $newOwner->id;
+        $comic->save();
+
+        return redirect()->route('user.my-comics.index')->with('success', "Đã chuyển quyền quản lý truyện '{$comic->title}' cho {$newOwner->name} thành công.");
     }
 
     // Xoá truyện
