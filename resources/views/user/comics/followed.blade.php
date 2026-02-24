@@ -56,8 +56,8 @@
         </div>
     </div>
     @else
-    {{-- COMIC GRID: 7 CỘT --}}
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-[repeat(7,minmax(0,1fr))] gap-3 gap-y-6">
+    {{-- COMIC GRID: 8 CỘT (2XL) --}}
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-[repeat(8,minmax(0,1fr))] gap-3 gap-y-6">
         @foreach($comics as $comic)
         {{-- CARD START: Code y hệt trang tác giả --}}
         <div class="group relative flex flex-col transition-all duration-300 hover:-translate-y-1">

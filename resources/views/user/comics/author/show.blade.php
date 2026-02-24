@@ -45,9 +45,9 @@
         </div>
     </div>
 
-    {{-- COMIC GRID: 7 COLUMNS --}}
-    {{-- Chú ý class: 2xl:grid-cols-[repeat(7,minmax(0,1fr))] để chia đúng 7 cột --}}
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-[repeat(7,minmax(0,1fr))] gap-3 gap-y-6">
+    {{-- COMIC GRID: 8 COLUMNS (2XL) --}}
+    {{-- Chú ý class: 2xl:grid-cols-[repeat(8,minmax(0,1fr))] để chia đúng 8 cột --}}
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-[repeat(8,minmax(0,1fr))] gap-3 gap-y-6">
         @foreach ($comics as $comic)
 
         <div class="group relative flex flex-col transition-all duration-300 hover:-translate-y-1">

@@ -344,10 +344,8 @@
             </div>
         </div>
         @endif
-
-        @include('user.live_chat.chat_box')
-
     </main>
+    @include('user.live_chat.chat_box')
 
     <!-- FOOTER -->
     <footer class="bg-[#1a1a1a] text-gray-400 py-12 relative overflow-hidden border-t border-gray-800 font-sans">
