@@ -111,7 +111,7 @@
                                     </div>
                                     <input type="number" name="chapter_number" id="chapter_number"
                                         value="{{ old('chapter_number', $chapter->chapter_number) }}"
-                                        min="1" required
+                                        min="0" required
                                         class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all font-medium placeholder-slate-400">
                                 </div>
                                 <p class="text-xs text-slate-500 font-medium mt-1"><i class="fas fa-info-circle mr-1"></i>Chapter hiện tại: {{ $chapter->chapter_number }}</p>
@@ -327,6 +327,32 @@
     // Handle Form Submit
     document.addEventListener('DOMContentLoaded', function() {
         const submitBtn = document.getElementById('submit-btn');
+        const chapterNumberInput = document.getElementById('chapter_number');
+        const chapterTitleInput = document.getElementById('chapter_title');
+
+        // Tự động gợi ý tên chương theo dạng "Chapter {number}"
+        if (chapterNumberInput && chapterTitleInput) {
+            let titleManuallyEdited = chapterTitleInput.value.trim() !== '';
+
+            const syncChapterTitle = () => {
+                const value = chapterNumberInput.value;
+                if (!titleManuallyEdited && value !== '') {
+                    chapterTitleInput.value = `Chapter ${value}`;
+                }
+            };
+
+            // Nếu ban đầu chưa có title nhưng đã có số chương thì gợi ý luôn
+            if (!titleManuallyEdited && chapterNumberInput.value !== '') {
+                syncChapterTitle();
+            }
+
+            chapterNumberInput.addEventListener('input', syncChapterTitle);
+
+            chapterTitleInput.addEventListener('input', () => {
+                // Nếu người dùng tự sửa title thì không tự động ghi đè nữa
+                titleManuallyEdited = chapterTitleInput.value.trim() !== '';
+            });
+        }
 
         // Form Submit Handler
         document.getElementById('chapter-upload-form').addEventListener('submit', function(e) {

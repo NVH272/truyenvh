@@ -144,7 +144,7 @@
                     <a href="{{ route('user.reading-history.index') }}" class="hover:text-blue-600 transition">Lịch sử đọc</a>
                     <div class="group relative cursor-pointer py-4">
                         <span class="hover:text-blue-600 flex items-center gap-1">Thể loại <i class="fas fa-caret-down"></i></span>
-                        <div class="absolute top-full left-0 w-56 bg-white shadow-xl rounded-lg hidden group-hover:grid grid-cols-2 gap-2 p-3 border border-gray-100 z-50">
+                        <div class="absolute top-full left-0 w-56 bg-white shadow-xl rounded-lg hidden group-hover:grid grid-cols-2 gap-x-2 gap-y-2 p-3 border border-gray-100 z-50">
                             {{-- Top 3 categories --}}
                             @foreach($topCategories as $category)
                             <a href="{{ route('user.comics.filter', ['categories[0]' => $category->slug]) }}" class="hover:text-blue-600 text-xs font-semibold">
@@ -286,11 +286,11 @@
                         @if(Auth::user()->role === 'admin' || Auth::user()->role === 'poster')
                         <a href="{{ route('user.my-comics.index') }}"
                             class="block px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
-                            <i class="fas fa-book mr-2"></i>Danh sách truyện của bạn
+                            <i class="fas fa-book mr-2"></i>Truyện của bạn
                         </a>
                         <a href="{{ route('poster.index') }}"
                             class="block px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
-                            <i class="fas fa-pen-to-square mr-2"></i>Chương truyện của bạn
+                            <i class="fas fa-pen-to-square mr-2"></i>Truyện & Chapter của bạn
                         </a>
                         <div class="border-t border-gray-200"></div>
                         @endif

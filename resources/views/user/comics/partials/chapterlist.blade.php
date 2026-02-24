@@ -21,7 +21,7 @@
             <thead class="bg-gray-50 sticky top-0 z-10 text-xs text-gray-500 uppercase">
                 <tr>
                     <th class="px-6 py-3 font-medium">Số chương</th>
-                    <th class="px-4 py-3 font-medium text-center">Cập nhật</th>
+                    <th class="px-4 py-3 font-medium text-center">Ngày đăng</th>
                     <th class="px-4 py-3 font-medium text-right">Lượt xem</th>
                     @if($isComicOwner)
                     <th class="px-4 py-3 font-medium text-center">Hành động</th>
@@ -35,13 +35,13 @@
                     <td class="px-6 py-3">
                         <a href="{{ route('user.comics.chapters.read', ['comic' => $comic->id,'chapter_number' => $chapter->chapter_number]) }}"
                             class="font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
-                            {{ $chapter->title }}
+                            <!-- {{ $chapter->chapter_number }}: -->{{ $chapter->title }}
                         </a>
                     </td>
 
-                    {{-- Cập nhật --}}
+                    {{-- Ngày đăng --}}
                     <td class="px-4 py-3 text-gray-500 text-center text-xs">
-                        {{ optional($chapter->updated_at)->format('d/m/Y') }}
+                        {{ optional($chapter->created_at)->format('d/m/Y') }}
                     </td>
 
                     {{-- Lượt xem --}}

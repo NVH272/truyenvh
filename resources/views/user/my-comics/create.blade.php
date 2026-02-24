@@ -107,12 +107,6 @@
                                 </div>
                             </div>
 
-                            <!-- <div class="space-y-1.5">
-                                <label class="block text-sm font-semibold text-gray-700">Số chương</label>
-                                <input type="number" name="chapter_count" id="input-chapter" value="{{ old('chapter_count', 0) }}" min="0"
-                                    class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
-                            </div> -->
-
                             {{-- Ngày phát hành --}}
                             <div class="space-y-1.5">
                                 <label class="block text-sm font-semibold text-gray-700">Ngày phát hành</label>

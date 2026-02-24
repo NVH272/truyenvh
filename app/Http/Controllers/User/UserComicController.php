@@ -41,7 +41,7 @@ class UserComicController extends Controller
         // Chuẩn hoá danh sách tác giả (nhiều tác giả cách nhau bởi dấu phẩy)
         $authorInput = (string) ($data['author'] ?? '');
         $authorNames = collect(explode(',', $authorInput))
-            ->map(fn ($name) => trim($name))
+            ->map(fn($name) => trim($name))
             ->filter()
             ->unique();
 
@@ -124,7 +124,7 @@ class UserComicController extends Controller
 
         $authorInput = (string) ($data['author'] ?? '');
         $authorNames = collect(explode(',', $authorInput))
-            ->map(fn ($name) => trim($name))
+            ->map(fn($name) => trim($name))
             ->filter()
             ->unique();
 
@@ -224,7 +224,7 @@ class UserComicController extends Controller
             'published_at'  => ['nullable', 'date'],
             'category_ids'  => ['required', 'array', 'min:1'],
             'category_ids.*' => ['required', 'integer', 'exists:categories,id'],
-            'cover_image'   => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp,gif', 'max:4096'],
+            'cover_image'   => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp,gif', 'max:5120'],
         ], [
             'category_ids.required' => 'Vui lòng chọn ít nhất một thể loại.',
             'category_ids.min' => 'Vui lòng chọn ít nhất một thể loại.',

@@ -210,7 +210,7 @@
         });
     </script>
 
-    {{-- SECTION 2: TOP THỊNH HÀNH (DESIGN Y HỆT GENRE CARD) --}}
+    {{-- SECTION 2: TOP THỊNH HÀNH --}}
     <section>
         <div class="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
             <h2 class="text-xl md:text-2xl font-extrabold text-blue-700 uppercase flex items-center gap-2">
@@ -374,7 +374,7 @@
                         </span>
 
                         {{-- Ảnh bìa (giữ nguyên tỷ lệ và kích thước như mẫu bạn đưa) --}}
-                        <div class="w-12 h-16 flex-shrink-0 rounded overflow-hidden border border-gray-200 shadow-sm">
+                        <div class="w-15 h-20 flex-shrink-0 rounded overflow-hidden border border-gray-200 shadow-sm">
                             <a href="{{ route('user.comics.show', $comic->slug) }}" class="block w-full h-full">
                                 <img src="{{ $comic->cover_url }}"
                                     class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
@@ -552,7 +552,10 @@
             e.preventDefault();
             e.stopPropagation();
             slider.scrollLeft += e.deltaY;
-        }, { passive: false, capture: true });
+        }, {
+            passive: false,
+            capture: true
+        });
     })();
 </script>
 @endpush

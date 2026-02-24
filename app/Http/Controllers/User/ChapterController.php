@@ -45,13 +45,13 @@ class ChapterController extends Controller
 
         // Validate
         $data = $request->validate([
-            'chapter_number' => ['required', 'integer', 'min:1'],
+            'chapter_number' => ['required', 'integer', 'min:0'],
             'title' => ['nullable', 'string', 'max:255'],
             'zip_file' => ['required', 'file', 'mimes:zip', 'max:102400'], // Tối đa 100MB
         ], [
             'chapter_number.required' => 'Vui lòng nhập số chapter.',
             'chapter_number.integer' => 'Số chapter phải là số nguyên.',
-            'chapter_number.min' => 'Số chapter phải lớn hơn 0.',
+            'chapter_number.min' => 'Số chapter phải lớn hơn hoặc bằng 0.',
             'zip_file.required' => 'Vui lòng chọn file ZIP chứa ảnh.',
             'zip_file.mimes' => 'File phải có định dạng ZIP.',
             'zip_file.max' => 'File ZIP không được vượt quá 100MB.',
@@ -219,7 +219,7 @@ class ChapterController extends Controller
         }
 
         $data = $request->validate([
-            'chapter_number' => ['required', 'integer', 'min:1'],
+            'chapter_number' => ['required', 'integer', 'min:0'],
             'title'          => ['nullable', 'string', 'max:255'],
             'zip_file'       => ['nullable', 'file', 'mimes:zip', 'max:102400'],
         ]);
