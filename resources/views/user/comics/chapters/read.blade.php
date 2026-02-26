@@ -4,6 +4,7 @@
 
 {{-- ĐẨY NỘI DUNG VÀO HEADER CỦA LAYOUT --}}
 @section('reader_header_content')
+
 {{-- Bên trái --}}
 <div class="flex items-center gap-4 overflow-hidden">
     <div class="logo-container h-16 flex items-center border-b border-slate-800 shrink-0 bg-slate-900 overflow-hidden whitespace-nowrap relative">
@@ -63,17 +64,33 @@
         </button>
 
         {{-- MENU --}}
+        <style>
+            #chapter-dropdown::-webkit-scrollbar {
+                width: 6px;
+            }
+            #chapter-dropdown::-webkit-scrollbar-track {
+                background: rgba(0, 0, 0, 0.2);
+                border-radius: 8px;
+            }
+            #chapter-dropdown::-webkit-scrollbar-thumb {
+                background-color: #4b5563;
+                border-radius: 8px;
+            }
+            #chapter-dropdown::-webkit-scrollbar-thumb:hover {
+                background-color: #6b7280;
+            }
+        </style>
         <div id="chapter-dropdown"
-            class="hidden absolute right-0 mt-2 w-48 max-h-64 overflow-y-auto
-                    bg-[#1a1a1a] border border-gray-700 rounded-xl shadow-xl z-50">
+            class="hidden absolute right-0 mt-2 w-48 max-h-64 overflow-y-auto 
+                    bg-[#1a1a1a] border border-gray-700 shadow-xl z-50">
 
-            @foreach($comic->chapters()->orderByDesc('chapter_number')->get() as $c)
+            @foreach($comic->chapters()->orderByRaw('CAST(chapter_number AS DECIMAL(10,2)) DESC')->get() as $c)
             <a href="{{ route('user.comics.chapters.read', [
                         'comic' => $comic->id,
                         'chapter_number' => $c->chapter_number
                     ]) }}"
                 class="block px-4 py-2 text-sm
-                          {{ $c->id === $chapter->id
+                        {{ $c->id === $chapter->id
                                 ? 'bg-blue-600 text-white font-bold'
                                 : 'text-gray-300 hover:bg-gray-800 hover:text-white' }}">
                 Chapter {{ $c->chapter_number }}

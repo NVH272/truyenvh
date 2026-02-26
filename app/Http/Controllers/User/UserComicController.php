@@ -20,13 +20,14 @@ class UserComicController extends Controller
 
         $comics = Comic::where('created_by', $user->id)
             ->latest()
-            ->paginate(24);
+            ->paginate(40);
 
         $eligibleUsers = \App\Models\User::whereIn('role', ['admin', 'poster'])
             ->where('id', '!=', $user->id) // Không lấy chính mình
-            ->select('id', 'name', 'role')
+            ->select('id', 'name', 'role', 'email')
             ->orderBy('role')
             ->orderBy('name')
+            // ->orderBy('email')
             ->get();
 
         return view('user.my-comics.index', compact('comics', 'eligibleUsers'));

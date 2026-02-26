@@ -104,25 +104,27 @@ class ComicController extends Controller
      */
     public function index(Request $request)
     {
-        $search = $request->input('search');
+        $search = trim((string) $request->input('search', ''));
         $status = $request->input('status');
 
-        $query = Comic::with('categories');
+        $query = Comic::where('approval_status', 'approved')
+            ->with('categories');
 
-        if ($search) {
+        if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'LIKE', "%{$search}%")
                     ->orWhere('author', 'LIKE', "%{$search}%");
             });
         }
 
-        $query = Comic::where('approval_status', 'approved');
-
         if ($status !== null && $status !== '') {
             $query->where('status', $status);
         }
 
-        $comics = $query->orderByDesc('created_at')->paginate(10)->withQueryString();
+        $comics = $query
+            ->orderByDesc('created_at')
+            ->paginate(10)
+            ->withQueryString();
 
         // Đếm số truyện chờ duyệt
         $pendingCount = Comic::where('approval_status', 'pending')->count();

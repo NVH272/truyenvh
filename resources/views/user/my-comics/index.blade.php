@@ -205,7 +205,7 @@
                         <option value="" hidden>-- Chọn Admin / Poster khác --</option>
                         @foreach($eligibleUsers as $u)
                         <option value="{{ $u->id }}">
-                            {{ $u->name }} - ({{ $u->role === 'admin' ? 'Admin' : 'Poster' }})
+                            {{ $u->role === 'admin' ? 'Admin' : 'Poster' }}: {{ $u->name }} - {{ $u->email }}
                         </option>
                         @endforeach
                     </select>

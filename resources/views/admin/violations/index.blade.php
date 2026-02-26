@@ -7,7 +7,7 @@
 <div class="max-w-6xl mx-auto space-y-8 pb-12">
 
     <!-- Stats Summary -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Total Reports -->
         <div class="bg-slate-800 rounded-2xl p-5 border border-slate-700/50 shadow-lg relative overflow-hidden group">
             <div class="absolute right-0 top-0 w-24 h-24 bg-blue-500/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
@@ -36,33 +36,20 @@
             </div>
         </div>
 
-        <!-- Resolved (Placeholder logic) -->
-        <div class="bg-slate-800 rounded-2xl p-5 border border-slate-700/50 shadow-lg relative overflow-hidden group">
-            <div class="absolute right-0 top-0 w-24 h-24 bg-emerald-500/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-            <div class="relative z-10 flex justify-between items-start">
-                <div>
-                    <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Đã xử lý</p>
-                    <h3 class="text-3xl font-black text-white brand-font tracking-wide">{{ $resolvedCount }}</h3>
-                </div>
-                <div class="p-3 bg-slate-700/50 rounded-xl text-emerald-400">
-                    <i class="fas fa-check-circle text-xl"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Banned Words (Placeholder logic) -->
-        <a href="{{ route('admin.banned_words.index') }}" class="block">
-            <div class="bg-slate-800 rounded-2xl p-5 border border-slate-700/50 shadow-lg relative overflow-hidden group">
-                <div class="absolute right-0 top-0 w-24 h-24 bg-red-500/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
-
+        <a href="{{ route('admin.banned_words.index') }}" class="block transform transition-all duration-300 hover: hover:shadow-xl hover:shadow-red-900/30 rounded-2xl">
+            <div class="bg-slate-800 rounded-2xl p-5 border border-slate-700/50 shadow-lg relative overflow-hidden group transition-colors duration-300 hover:border-red-500/50">
+                <div class="absolute right-0 top-0 w-24 h-24 bg-red-500/10 rounded-bl-full -mr-4 -mt-4 transition-all duration-500 ease-out group-hover:scale-[1.7] group-hover:bg-red-500/20"></div>
                 <div class="relative z-10 flex justify-between items-start">
                     <div>
-                        <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Danh sách từ cấm</p>
-                        {{-- Thay thế '--' bằng biến số lượng từ cấm thực tế nếu có, ví dụ: $bannedWords->count() --}}
-                        <h3 class="text-3xl font-black text-white brand-font tracking-wide">{{ $bannedWordsCount }}</h3>
+                        <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1 transition-colors group-hover:text-slate-300">
+                            Danh sách từ cấm
+                        </p>
+                        <h3 class="text-3xl font-black text-white brand-font tracking-wide">
+                            {{ $bannedWordsCount }}
+                        </h3>
                     </div>
-                    <div class="p-3 bg-slate-700/50 rounded-xl text-red-400">
-                        <i class="fas fa-ban text-xl"></i>
+                    <div class="p-3 bg-slate-700/50 rounded-xl text-red-400 transition-all duration-300 group-hover:bg-red-500/20 group-hover:text-red-300">
+                        <i class="fas fa-ban text-xl transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110"></i>
                     </div>
                 </div>
             </div>
@@ -193,24 +180,6 @@
                         <i class="fas fa-check mr-1"></i> Nội dung đã bị gỡ bỏ
                     </div>
                     @endif
-
-                    <!-- Ban User Button -->
-                    <!-- @if($r->comment?->user)
-                    <form method="POST" action="{{ route('admin.users.toggle-active', $r->comment->user->id) }}"
-                        onsubmit="return confirm('Xác nhận khoá tài khoản người dùng này?');" class="w-full">
-                        @csrf
-                        @method('PATCH')
-                        <button type="submit" class="group w-full flex items-center justify-between px-4 py-3 rounded-lg bg-slate-800 hover:bg-amber-900/30 text-slate-400 hover:text-amber-400 border border-slate-600 hover:border-amber-500/50 transition-all duration-200">
-                            <div class="flex flex-col items-start">
-                                <span class="text-xs font-bold uppercase tracking-wide">Khoá tài khoản</span>
-                                <span class="text-[10px] opacity-60 font-normal">Cấm người đăng</span>
-                            </div>
-                            <div class="w-8 h-8 rounded-full bg-slate-700/50 group-hover:bg-amber-500/20 flex items-center justify-center transition-colors">
-                                <i class="fas fa-user-slash text-sm group-hover:scale-110 transition-transform"></i>
-                            </div>
-                        </button>
-                    </form>
-                    @endif -->
 
                     <!-- Ban & Delete Button -->
                     @if($r->comment && $r->comment->user)

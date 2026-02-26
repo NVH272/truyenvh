@@ -43,7 +43,7 @@ class ComicReadController extends Controller
         }
 
         $comic->load(['chapters' => function ($q) {
-            $q->orderByDesc('chapter_number');
+            $q->orderByRaw('CAST(chapter_number AS DECIMAL(10,2)) DESC');
         }]);
 
         $commentsQuery = Comment::where('comic_id', $comic->id)
@@ -103,7 +103,7 @@ class ComicReadController extends Controller
         // Lấy danh sách category id của truyện hiện tại
         $categoryIds = $comic->categories()->pluck('categories.id')->all(); // comic phải có relation categories()
 
-        // 1) Ưu tiên: 5 truyện cùng ít nhất 1 tác giả (dựa trên quan hệ authors N-N)
+        // 1) Ưu tiên: Lấy truyện cùng ít nhất 1 tác giả (dựa trên quan hệ authors N-N)
         //    Sắp xếp: lượt xem giảm dần, rồi rating giảm dần
         $relatedComics = collect();
 
@@ -126,13 +126,20 @@ class ComicReadController extends Controller
                 ->get();
         }
 
-        // 2) Fallback: 5 truyện cùng thể loại nếu không có cùng tác giả
+        // Tính số lượng truyện còn thiếu để đạt đủ $limit (vd: 5)
+        $missingCount = $limit - $relatedComics->count();
+
+        // 2) Fallback: Nếu chưa đủ số lượng, bù thêm bằng truyện cùng thể loại
         //    - Cùng càng nhiều thể loại thì đứng trên (matched_categories_count)
         //    - Sắp xếp tiếp theo: views, rating giảm dần
-        if ($relatedComics->isEmpty() && !empty($categoryIds)) {
-            $relatedComics = Comic::query()
+        if ($missingCount > 0 && !empty($categoryIds)) {
+
+            // Lấy ID của truyện hiện tại VÀ các truyện đã lấy được ở bước 1 để loại trừ (tránh trùng lặp)
+            $excludedIds = $relatedComics->pluck('id')->push($comic->id)->toArray();
+
+            $fallbackComics = Comic::query()
                 ->where('approval_status', 'approved')
-                ->where('id', '!=', $comic->id)
+                ->whereNotIn('id', $excludedIds) // Loại trừ truyện hiện tại và truyện đã có ở bước 1
                 ->whereHas('categories', function ($q) use ($categoryIds) {
                     $q->whereIn('categories.id', $categoryIds);
                 })
@@ -148,8 +155,11 @@ class ComicReadController extends Controller
                 ->orderByDesc('views')
                 ->orderByRaw('ratings_avg_rating IS NULL, ratings_avg_rating DESC')
                 ->orderByDesc('ratings_count')
-                ->limit($limit)
+                ->limit($missingCount) // <--- Chú ý: Chỉ lấy đúng số lượng còn thiếu
                 ->get();
+
+            // Gộp danh sách truyện tìm được bằng thể loại vào danh sách truyện cùng tác giả ban đầu
+            $relatedComics = $relatedComics->merge($fallbackComics);
         }
 
         // Nếu request AJAX (dùng cho filter/pagination comments) thì trả về partial comments
@@ -163,11 +173,11 @@ class ComicReadController extends Controller
         }
 
         $firstChapter = Chapter::where('comic_id', $comic->id)
-            ->orderBy('chapter_number')
+            ->orderByRaw('CAST(chapter_number AS DECIMAL(10,2)) ASC')
             ->first();
 
         $latestChapter = Chapter::where('comic_id', $comic->id)
-            ->orderByDesc('chapter_number')
+            ->orderByRaw('CAST(chapter_number AS DECIMAL(10,2)) DESC')
             ->first();
 
         // Top lượt xem: chỉ tính truyện đã được duyệt

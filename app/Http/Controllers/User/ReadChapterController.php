@@ -15,8 +15,14 @@ class ReadChapterController extends Controller
     public function show(Request $request, $comic, $chapter_number)
     {
         $comic = Comic::findOrFail($comic);
+        $chapterNumber = (float) $chapter_number;
 
-        $chapterNumber = (int) $chapter_number;
+        $currentChapterNum = (float) $chapter_number;
+
+        $chapter = Chapter::where('comic_id', $comic->id)
+            ->where('chapter_number', $chapter_number) // Cột lưu chuỗi, nhưng so sánh bằng = thì vẫn nhận
+            ->with(['pages' => fn($q) => $q->orderBy('page_index')])
+            ->firstOrFail();
 
         $chapter = Chapter::where('comic_id', $comic->id)
             ->where('chapter_number', $chapterNumber)
@@ -25,24 +31,24 @@ class ReadChapterController extends Controller
 
         // Chapter trước: số nhỏ hơn gần nhất
         $prevChapter = Chapter::where('comic_id', $comic->id)
-            ->where('chapter_number', '<', $chapterNumber)
-            ->orderByDesc('chapter_number')
+            ->whereRaw('CAST(chapter_number AS DECIMAL(10,2)) < ?', [$currentChapterNum])
+            ->orderByRaw('CAST(chapter_number AS DECIMAL(10,2)) DESC')
             ->first();
 
         // Chapter sau: số lớn hơn gần nhất
         $nextChapter = Chapter::where('comic_id', $comic->id)
-            ->where('chapter_number', '>', $chapterNumber)
-            ->orderBy('chapter_number')
+            ->whereRaw('CAST(chapter_number AS DECIMAL(10,2)) > ?', [$currentChapterNum])
+            ->orderByRaw('CAST(chapter_number AS DECIMAL(10,2)) ASC')
             ->first();
 
         // Chapter đầu tiên
         $firstChapter = Chapter::where('comic_id', $comic->id)
-            ->orderBy('chapter_number')
+            ->orderByRaw('CAST(chapter_number AS DECIMAL(10,2)) ASC')
             ->first();
 
         // Chapter mới nhất
         $latestChapter = Chapter::where('comic_id', $comic->id)
-            ->orderByDesc('chapter_number')
+            ->orderByRaw('CAST(chapter_number AS DECIMAL(10,2)) DESC')
             ->first();
 
         $this->countChapterView($chapter);

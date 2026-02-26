@@ -77,5 +77,5 @@
         display: inline-block;
     }
 </style>
-
+@stack('scripts')
 @endsection

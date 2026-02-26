@@ -24,9 +24,8 @@ class ViolationController extends Controller
 
         $bannedWordsCount = BannedWord::count();
         $pendingCount = CommentReport::where('status', 'pending')->count();
-        $resolvedCount = CommentReport::where('status', 'resolved')->count();
 
-        return view('admin.violations.index', compact('reports', 'bannedWordsCount', 'pendingCount', 'resolvedCount'));
+        return view('admin.violations.index', compact('reports', 'bannedWordsCount', 'pendingCount'));
     }
 
     public function banUserAndDeleteComment($id)

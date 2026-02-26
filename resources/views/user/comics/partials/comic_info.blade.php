@@ -71,8 +71,8 @@
                 </div>
 
                 {{-- Grid Thông tin --}}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm mb-6">
-                    <div class="flex items-center gap-2">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-3 text-sm mb-6">
+                    <div class="flex items-center gap-2 col-span-2">
                         <span class="text-gray-500 w-24 flex-shrink-0">
                             <i class="fas fa-user mr-1.5"></i> Tác giả:
                         </span>
@@ -95,12 +95,12 @@
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 col-span-1">
                         <span class="text-gray-500 w-24 flex-shrink-0"><i class="fas fa-eye mr-1.5"></i> Lượt xem:</span>
                         <span class="font-medium text-gray-800">{{ number_format($comic->views ?? 0) }}</span>
                     </div>
 
-                    <div class="flex items-center gap-2 col-span-2">
+                    <div class="flex items-center gap-2 col-span-3">
                         <span class="text-gray-500 w-24 flex-shrink-0"><i class="fas fa-tags mr-1.5"></i> Thể loại:</span>
                         <div class="flex flex-wrap gap-1">
                             @forelse ($comic->categories as $category)
@@ -123,7 +123,7 @@
                     <h3 class="font-bold text-gray-800 border-b-2 border-blue-500 inline-block mb-2 pb-1">
                         Sơ lược
                     </h3>
-                    <p class="text-gray-600 text-sm leading-relaxed whitespace-pre-line">
+                    <p class="text-gray-600 text-sm leading-relaxed">
                         {{ $comic->description ?? 
                             'Chào mừng các độc giả thân mến của TruyenVH, hãy cùng thưởng thức bộ truyện tranh ' 
                             . $comic->title . 

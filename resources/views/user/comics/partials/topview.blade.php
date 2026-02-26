@@ -31,7 +31,7 @@
             {{-- Thông tin --}}
             <div class="flex-1 min-w-0">
                 <h4
-                    class="text-sm font-medium text-gray-800 group-hover:text-red-500 truncate transition-colors">
+                    class="text-sm font-bold text-gray-800 group-hover:text-red-500 truncate transition-colors">
                     <a href="{{ route('user.comics.show', $comic->slug) }}">
                         {{ $comic->title }}
                     </a>

@@ -195,6 +195,10 @@ $isReaderPage = request()->routeIs('user.comics.chapters.read') || request()->ro
                     toggleBtn.style.top = "20px";
                     toggleIcon.classList.remove('fa-chevron-up');
                     toggleIcon.classList.add('fa-chevron-down');
+
+                    // Tự động đóng chapter dropdown khi header ẩn đi
+                    const chapterDropdown = document.getElementById('chapter-dropdown');
+                    if (chapterDropdown) chapterDropdown.classList.add('hidden');
                 }
             }
 

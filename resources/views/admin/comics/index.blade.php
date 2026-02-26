@@ -134,8 +134,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-700/50 text-sm">
                     @forelse($comics as $comic)
-                    <tr class="group hover:bg-slate-700/30 transition-colors duration-200"
-                        onclick="window.location='{{ route('admin.chapters.by-comic', $comic) }}';">
+                    <tr class="group hover:bg-slate-700/30 transition-colors duration-200">
                         {{-- ID --}}
                         <td class="px-6 py-4 text-center text-slate-500 font-mono">
                             #{{ $comic->id }}
@@ -208,8 +207,14 @@
 
                         {{-- Actions --}}
                         <td class="px-6 py-4 text-center">
-                            <div class="relative z-10 flex items-center justify-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity"
-                                onclick="event.stopPropagation()">
+                            <div class="relative z-10 flex items-center justify-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+
+                                {{-- Quản lý chương --}}
+                                <a href="{{ route('admin.chapters.by-comic', $comic) }}"
+                                    class="p-2 rounded-lg bg-slate-700/50 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-all shadow hover:shadow-emerald-500/30"
+                                    title="Quản lý chương">
+                                    <i class="fas fa-list-alt text-sm"></i>
+                                </a>
 
                                 <a href="{{ route('admin.comics.edit', $comic) }}"
                                     class="p-2 rounded-lg bg-slate-700/50 text-blue-400 hover:bg-blue-500 hover:text-white transition-all shadow hover:shadow-blue-500/30"

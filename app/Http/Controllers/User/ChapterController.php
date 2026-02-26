@@ -30,7 +30,11 @@ class ChapterController extends Controller
         // cover_image nếu cover_url của bạn sinh từ cover_image
 
         // Lấy số chapter tiếp theo
-        $nextChapterNumber = $comic->chapters()->max('chapter_number') + 1;
+        $maxChapter = $comic->chapters()
+            ->selectRaw('MAX(CAST(chapter_number AS DECIMAL(10,2))) as max_chapter')
+            ->value('max_chapter');
+
+        $nextChapterNumber = ($maxChapter !== null) ? floor($maxChapter) + 1 : 1;
 
         return view('user.comics.chapters.create', compact('comic', 'myComics', 'nextChapterNumber'));
     }
@@ -45,12 +49,12 @@ class ChapterController extends Controller
 
         // Validate
         $data = $request->validate([
-            'chapter_number' => ['required', 'integer', 'min:0'],
+            'chapter_number' => ['required', 'numeric', 'min:0'],
             'title' => ['nullable', 'string', 'max:255'],
             'zip_file' => ['required', 'file', 'mimes:zip', 'max:102400'], // Tối đa 100MB
         ], [
             'chapter_number.required' => 'Vui lòng nhập số chapter.',
-            'chapter_number.integer' => 'Số chapter phải là số nguyên.',
+            'chapter_number.numeric' => 'Số chapter phải là số thực.',
             'chapter_number.min' => 'Số chapter phải lớn hơn hoặc bằng 0.',
             'zip_file.required' => 'Vui lòng chọn file ZIP chứa ảnh.',
             'zip_file.mimes' => 'File phải có định dạng ZIP.',
@@ -201,7 +205,11 @@ class ChapterController extends Controller
             ->orderByDesc('id')
             ->get(['id', 'title', 'slug', 'author', 'cover_image']);
 
-        $nextChapterNumber = $comic->chapters()->max('chapter_number') + 1;
+        $maxChapter = $comic->chapters()
+            ->selectRaw('MAX(CAST(chapter_number AS DECIMAL(10,2))) as max_chapter')
+            ->value('max_chapter');
+
+        $nextChapterNumber = ($maxChapter !== null) ? floor($maxChapter) + 1 : 1;
 
         if ($chapter->comic_id !== $comic->id) {
             abort(404);
@@ -219,9 +227,11 @@ class ChapterController extends Controller
         }
 
         $data = $request->validate([
-            'chapter_number' => ['required', 'integer', 'min:0'],
+            'chapter_number' => ['required', 'numeric', 'min:0'],
             'title'          => ['nullable', 'string', 'max:255'],
             'zip_file'       => ['nullable', 'file', 'mimes:zip', 'max:102400'],
+        ], [
+            'chapter_number.numeric' => 'Số chapter phải là một số hợp lệ.',
         ]);
 
         // Nếu đổi số chapter → check trùng

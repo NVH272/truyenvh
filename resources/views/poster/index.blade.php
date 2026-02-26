@@ -53,8 +53,7 @@
                 {{-- Table Body --}}
                 <tbody class="divide-y divide-slate-100">
                     @forelse ($comics as $comic)
-                    <tr class="group hover:bg-blue-50/40 transition-colors duration-200 cursor-pointer"
-                        onclick="window.location='{{ route('poster.chapters', $comic->slug) }}'">
+                    <tr class="group hover:bg-blue-50/40 transition-colors duration-200">
 
                         {{-- 1. THÔNG TIN TRUYỆN --}}
                         <td class="px-6 py-4">
@@ -130,8 +129,15 @@
                         </td>
 
                         {{-- 5. THAO TÁC --}}
-                        <td class="px-6 py-4 text-right align-middle" onclick="event.stopPropagation()">
+                        <td class="px-6 py-4 text-right align-middle">
                             <div class="flex items-center justify-end gap-2">
+
+                                {{-- Quản lý chương --}}
+                                <a href="{{ route('poster.chapters', $comic->slug) }}"
+                                    class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:text-yellow-600 hover:bg-yellow-50 border border-slate-200 hover:border-yellow-200 transition-all shadow-sm"
+                                    title="Quản lý chương">
+                                    <i class="fa-solid fa-list-ul"></i>
+                                </a>
 
                                 {{-- View --}}
                                 <a href="{{ route('user.comics.show', $comic->slug) }}"

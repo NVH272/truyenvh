@@ -3,13 +3,13 @@
         <h2 class="text-lg font-bold text-blue-600 flex items-center gap-2">
             <i class="fas fa-list-ul"></i> Danh sách chương
         </h2>
-        <span class="text-xs text-gray-500">
+        <!-- <span class="text-xs text-gray-500">
             @if($comic->chapters->isNotEmpty())
-            Cập nhật lúc: {{ $comic->chapters->first()->updated_at->diffForHumans() }}
+            Cập nhật lúc: {{ $comic->chapters->sortByDesc('chapter_number')->first()->created_at->diffForHumans() }}
             @else
             Chưa có chapter
             @endif
-        </span>
+        </span> -->
 
     </div>
 
@@ -29,7 +29,7 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 text-sm">
-                @forelse($comic->chapters as $chapter)
+                @forelse($comic->chapters->sortByDesc('chapter_number') as $chapter)
                 <tr class="hover:bg-gray-50 transition-colors group">
                     {{-- Số chapter --}}
                     <td class="px-6 py-3">
