@@ -282,8 +282,16 @@
                         <div class="border-t border-gray-200"></div>
                         @endif
 
-                        {{-- MY COMICS (ADMIN + POSTER) --}}
+                        {{-- MY COMICS VÀ ERRORS (ADMIN + POSTER) --}}
                         @if(Auth::user()->role === 'admin' || Auth::user()->role === 'poster')
+
+                        @php
+                        // Đếm số thông báo lỗi chưa đọc
+                        $unreadErrorCount = auth()->user()->unreadNotifications()
+                        ->where('type', 'App\Notifications\ChapterErrorNotification')
+                        ->count();
+                        @endphp
+
                         <a href="{{ route('user.my-comics.index') }}"
                             class="block px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
                             <i class="fas fa-book mr-2"></i>Truyện của bạn
@@ -291,6 +299,18 @@
                         <a href="{{ route('poster.index') }}"
                             class="block px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
                             <i class="fas fa-pen-to-square mr-2"></i>Truyện & Chapter của bạn
+                        </a>
+
+                        <a href="{{ route('poster.errors.index') }}"
+                            class="flex items-center justify-between px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
+                            <div>
+                                <i class="fas fa-bug w-4 text-center mr-1.5"></i>Báo lỗi Chapter
+                            </div>
+                            @if($unreadErrorCount > 0)
+                            <span class="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">
+                                {{ $unreadErrorCount > 99 ? '99+' : $unreadErrorCount }}
+                            </span>
+                            @endif
                         </a>
                         <div class="border-t border-gray-200"></div>
                         @endif
@@ -410,6 +430,37 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // ===== NOTIFICATION DROPDOWN =====
+            const notifBtn = document.getElementById('notification-btn');
+            const notifDropdown = document.getElementById('notification-dropdown');
+            const notifList = document.getElementById('notification-list');
+            notifBtn.addEventListener('click', function(e) {
+                e.stopPropagation(); // Ngăn sự kiện click lan ra ngoài
+
+                // Logic bật/tắt (toggle) dropdown của bạn
+                const isHidden = notifDropdown.classList.contains('hidden');
+
+                if (isHidden) {
+                    // 1. Hiển thị dropdown
+                    notifDropdown.classList.remove('hidden');
+                    setTimeout(() => {
+                        notifDropdown.classList.remove('scale-95', 'opacity-0');
+                    }, 10);
+
+                    // 2. ÉP CUỘN LÊN ĐẦU
+                    if (notifList) {
+                        notifList.scrollTop = 0;
+                    }
+
+                } else {
+                    // Đóng dropdown
+                    notifDropdown.classList.add('scale-95', 'opacity-0');
+                    setTimeout(() => {
+                        notifDropdown.classList.add('hidden');
+                    }, 200);
+                }
+            });
+
             // ===== DROPDOWN USER =====
             const userBtn = document.getElementById('userMenuBtn');
             const userMenu = document.getElementById('userDropdown');

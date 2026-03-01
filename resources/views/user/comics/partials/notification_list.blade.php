@@ -16,7 +16,7 @@
             {{-- AVATAR --}}
             <div class="flex-shrink-0 relative">
                 <img class="h-11 w-11 rounded-full object-cover border border-gray-200 shadow-sm"
-                    src="{{ $notify->data['image'] }}" alt="Icon">
+                    src="{{ $notify->data['image'] ?? asset('storage/logo/logoMini.png')}}" alt="Icon">
 
                 @if(!$notify->read_at)
                 <span class="absolute -top-1 -right-1 flex h-3 w-3">

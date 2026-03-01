@@ -214,7 +214,7 @@ class ComicReadController extends Controller
 
         $query = Comic::query()
             ->where('approval_status', 'approved')
-            ->whereNotNull('last_chapter_at') // Chỉ lấy những truyện đã có chapter
+            ->whereNotNull('last_chapter_at')
             ->with(['categories', 'authors'])
             ->withAvg('ratings', 'rating')
             ->withCount('ratings');
@@ -226,8 +226,8 @@ class ComicReadController extends Controller
 
         // Sắp xếp theo thời gian cập nhật chapter mới nhất giảm dần
         $comics = $query->orderByDesc('last_chapter_at')
-            ->paginate(24) // 24 truyện / trang
-            ->withQueryString(); // Giữ lại tham số ?status=... khi chuyển trang
+            ->paginate(40)
+            ->withQueryString(); // Giữ nguyên query string khi phân trang
 
         return view('user.comics.recently_updated', compact('comics', 'statusFilter'));
     }

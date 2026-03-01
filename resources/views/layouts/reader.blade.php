@@ -128,6 +128,7 @@ $isReaderPage = request()->routeIs('user.comics.chapters.read') || request()->ro
     {{-- ========================================== --}}
     <main class="{{ $isReaderPage ? 'w-full min-h-screen pt-16' : 'container mx-auto px-4 py-6 min-h-screen' }}">
         @yield('content')
+        @stack('modals')
     </main>
 
 

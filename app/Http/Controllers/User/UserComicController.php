@@ -309,4 +309,35 @@ class UserComicController extends Controller
         // Chỉ trả về tên file (không có đường dẫn)
         return $imageName;
     }
+
+    /**
+     * Trang danh sách báo lỗi của Poster/Admin
+     */
+    public function errorReports()
+    {
+        $user = Auth::user();
+        
+        // Kiểm tra quyền
+        if (!in_array($user->role, ['admin', 'poster'])) {
+            abort(403, 'Bạn không có quyền truy cập trang này.');
+        }
+        
+        // Lấy tất cả thông báo lỗi (cả đã đọc và chưa đọc), phân trang 15 item/trang
+        $errorNotifications = $user->notifications()
+            ->where('type', 'App\Notifications\ChapterErrorNotification')
+            ->paginate(15);
+
+        return view('poster.errors.index', compact('errorNotifications'));
+    }
+
+    /**
+     * Đánh dấu 1 báo lỗi là đã đọc
+     */
+    public function markErrorAsRead($id)
+    {
+        $notification = Auth::user()->notifications()->findOrFail($id);
+        $notification->markAsRead();
+
+        return back()->with('success', 'Đã đánh dấu là đã đọc.');
+    }
 }

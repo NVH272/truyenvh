@@ -30,6 +30,14 @@
 {{-- Bên phải --}}
 <div class="flex items-center gap-2">
 
+    {{-- NÚT BÁO LỖI --}}
+    <button type="button" 
+        onclick="document.getElementById('reportErrorModal').classList.remove('hidden')"
+        class="flex items-center justify-center h-10 px-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 hover:bg-yellow-500 hover:text-white transition-all shadow-sm"
+        title="Báo lỗi chapter này">
+        <i class="fas fa-exclamation-triangle"></i>
+    </button>
+
     {{-- CHAPTER TRƯỚC --}}
     @if($prevChapter)
     <a href="{{ route('user.comics.chapters.read', [
@@ -434,4 +442,55 @@
             'theme' => 'dark'  // <--- Kích hoạt giao diện tối
         ])
     </div>
+
+@push('modals')
+{{-- MODAL BÁO LỖI --}}
+<div id="reportErrorModal" class="fixed inset-0 z-[100] hidden">
+    {{-- Backdrop --}}
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity" 
+         onclick="document.getElementById('reportErrorModal').classList.add('hidden')"></div>
+    
+    {{-- Form Content --}}
+    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-6 bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold text-red-400 flex items-center gap-2">
+                <i class="fas fa-bug"></i> Báo lỗi Chapter {{ $chapter->chapter_number }}
+            </h3>
+            <button type="button" onclick="document.getElementById('reportErrorModal').classList.add('hidden')" class="text-gray-400 hover:text-white transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        
+        <form action="{{ route('public.chapters.report', ['comic' => $comic->id, 'chapter' => $chapter->id]) }}" method="POST">
+            @csrf
+            <div class="mb-4">
+                <label for="error_description" class="block text-sm font-medium text-gray-300 mb-2">Mô tả lỗi gặp phải <span class="text-red-500">*</span></label>
+                <textarea id="error_description" name="description" rows="4" required
+                    placeholder="Ví dụ: Ảnh bị lỗi, thiếu trang, up nhầm chapter..."
+                    class="w-full p-3 bg-slate-900 border border-slate-700 rounded-lg text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-red-500/50 focus:border-red-500 outline-none transition-all resize-none"></textarea>
+            </div>
+            
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="document.getElementById('reportErrorModal').classList.add('hidden')" 
+                    class="px-4 py-2 bg-slate-700 text-gray-300 hover:bg-slate-600 rounded-lg font-medium transition-colors">
+                    Hủy
+                </button>
+                <button type="submit" 
+                    class="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg font-bold shadow-lg shadow-red-600/30 transition-all">
+                    Gửi báo cáo
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Hiển thị thông báo thành công nếu có --}}
+@if(session('success_report'))
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        alert("{{ session('success_report') }}"); // Bạn có thể thay bằng Toast/SweetAlert nếu project có sẵn
+    });
+</script>
+@endif
+@endpush
 @endsection

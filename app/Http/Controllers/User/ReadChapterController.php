@@ -10,6 +10,9 @@ use App\Models\Chapter;
 use App\Models\ReadingHistory;
 use App\Models\Comment;
 
+use App\Models\User;
+use App\Notifications\ChapterErrorNotification;
+
 class ReadChapterController extends Controller
 {
     public function show(Request $request, $comic, $chapter_number)
@@ -156,5 +159,30 @@ class ReadChapterController extends Controller
                 'last_read_at' => now(),
             ]
         );
+    }
+
+    public function reportError(Request $request, $comic_id, $chapter_id)
+    {
+        // Validate
+        $request->validate([
+            'description' => 'required|string|max:1000'
+        ]);
+
+        $comic = Comic::findOrFail($comic_id);
+        $chapter = Chapter::findOrFail($chapter_id);
+
+        // Tìm người đăng truyện (Poster)
+        $poster = User::find($comic->created_by);
+
+        if ($poster) {
+            // Xác định ai là người báo lỗi
+            $reporterName = auth()->check() ? auth()->user()->name : 'Một độc giả ẩn danh';
+
+            // Gửi thông báo cho Poster
+            $poster->notify(new ChapterErrorNotification($comic, $chapter, $request->description, $reporterName));
+        }
+
+        // Quay lại trang đọc và gửi kèm thông báo thành công
+        return back()->with('success_report', 'Báo cáo lỗi đã được gửi đến nhóm dịch.');
     }
 }

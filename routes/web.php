@@ -58,6 +58,9 @@ Route::get('/comics/{comic}/chapter-{chapter_number}', [ReadChapterController::c
     ->whereNumber('comic')
     ->name('user.comics.chapters.read');
 
+Route::post('/comics/{comic}/chapters/{chapter}/report', [ReadChapterController::class, 'reportError'])
+    ->name('public.chapters.report');
+
 // Trang tìm kiếm truyện
 Route::get('/search', [ComicSearchController::class, 'index'])
     ->name('user.comics.search');
@@ -277,6 +280,16 @@ Route::prefix('my-comics')->name('user.my-comics.')->middleware(['auth', 'verifi
     Route::put('/{comic}', [UserComicController::class, 'update'])->name('update');
     Route::delete('/{comic}', [UserComicController::class, 'destroy'])->name('destroy');
     Route::patch('{comic}/transfer', [UserComicController::class, 'transfer'])->name('transfer');
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Route để hiển thị danh sách báo lỗi
+    Route::get('/poster/error-reports', [UserComicController::class, 'errorReports'])
+        ->name('poster.errors.index');
+        
+    // Route để đánh dấu báo lỗi đã đọc
+    Route::post('/poster/error-reports/{id}/read', [UserComicController::class, 'markErrorAsRead'])
+        ->name('poster.errors.read');
 });
 
 /*
