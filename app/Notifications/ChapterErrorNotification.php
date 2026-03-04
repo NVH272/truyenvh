@@ -37,7 +37,7 @@ class ChapterErrorNotification extends Notification
             'chapter_id' => $this->chapter->id,
             'title'      => 'Báo lỗi truyện: ' . $this->comic->title,
             'message'    => "{$this->reporterName} đã báo lỗi ở Chapter {$this->chapter->chapter_number}: {$this->description}",
-            'url'        => route('admin.chapters.by-comic', $this->comic->id), // Hoặc url đến trang sửa truyện
+            'url'        => route('poster.errors.index', $this->comic->id),
         ];
     }
 }

@@ -13,7 +13,9 @@ class HomeController extends Controller
 
         // 1. TOP THỊNH HÀNH
         $trendingComics = Comic::where('approval_status', 'approved')
-            ->orderBy('views', 'desc')
+            ->orderByDesc('views')
+            ->orderByDesc('rating')
+            ->orderByDesc('follows')
             ->take(20)
             ->get();
 
@@ -42,6 +44,8 @@ class HomeController extends Controller
         $sliderComics = Comic::where('approval_status', 'approved')
             ->with('categories')
             ->orderByDesc('views')
+            ->orderByDesc('rating')
+            ->orderByDesc('follows')
             ->take(15)
             ->get();
 
@@ -60,7 +64,7 @@ class HomeController extends Controller
             ];
         })->values();
 
-        // 3. Các section theo thể loại (lọc qua bảng categories + category_comic)
+        // 3. Các section theo thể loại
         // Dùng đúng slug trong bảng `categories` (xem file dump db_truyenvh.sql)
         $genreSlugs = [
             'action'      => 'Truyện Action',

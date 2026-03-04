@@ -38,30 +38,17 @@
             <table class="w-full text-left text-sm whitespace-nowrap">
                 <thead class="bg-gray-50 text-gray-500 uppercase text-[11px] font-bold tracking-widest border-b border-gray-200/80">
                     <tr>
-                        <th class="px-6 py-4 w-32">Trạng thái</th>
                         <th class="px-6 py-4">Chi tiết báo cáo</th>
-                        <th class="px-6 py-4 text-center">Thời gian</th>
-                        <th class="px-6 py-4 text-right">Thao tác</th>
+                        <th class="px-6 py-4 w-32 text-center">Trạng thái</th>
+                        <th class="px-6 py-4 w-32 text-center">Thời gian</th>
+                        <th class="px-6 py-4 w-40 text-right">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     @forelse($errorNotifications as $notification)
                     <tr class="{{ empty($notification->read_at) ? 'bg-red-50/20' : 'bg-white' }} hover:bg-gray-50/80 transition-colors duration-200">
 
-                        {{-- Cột Tình trạng --}}
-                        <td class="px-6 py-4">
-                            @if(empty($notification->read_at))
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-red-100 text-red-700">
-                                Chưa xử lý
-                            </span>
-                            @else
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-gray-100 text-gray-600">
-                                Đã xử lý
-                            </span>
-                            @endif
-                        </td>
-
-                        {{-- Cột Nội dung --}}
+                        {{-- Cột Nội dung (Đưa lên đầu) --}}
                         <td class="px-6 py-4 whitespace-normal min-w-[300px]">
                             <div class="font-bold text-gray-900 mb-1">
                                 <a href="{{ $notification->data['url'] ?? '#' }}" class="hover:text-blue-600 transition-colors underline-offset-4 hover:underline">
@@ -71,6 +58,19 @@
                             <div class="text-gray-600 text-sm line-clamp-2 leading-snug">
                                 {{ $notification->data['message'] ?? 'Không có nội dung mô tả.' }}
                             </div>
+                        </td>
+
+                        {{-- Cột Tình trạng (Chuyển ra giữa và căn giữa) --}}
+                        <td class="px-6 py-4 text-center">
+                            @if(empty($notification->read_at))
+                            <span class="inline-flex items-center justify-center w-full max-w-[90px] px-2.5 py-1 rounded-md text-xs font-semibold bg-red-100 text-red-700">
+                                Chưa xử lý
+                            </span>
+                            @else
+                            <span class="inline-flex items-center justify-center w-full max-w-[90px] px-2.5 py-1 rounded-md text-xs font-semibold bg-gray-100 text-gray-600">
+                                Đã xử lý
+                            </span>
+                            @endif
                         </td>
 
                         {{-- Cột Thời gian --}}
@@ -83,10 +83,30 @@
                             <div class="flex items-center justify-end gap-1.5">
 
                                 {{-- Nút Xem --}}
-                                <a href="{{ $notification->data['url'] ?? '#' }}"
-                                    class="w-8 h-8 flex items-center justify-center rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                                    title="Đến trang chapter">
+                                @php
+                                // Xử lý tạo link Đọc truyện an toàn
+                                $readUrl = $notification->data['url'] ?? '#';
+                                if (isset($notification->data['comic_id']) && isset($notification->data['chapter_id'])) {
+                                $errorChapter = \App\Models\Chapter::find($notification->data['chapter_id']);
+                                if ($errorChapter) {
+                                $readUrl = route('user.comics.chapters.read', [
+                                'comic' => $notification->data['comic_id'],
+                                'chapter_number' => $errorChapter->chapter_number
+                                ]);
+                                }
+                                }
+                                @endphp
+
+                                <a href="{{ $readUrl }}" target="_blank"
+                                    class="w-8 h-8 flex items-center justify-center rounded-md text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 transition-colors"
+                                    title="Đến trang đọc chapter">
                                     <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                </a>
+
+                                <a href="{{ isset($notification->data['comic_id']) && isset($notification->data['chapter_id']) ? route('user.comics.chapters.edit', ['comic' => $notification->data['comic_id'], 'chapter' => $notification->data['chapter_id']]) : ($notification->data['url'] ?? '#') }}"
+                                    class="w-8 h-8 flex items-center justify-center rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                                    title="Đến trang sửa chapter">
+                                    <i class="fa-solid fa-pen-to-square"></i>
                                 </a>
 
                                 {{-- Nút Đánh dấu đã xử lý --}}
