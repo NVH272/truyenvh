@@ -7,8 +7,6 @@
                     <img src="{{ $comic->cover_url ?? 'https://placehold.co/400x600?text=No+Image' }}"
                         alt="{{ $comic->title ?? 'Cover' }}"
                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
-                    {{-- Badge Hot/New nếu cần --}}
-                    <!-- <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">HOT</span> -->
                 </div>
             </div>
 

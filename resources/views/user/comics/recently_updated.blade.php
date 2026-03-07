@@ -78,7 +78,7 @@
                     @endif
                 </div>
 
-                {{-- Badge: Thời gian cập nhật (Top Right) --}}
+                <!-- {{-- Badge: Thời gian cập nhật (Top Right) --}}
                 @if(!empty($comic->last_chapter_at))
                 <div class="absolute top-1.5 right-1.5 pointer-events-none z-20">
                     <span class="px-1.5 py-0.5 text-[9px] font-semibold bg-slate-900/80 text-white rounded shadow-sm backdrop-blur-sm">
@@ -86,7 +86,7 @@
                         {{ \Carbon\Carbon::parse($comic->last_chapter_at)->diffForHumans(null, true, true) }}
                     </span>
                 </div>
-                @endif
+                @endif -->
 
                 {{-- Overlay Stats (Bottom on Image) --}}
                 <div class="absolute inset-x-0 bottom-0 pt-6 pb-1.5 px-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex justify-between items-end text-[10px] text-white/90 pointer-events-none z-20">

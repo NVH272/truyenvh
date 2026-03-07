@@ -128,6 +128,9 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('auth');
     Route::post('/comments/{comment}/report', [CommentReportController::class, 'store'])
         ->name('comments.report');
+
+    Route::get('/followed', [ComicFollowController::class, 'index'])
+        ->name('user.comics.followed');
 });
 
 /*
@@ -208,8 +211,8 @@ Route::prefix('reset-password')->name('password.')->group(function () {
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/followed', [ComicFollowController::class, 'index'])
-        ->name('user.comics.followed');
+    // Route::get('/followed', [ComicFollowController::class, 'index'])
+    //     ->name('user.comics.followed');
 });
 
 // Chat routes - yêu cầu đã xác thực email
@@ -223,7 +226,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         $apiKey = env('GEMINI_API_KEY');
 
         if (!$apiKey) {
-            return "❌ KHÔNG CÓ API KEY trong .env";
+            return "KHÔNG CÓ API KEY trong .env";
         }
 
         try {
@@ -238,16 +241,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 ]);
 
             if ($response->successful()) {
-                return "✅ KẾT NỐI THÀNH CÔNG!<br>" .
+                return "KẾT NỐI THÀNH CÔNG!<br>" .
                     "Status: " . $response->status() . "<br>" .
                     "Response: " . $response->body();
             } else {
-                return "❌ KẾT NỐI THẤT BẠI!<br>" .
+                return "KẾT NỐI THẤT BẠI!<br>" .
                     "Status: " . $response->status() . "<br>" .
                     "Error: " . $response->body();
             }
         } catch (\Exception $e) {
-            return "❌ EXCEPTION: " . $e->getMessage();
+            return "EXCEPTION: " . $e->getMessage();
         }
     });
 });
@@ -286,7 +289,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Route để hiển thị danh sách báo lỗi
     Route::get('/poster/error-reports', [UserComicController::class, 'errorReports'])
         ->name('poster.errors.index');
-        
+
     // Route để đánh dấu báo lỗi đã đọc
     Route::post('/poster/error-reports/{id}/read', [UserComicController::class, 'markErrorAsRead'])
         ->name('poster.errors.read');
