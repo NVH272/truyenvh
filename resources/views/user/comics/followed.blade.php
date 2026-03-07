@@ -3,63 +3,57 @@
 @section('title', 'Tủ truyện yêu thích')
 
 @section('content')
-{{-- Sử dụng max-w-[1920px] để mở rộng không gian cho 7 cột --}}
+{{-- Sử dụng max-w-[1920px] để mở rộng không gian cho 7-8 cột --}}
 <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6 min-h-screen">
 
-    {{-- HEADER: CLEAN GLASSY (Đồng bộ với Empty State) --}}
-    <div class="relative mb-8 p-[2px] rounded-[2rem] bg-gradient-to-br from-rose-100 via-white to-pink-50 shadow-sm">
-
-        {{-- Lớp kính mờ bên trong --}}
-        <div class="relative bg-white/60 backdrop-blur-xl rounded-[calc(2rem-2px)] p-6 md:p-8 flex flex-col md:flex-row items-center md:items-start gap-6">
-
-            {{-- Icon đại diện (Gọn, nổi bật trên nền trắng) --}}
-            <div class="shrink-0">
-                <div class="w-16 h-16 md:w-20 md:h-20 bg-white rounded-2xl shadow-[0_8px_20px_-6px_rgba(244,63,94,0.2)] border border-rose-50 flex items-center justify-center group">
-                    <i class="fas fa-heart text-3xl md:text-4xl bg-gradient-to-br from-rose-500 to-pink-600 bg-clip-text text-transparent group-hover:scale-110 transition-transform duration-300"></i>
-                </div>
+    {{-- HEADER: Tối giản, thanh lịch, tinh tế --}}
+    <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6">
+        <div class="flex items-center gap-4">
+            {{-- Icon đại diện (Nhẹ nhàng với màu pastel) --}}
+            <div class="w-12 h-12 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center shadow-sm border border-rose-100/50 shrink-0">
+                <i class="fas fa-heart text-xl"></i>
             </div>
 
             {{-- Nội dung text --}}
-            <div class="flex-1 text-center md:text-left">
-                <div class="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 mb-2">
-                    <h1 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">
-                        Truyện đang theo dõi
-                    </h1>
-
-                    {{-- Badge thống kê nhỏ gọn --}}
-                    @if($comics->total() > 0)
-                    <span class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-rose-50 border border-rose-100 text-rose-600 text-xs font-bold uppercase tracking-wide mx-auto md:mx-0">
-                        {{ $comics->total() }} bộ truyện
-                    </span>
-                    @endif
-                </div>
-
-                <p class="text-slate-500 font-medium text-sm md:text-base leading-relaxed max-w-2xl">
-                    Danh sách những bộ truyện bạn đang theo dõi. Mọi cập nhật chương mới sẽ hiển thị tại đây.
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight">
+                    Truyện đang theo dõi
+                </h1>
+                <p class="text-slate-500 text-sm mt-0.5">
+                    Cập nhật những chương mới nhất từ tủ truyện của bạn.
                 </p>
             </div>
         </div>
+
+        {{-- Badge thống kê --}}
+        @if(isset($comics) && $comics->total() > 0)
+        <div class="inline-flex items-center justify-center px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 shadow-sm self-start md:self-auto">
+            Đang theo dõi: <span class="text-rose-600 font-bold ml-1.5">{{ $comics->total() }}</span>
+        </div>
+        @endif
     </div>
 
     @if($comics->isEmpty())
-    {{-- EMPTY STATE: Glassy --}}
-    <div class="relative p-[2px] rounded-[2.5rem] bg-gradient-to-br from-slate-100 via-white to-slate-50 shadow-lg mt-8 max-w-2xl mx-auto">
-        <div class="bg-white/80 backdrop-blur-xl rounded-[2.4rem] p-10 text-center relative overflow-hidden">
-            {{-- Icon và nội dung --}}
-            <div class="w-20 h-20 bg-slate-50 rounded-2xl mx-auto flex items-center justify-center text-3xl text-slate-300 mb-5 shadow-sm border border-slate-100">
-                <i class="far fa-folder-open"></i>
-            </div>
-            <h3 class="text-xl font-bold text-slate-900 mb-3">Tủ truyện đang trống</h3>
-            <a href="{{ url('/') }}" class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold text-white bg-rose-600 rounded-xl hover:bg-rose-700 transition-colors shadow-lg shadow-rose-600/20">
-                Tìm truyện để theo dõi &rarr;
-            </a>
+    {{-- EMPTY STATE: Sạch sẽ, viền dashed thân thiện --}}
+    <div class="flex flex-col items-center justify-center py-24 px-4 bg-slate-50/50 border border-slate-200 border-dashed rounded-2xl text-center max-w-3xl mx-auto mt-10">
+        <div class="w-20 h-20 bg-white text-slate-300 rounded-full flex items-center justify-center text-4xl mb-5 shadow-sm border border-slate-100">
+            <i class="fas fa-book-open"></i>
         </div>
+        <h3 class="text-xl font-bold text-slate-800 mb-2">Tủ truyện của bạn đang trống</h3>
+        <p class="text-slate-500 max-w-md mx-auto mb-8 text-sm leading-relaxed">
+            Bạn chưa lưu bộ truyện nào cả. Hãy tìm kiếm và lưu lại những tác phẩm yêu thích để không bỏ lỡ chương mới nhé!
+        </p>
+        <a href="{{ url('/') }}" class="inline-flex items-center justify-center px-6 py-2.5 text-sm font-semibold text-white bg-slate-800 rounded-xl hover:bg-slate-900 transition-all shadow-sm hover:shadow-md group">
+            Khám phá truyện ngay
+            <i class="fas fa-arrow-right ml-2 text-xs group-hover:translate-x-1 transition-transform"></i>
+        </a>
     </div>
     @else
     {{-- COMIC GRID: 8 CỘT (2XL) --}}
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-[repeat(8,minmax(0,1fr))] gap-3 gap-y-6">
         @foreach($comics as $comic)
-        {{-- CARD START: Code y hệt trang tác giả --}}
+
+        {{-- CARD START: ĐƯỢC GIỮ NGUYÊN HOÀN TOÀN THEO YÊU CẦU --}}
         <div class="group relative flex flex-col transition-all duration-300 hover:-translate-y-1">
 
             {{-- Stretched link --}}
@@ -137,6 +131,7 @@
             </div>
         </div>
         {{-- CARD END --}}
+
         @endforeach
     </div>
 

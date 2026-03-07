@@ -110,12 +110,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/reading-history', [ReadingHistoryController::class, 'store'])
         ->middleware('auth')
         ->name('reading-history.store');
+
     Route::get('/reading-history', [ReadingHistoryController::class, 'index'])
         ->middleware('auth')
         ->name('user.reading-history.index');
 });
 
-// Bình luận & reaction: chỉ cần đăng nhập
+// Bình luận & reaction
 Route::middleware(['auth'])->group(function () {
     Route::post('/comics/{comic}/comments', [ComicCommentController::class, 'store'])
         ->name('comments.store');
@@ -128,9 +129,6 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('auth');
     Route::post('/comments/{comment}/report', [CommentReportController::class, 'store'])
         ->name('comments.report');
-
-    Route::get('/followed', [ComicFollowController::class, 'index'])
-        ->name('user.comics.followed');
 });
 
 /*
@@ -211,8 +209,8 @@ Route::prefix('reset-password')->name('password.')->group(function () {
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    // Route::get('/followed', [ComicFollowController::class, 'index'])
-    //     ->name('user.comics.followed');
+    Route::get('/followed', [ComicFollowController::class, 'index'])
+        ->name('user.comics.followed');
 });
 
 // Chat routes - yêu cầu đã xác thực email
@@ -221,7 +219,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/chat/messages', [ChatController::class, 'getMessages'])->name('chat.messages');
     Route::post('/chat/send', [ChatController::class, 'send'])->name('chat.send');
     Route::get('/chat/list', [ChatController::class, 'getChatList'])->name('chat.list');
-    Route::post('/chat/ai', [App\Http\Controllers\ChatController::class, 'askAI'])->name('chat.ai');
+    Route::post('/chat/ai', [ChatController::class, 'askAI'])->name('chat.ai');
+
     Route::get('/test-gemini-connection', function () {
         $apiKey = env('GEMINI_API_KEY');
 

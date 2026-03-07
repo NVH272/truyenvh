@@ -323,34 +323,101 @@ PHONG CÁCH:
         foreach ($comics as $comic) {
             $categories = $comic->categories->pluck('name')->join(', ');
 
-                $context .= sprintf(
-                    "• %s\n" .
+            $context .= sprintf(
+                "• %s\n" .
                     "  Thể loại: %s | Tác giả: %s | %s\n" .
                     "  👁️ %s lượt xem | ❤️ %s theo dõi | ⭐ %.1f/5\n" .
                     "  Mô tả: %s\n\n",
-                    $comic->title,
-                    $comic->slug,
-                    $categories ?: 'Đa dạng',
-                    $comic->authors_list ?: 'Đang cập nhật',
-                    $this->getStatusText($comic->status),
-                    number_format($comic->views ?? 0),
-                    number_format($comic->follows ?? 0),
-                    $comic->rating ?? 0,
-                    $this->truncate($comic->description, 80)
-                );
+                $comic->title,
+                $comic->slug,
+                $categories ?: 'Đa dạng',
+                $comic->authors_list ?: 'Đang cập nhật',
+                $this->getStatusText($comic->status),
+                number_format($comic->views ?? 0),
+                number_format($comic->follows ?? 0),
+                $comic->rating ?? 0,
+                $this->truncate($comic->description, 80)
+            );
         }
 
         return $context;
     }
 
     /**
-     * Phát hiện intent - CẢI THIỆN
+     * Phát hiện intent - BẢN NÂNG CẤP
      */
     private function detectIntent($message)
     {
-        $message = mb_strtolower($message);
+        $message = mb_strtolower(trim($message));
 
-        // Từ khóa truyện - BỔ SUNG THÊM
+        // 1. KIỂM TRA CHÀO HỎI TRƯỚC TIÊN
+        if (preg_match('/^(hi|hello|hey|alo|chào|xin chào|chào bạn|chào bot|chào ad)$/i', $message)) {
+            return 'unclear';
+        }
+
+        // 2. KIỂM TRA TỪ KHÓA CẤM
+        $offTopicKeywords = [
+            'chính trị',
+            'tổng thống',
+            'thủ tướng',
+            'bầu cử',
+            'lập trình',
+            'code',
+            'python',
+            'javascript',
+            'database',
+            'toán',
+            'vật lý',
+            'hóa',
+            'sinh học',
+            'covid',
+            'vaccine',
+            'bệnh',
+            'bóng đá',
+            'world cup',
+            'bitcoin',
+            'crypto',
+            'chứng khoán',
+            'thời tiết',
+            'weather',
+            'nấu ăn',
+            'công thức',
+            'tại sao',
+            'why',
+            'làm sao',
+            'how to'
+        ];
+
+        foreach ($offTopicKeywords as $keyword) {
+            if (str_contains($message, $keyword)) {
+                return 'off_topic';
+            }
+        }
+
+        // 3. KIỂM TRA TỪ KHÓA NỐI TIẾP
+        // Những từ này thường dùng khi người dùng đang chat và muốn xem thêm
+        $followUpKeywords = [
+            'khác',
+            'nữa',
+            'đổi',
+            'thêm',
+            'tiếp',
+            'không thích',
+            'chê',
+            'chán',
+            'tệ',
+            'bộ khác',
+            'cái khác',
+            'truyện khác'
+        ];
+
+        foreach ($followUpKeywords as $keyword) {
+            if (str_contains($message, $keyword)) {
+                return 'comic_related';
+            }
+        }
+
+        // 4. KIỂM TRA TỪ KHÓA TRUYỆN TRANH
         $comicKeywords = [
             // Từ khóa chung
             'truyện',
@@ -465,62 +532,25 @@ PHONG CÁCH:
             'drop'
         ];
 
-        // Blacklist - BỔ SUNG
-        $offTopicKeywords = [
-            'chính trị',
-            'tổng thống',
-            'thủ tướng',
-            'bầu cử',
-            'lập trình',
-            'code',
-            'python',
-            'javascript',
-            'database',
-            'toán',
-            'vật lý',
-            'hóa',
-            'sinh học',
-            'covid',
-            'vaccine',
-            'bệnh',
-            'bóng đá',
-            'world cup',
-            'bitcoin',
-            'crypto',
-            'chứng khoán',
-            'thời tiết',
-            'weather',
-            'nấu ăn',
-            'công thức',
-            'tại sao',
-            'why',
-            'làm sao',
-            'how to' // Câu hỏi chung
-        ];
-
-        // Kiểm tra blacklist
-        foreach ($offTopicKeywords as $keyword) {
-            if (str_contains($message, $keyword)) {
-                return 'off_topic';
-            }
-        }
-
-        // Kiểm tra comic keywords
         foreach ($comicKeywords as $keyword) {
             if (str_contains($message, $keyword)) {
                 return 'comic_related';
             }
         }
 
-        // Câu ngắn (<5 ký tự) hoặc chỉ chào hỏi
-        if (
-            mb_strlen($message) < 4 ||
-            preg_match('/^(hi|hello|hey|alo|chào|xin chào)$/i', $message)
-        ) {
+        // 5. KIỂM TRA LỊCH SỬ CHAT (NÂNG CẤP MỚI)
+        // Nếu user gõ một câu ngắn gọn không có từ khóa (vd: "ok", "được đấy", "hay đó") 
+        // nhưng họ ĐANG trong cuộc hội thoại (đã có session lịch sử), ta vẫn cho phép.
+        if (!empty(session('ai_chat_history'))) {
+            return 'comic_related';
+        }
+
+        // 6. XỬ LÝ CÂU QUÁ NGẮN VÔ NGHĨA (Giữ nguyên)
+        if (mb_strlen($message) < 4) {
             return 'unclear';
         }
 
-        // Mặc định: off-topic nếu không match
+        // Mặc định: off-topic nếu không match bất cứ cái gì
         return 'off_topic';
     }
 
@@ -710,9 +740,9 @@ PHONG CÁCH:
         try {
             // Chuẩn bị context
             $comicsContext = $this->getComicsContext(30);
-            $relevantComics = $this->searchRelevantComics($message, 5);
+            $relevantComics = $this->searchRelevantComics($message, 10); // Lấy 10 bộ để nó có nhiều lựa chọn đổi
 
-            $relevantContext = "🎯 TRUYỆN PHÙ HỢP:\n\n";
+            $relevantContext = "🎯 TRUYỆN PHÙ HỢP (Ưu tiên gợi ý từ đây):\n\n";
             foreach ($relevantComics as $comic) {
                 $relevantContext .= sprintf(
                     "• %s (%s) - ⭐%.1f\n",
@@ -722,20 +752,45 @@ PHONG CÁCH:
                 );
             }
 
-            // Tạo prompt
+            // ===============================================
+            // THÊM LOGIC NHỚ LỊCH SỬ CHAT (SESSION)
+            // ===============================================
+
+            // 1. Lấy lịch sử cũ ra
+            $chatHistory = session('ai_chat_history', []);
+
+            // 2. Chuyển mảng lịch sử thành 1 đoạn Text để nhét vào Prompt
+            $historyText = "LỊCH SỬ TRÒ CHUYỆN GẦN NHẤT:\n";
+            if (empty($chatHistory)) {
+                $historyText .= "(Chưa có)\n";
+            } else {
+                foreach ($chatHistory as $chat) {
+                    $roleName = $chat['role'] === 'user' ? 'Khách hỏi' : 'Bạn (AI) đã trả lời';
+                    $historyText .= "- {$roleName}: " . $chat['text'] . "\n";
+                }
+            }
+
+            // 3. Nếu user nói "truyện khác", nhắc AI đừng lặp lại truyện cũ
+            $instructionText = "Trả lời NGẮN GỌN, gợi ý 2-3 bộ truyện CỤ THỂ từ danh sách.";
+            if (str_contains(mb_strtolower($message), 'khác') || str_contains(mb_strtolower($message), 'không thích')) {
+                $instructionText = "LƯU Ý: Khách muốn đổi truyện. BẠN PHẢI TÌM TRUYỆN KHÁC (CÙNG THỂ LOẠI) VÀ TUYỆT ĐỐI KHÔNG LẶP LẠI CÁC TRUYỆN BẠN ĐÃ GỢI Ý TRONG LỊCH SỬ.\n" . $instructionText;
+            }
+
+            // Tạo prompt GỘP CHUNG TẤT CẢ
             $fullPrompt = $this->getSystemPrompt() . "\n\n" .
                 $comicsContext . "\n" .
                 $relevantContext . "\n\n" .
-                "CÂU HỎI: " . $message . "\n\n" .
-                "Trả lời NGẮN GỌN, gợi ý 2-3 bộ truyện CỤ THỂ từ danh sách.";
+                $historyText . "\n\n" . // <--- Đưa lịch sử vào đây
+                "CÂU HỎI MỚI CỦA KHÁCH: " . $message . "\n\n" .
+                $instructionText;
 
-            // Gọi API với error handling tốt hơn
+            // Gọi API
             $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}";
 
             $response = Http::withoutVerifying()
-                ->timeout(60) // Tăng timeout
-                ->connectTimeout(30) // Thêm connect timeout
-                ->retry(2, 1000) // Retry 2 lần, mỗi lần cách 1s
+                ->timeout(60)
+                ->connectTimeout(30)
+                ->retry(2, 1000)
                 ->post($url, [
                     'contents' => [
                         ['parts' => [['text' => $fullPrompt]]]
@@ -746,32 +801,33 @@ PHONG CÁCH:
                     ]
                 ]);
 
-            // Log response để debug
-            Log::info('Gemini Response', [
-                'status' => $response->status(),
-                'successful' => $response->successful(),
-                'body_length' => strlen($response->body())
-            ]);
-
             if ($response->failed()) {
-                Log::error('Gemini API Failed', [
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                    'reason' => $response->reason()
-                ]);
-
-                // Trả về fallback response
                 return $this->getFallbackResponse($relevantComics);
             }
 
             $data = $response->json();
 
             if (!isset($data['candidates'][0]['content']['parts'][0]['text'])) {
-                Log::error('Invalid Gemini response structure', ['data' => $data]);
                 return $this->getFallbackResponse($relevantComics);
             }
 
             $answer = $data['candidates'][0]['content']['parts'][0]['text'];
+
+            // ===============================================
+            // CẬP NHẬT LẠI LỊCH SỬ VÀO SESSION
+            // ===============================================
+
+            // Lưu câu hỏi của User
+            $chatHistory[] = ['role' => 'user', 'text' => $message];
+            // Lưu câu trả lời của AI
+            $chatHistory[] = ['role' => 'model', 'text' => $answer];
+
+            // Chỉ giữ lại 6 lượt chat gần nhất (12 dòng) để prompt không bị quá dài
+            if (count($chatHistory) > 12) {
+                $chatHistory = array_slice($chatHistory, -12);
+            }
+            session(['ai_chat_history' => $chatHistory]);
+            // ===============================================
 
             $answerWithLinks = preg_replace_callback('/\[\[(.*?)\|(.*?)\]\]/', function ($matches) {
                 $title = $matches[1];
@@ -796,7 +852,6 @@ PHONG CÁCH:
             return $this->getFallbackResponse($relevantComics ?? null);
         }
     }
-
     /**
      * Fallback response khi API lỗi
      */
